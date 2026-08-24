@@ -16,7 +16,7 @@ import {
   type Agent,
   type SessionConfigOption,
   type SessionConfigValue,
-} from "@sync/extension-api";
+} from "@sync-buzz/extension-api";
 import { ChevronDown } from "lucide-react";
 
 /**

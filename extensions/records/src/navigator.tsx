@@ -10,16 +10,16 @@ import {
   Plus,
   type LucideIcon,
 } from "lucide-react";
-import { TypeFilter } from "@sync/extension-api";
-import { kindIcon } from "@sync/extension-api";
+import { TypeFilter } from "@sync-buzz/extension-api";
+import { kindIcon } from "@sync-buzz/extension-api";
 import {
   PanelFooter,
   PanelHeader,
   PanelPlaceholder,
   PanelSurface,
-} from "@sync/extension-api";
+} from "@sync-buzz/extension-api";
 
-import { Button } from "@sync/extension-api";
+import { Button } from "@sync-buzz/extension-api";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -27,14 +27,14 @@ import {
   DropdownMenuLabel,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
-} from "@sync/extension-api";
-import { ScrollArea } from "@sync/extension-api";
+} from "@sync-buzz/extension-api";
+import { ScrollArea } from "@sync-buzz/extension-api";
 import {
   Tooltip,
   TooltipContent,
   TooltipTrigger,
-} from "@sync/extension-api";
-import { isAttachedType, type MemoryType } from "@sync/extension-api";
+} from "@sync-buzz/extension-api";
+import { isAttachedType, type MemoryType } from "@sync-buzz/extension-api";
 import {
   SourceTree,
   foldersUnder,
@@ -42,14 +42,14 @@ import {
   parentFolder,
   type MemoryFolder,
   type SourceTreeItem,
-} from "@sync/extension-api";
-import { ATTENTION_STATES, type Corpus } from "@sync/extension-api";
+} from "@sync-buzz/extension-api";
+import { ATTENTION_STATES, type Corpus } from "@sync-buzz/extension-api";
 import type { RecordsFilter } from "./filter";
 import {
   showNativeContextMenu,
   type NativeMenuEntry,
-} from "@sync/extension-api";
-import type { ProjectViewState } from "@sync/extension-api";
+} from "@sync-buzz/extension-api";
+import type { ProjectViewState } from "@sync-buzz/extension-api";
 
 /** Each type's folders, by kind. See `useFolders`. */
 type FoldersByKind = ReadonlyMap<string, readonly MemoryFolder[]>;

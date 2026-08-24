@@ -53,7 +53,7 @@ import {
   type RememberedConversation,
   type SessionConfigOption,
   type SessionRow,
-} from "@sync/extension-api";
+} from "@sync-buzz/extension-api";
 import { ChevronDown, ChevronLeft, Play, Plus } from "lucide-react";
 
 import { Composer, EMPTY_DRAFT, type Draft } from "./composer";

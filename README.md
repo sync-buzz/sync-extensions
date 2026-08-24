@@ -55,7 +55,7 @@ The archive is reproducible — the same input produces the same bytes — so
 
 ## What an extension may import, and how it reaches the window's objects
 
-Two modules, and nothing else: `react`, and `@sync/extension-api`. The lint rule
+Two modules, and nothing else: `react`, and `@sync-buzz/extension-api`. The lint rule
 that used to say so inside Sync is now the resolver: there is no Sync source to
 reach into, so an import that goes past the contract does not type-check.
 
@@ -108,6 +108,6 @@ person who caused it rather than in front of somebody opening a project.
 ## What is not here yet
 
 `registry.json` and `dist/`, which arrive with the registry; the `sync-ext` CLI
-and the published `@sync/extension-api`, which arrive with the contract
+and the published `@sync-buzz/extension-api`, which arrive with the contract
 repository. Until then a folder or a locally packed archive is how an extension
 reaches a window.

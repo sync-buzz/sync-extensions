@@ -1,4 +1,4 @@
-import type { ActivationResult, ExtensionHost } from "@sync/extension-api";
+import type { ActivationResult, ExtensionHost } from "@sync-buzz/extension-api";
 
 import {
   RecordsAreaProvider,

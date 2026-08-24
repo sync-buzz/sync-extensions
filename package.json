@@ -11,7 +11,7 @@
     "contract": "cd ../sync && pnpm api:publish"
   },
   "devDependencies": {
-    "@sync/extension-api": "link:../sync-extension-api",
+    "@sync-buzz/extension-api": "link:../sync-extension-api",
     "@types/react": "^19.2.18",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",

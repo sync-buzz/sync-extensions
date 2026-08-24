@@ -2,19 +2,19 @@
 
 import { createContext, useContext, useEffect, useState, type ReactNode } from "react";
 
-import { ContextInspector } from "@sync/extension-api";
+import { ContextInspector } from "@sync-buzz/extension-api";
 import { ContextNavigator, folderRow, parentRow } from "./navigator";
-import { DocumentView } from "@sync/extension-api";
-import { RecordRemovalSheet } from "@sync/extension-api";
-import { TypeRemovalSheet } from "@sync/extension-api";
-import { TypeSheet } from "@sync/extension-api";
+import { DocumentView } from "@sync-buzz/extension-api";
+import { RecordRemovalSheet } from "@sync-buzz/extension-api";
+import { TypeRemovalSheet } from "@sync-buzz/extension-api";
+import { TypeSheet } from "@sync-buzz/extension-api";
 import { Workspace, viewName } from "./workspace";
-import { Button } from "@sync/extension-api";
-import { useAppMenu } from "@sync/extension-api";
+import { Button } from "@sync-buzz/extension-api";
+import { useAppMenu } from "@sync-buzz/extension-api";
 import {
   TableCommandsProvider,
   type TableCommands,
-} from "@sync/extension-api";
+} from "@sync-buzz/extension-api";
 import {
   updateMemoryDocument,
   describeMemoryFolder,
@@ -23,23 +23,23 @@ import {
   moveMemoryDocument,
   deleteMemoryFolder,
   memoryFolderToll,
-} from "@sync/extension-api";
-import { FolderSheet, FolderRemovalSheet, MoveArea } from "@sync/extension-api";
+} from "@sync-buzz/extension-api";
+import { FolderSheet, FolderRemovalSheet, MoveArea } from "@sync-buzz/extension-api";
 import {
   PROJECT_KEY,
   type MemoryFolder,
   type MemoryRecord,
   type MemoryType,
-} from "@sync/extension-api";
-import { explain, type Corpus } from "@sync/extension-api";
-import { useFolders, type Folders } from "@sync/extension-api";
-import { useDocument, type OpenDocument } from "@sync/extension-api";
+} from "@sync-buzz/extension-api";
+import { explain, type Corpus } from "@sync-buzz/extension-api";
+import { useFolders, type Folders } from "@sync-buzz/extension-api";
+import { useDocument, type OpenDocument } from "@sync-buzz/extension-api";
 import { useRecords, type RecordsFilter } from "./filter";
-import type { AreaIntent, OpenProject } from "@sync/extension-api";
+import type { AreaIntent, OpenProject } from "@sync-buzz/extension-api";
 import {
   useProjectView,
   type ProjectViewState,
-} from "@sync/extension-api";
+} from "@sync-buzz/extension-api";
 
 /**
  * Records, as an area of the window.

@@ -5,8 +5,8 @@ import {
   PAGE_LIMIT,
   useCorpus,
   type Corpus,
-} from "@sync/extension-api";
-import type { MemorySelection } from "@sync/extension-api";
+} from "@sync-buzz/extension-api";
+import type { MemorySelection } from "@sync-buzz/extension-api";
 
 /**
  * What Records is, once the corpus is not its.

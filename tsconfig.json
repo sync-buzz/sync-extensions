@@ -1,7 +1,7 @@
 {
   // What an extension is allowed to name.
   //
-  // `@sync/extension-api` resolves through node_modules like any dependency,
+  // `@sync-buzz/extension-api` resolves through node_modules like any dependency,
   // and there is nothing else to resolve: an extension has no access to Sync's
   // source, so an import that reaches past the contract does not type-check
   // rather than being caught by review.

@@ -1,4 +1,4 @@
-# esbuild arrives through @sync/extension-api and fetches a platform binary in a
+# esbuild arrives through @sync-buzz/extension-api and fetches a platform binary in a
 # postinstall script. It is what `sync-ext build` runs on.
 allowBuilds:
   esbuild: true

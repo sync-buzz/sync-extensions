@@ -8,7 +8,7 @@ importers:
 
   .:
     devDependencies:
-      '@sync/extension-api':
+      '@sync-buzz/extension-api':
         specifier: link:../sync-extension-api
         version: link:../sync-extension-api
       '@types/react':

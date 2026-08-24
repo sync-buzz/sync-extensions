@@ -13,7 +13,7 @@ import {
   type Entry,
   type OpenQuestion,
   type PastedImage,
-} from "@sync/extension-api";
+} from "@sync-buzz/extension-api";
 import { ChevronRight, Paperclip } from "lucide-react";
 
 import { fileName } from "./composer";

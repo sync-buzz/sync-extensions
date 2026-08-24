@@ -2,27 +2,27 @@
 
 import type { MouseEvent, ReactNode } from "react";
 import { Info, Plus } from "lucide-react";
-import { KindMark, StateMark } from "@sync/extension-api";
-import { PanelPlaceholder } from "@sync/extension-api";
-import { UnmatchedFiles } from "@sync/extension-api";
-import { Button } from "@sync/extension-api";
-import { ScrollArea } from "@sync/extension-api";
+import { KindMark, StateMark } from "@sync-buzz/extension-api";
+import { PanelPlaceholder } from "@sync-buzz/extension-api";
+import { UnmatchedFiles } from "@sync-buzz/extension-api";
+import { Button } from "@sync-buzz/extension-api";
+import { ScrollArea } from "@sync-buzz/extension-api";
 import {
   Tooltip,
   TooltipContent,
   TooltipTrigger,
-} from "@sync/extension-api";
+} from "@sync-buzz/extension-api";
 import {
   absenceLabel,
   type MemoryDocument,
   type MemoryFolder,
   type MemoryRecord,
   type MemoryType,
-} from "@sync/extension-api";
-import { typeName, type Corpus } from "@sync/extension-api";
-import { useDragHandle } from "@sync/extension-api";
+} from "@sync-buzz/extension-api";
+import { typeName, type Corpus } from "@sync-buzz/extension-api";
+import { useDragHandle } from "@sync-buzz/extension-api";
 import type { RecordsFilter } from "./filter";
-import { showNativeContextMenu } from "@sync/extension-api";
+import { showNativeContextMenu } from "@sync-buzz/extension-api";
 
 /**
  * The dominant surface.

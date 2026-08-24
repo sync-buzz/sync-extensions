@@ -18,7 +18,7 @@ import {
   cn,
   type AgentSession,
   type PastedContent,
-} from "@sync/extension-api";
+} from "@sync-buzz/extension-api";
 import { ArrowUp, FileText, Paperclip, Square, X } from "lucide-react";
 
 /**

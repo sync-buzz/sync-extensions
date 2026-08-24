@@ -1,6 +1,6 @@
 "use client";
 
-import type { Entry, SessionRow, Transcript } from "@sync/extension-api";
+import type { Entry, SessionRow, Transcript } from "@sync-buzz/extension-api";
 
 import { fileName } from "./composer";
 
