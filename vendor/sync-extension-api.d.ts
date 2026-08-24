@@ -925,6 +925,20 @@ export declare function isAttachedType(type: MemoryType): boolean;
 export declare function isVersion(candidate: string): boolean;
 
 /**
+ * The bare glyph as a component, for a row that draws its own surround.
+ *
+ * The same lookup as [`kindIcon`] and a different shape, because the shape
+ * matters: a function that answers with a component type has to be called from
+ * somewhere, and calling it in the body of a component makes a new component
+ * identity on every render — which React reads as a different element type and
+ * rebuilds beneath. This is one component whose *props* change instead.
+ */
+export declare function KindGlyph({ icon, className, }: {
+    icon: string | null | undefined;
+    className?: string;
+}): JSX.Element;
+
+/**
  * The bare glyph, for places too narrow to carry the full mark. The navigator
  * lists the kinds themselves, so it uses this and stays one language with the
  * rows it filters.
