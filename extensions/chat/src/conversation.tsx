@@ -479,7 +479,7 @@ function Question({ question, session }: { question: OpenQuestion; session: Agen
       </p>
       {message ? <p className="text-sm text-fg-secondary">{message}</p> : null}
       {hasInput(rawInput) ? (
-        <pre className="max-h-40 overflow-auto rounded-(--radius-control) bg-surface-secondary p-2 font-mono text-xs text-fg-secondary">
+        <pre className="max-h-40 overflow-auto rounded-(--radius-control) bg-panel p-2 font-mono text-xs text-fg-secondary">
           {formatInput(rawInput)}
         </pre>
       ) : null}
