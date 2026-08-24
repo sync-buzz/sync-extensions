@@ -1,0 +1,13 @@
+{
+  "kind": "project-memory.constraint",
+  "title": "Constraint",
+  "description": "Something that must always — or never — be done here, and what goes wrong when it is not.",
+  "icon": "lock",
+  "guidance": "One rule per record, and say what goes wrong when it is violated — a rule without a consequence reads as a preference and gets treated as one.",
+  "relationships": {
+    "references": {
+      "target": "any",
+      "description": "Another record this one rests on, cites or is about."
+    }
+  }
+}

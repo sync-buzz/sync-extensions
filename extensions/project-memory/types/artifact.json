@@ -1,0 +1,27 @@
+{
+  "kind": "project-memory.artifact",
+  "title": "Artifact",
+  "description": "A pointer to something kept elsewhere: a design file, an issue, a link.",
+  "icon": "package",
+  "guidance": "The record says what the thing is for and why it matters here; the thing itself stays where it is. Never paste a credentialed link — name where the secret lives, never its value.",
+  "fields": {
+    "url": {
+      "type": "string",
+      "required": true,
+      "description": "Where it is."
+    },
+    "source": {
+      "type": "enum",
+      "values": ["figma", "url", "file", "gist", "other"],
+      "required": false,
+      "default": "url",
+      "description": "What kind of thing is at the other end."
+    }
+  },
+  "relationships": {
+    "references": {
+      "target": "any",
+      "description": "Another record this one rests on, cites or is about."
+    }
+  }
+}

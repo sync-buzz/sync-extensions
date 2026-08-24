@@ -1,0 +1,17 @@
+{
+  "kind": "project-memory.decision",
+  "title": "Decision",
+  "description": "A choice that was made, why it was made, and what it was chosen over.",
+  "icon": "signpost",
+  "guidance": "One decision per record: the choice and why it won, not a summary of the discussion. Record it the moment it is settled — a decision nobody wrote down is one the next session will make again, differently.",
+  "relationships": {
+    "supersedes": {
+      "target": "project-memory.decision",
+      "description": "The earlier decision this one replaces."
+    },
+    "references": {
+      "target": "any",
+      "description": "Another record this one rests on, cites or is about."
+    }
+  }
+}

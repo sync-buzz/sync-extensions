@@ -1,0 +1,13 @@
+{
+  "kind": "project-memory.observation",
+  "title": "Observation",
+  "description": "Something found out about how the project actually works.",
+  "icon": "eye",
+  "guidance": "What is true, not what ought to be, and non-obvious enough to be worth the read. Name the files it was found in: that is what lets the engine flag it when the code moves.",
+  "relationships": {
+    "references": {
+      "target": "any",
+      "description": "Another record this one rests on, cites or is about."
+    }
+  }
+}

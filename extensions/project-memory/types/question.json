@@ -1,0 +1,43 @@
+{
+  "kind": "project-memory.question",
+  "title": "Question",
+  "description": "Something nobody has settled yet, and the answer once there is one.",
+  "icon": "circle-help",
+  "guidance": "Raise one before asking a person, not after: a question written down outlives the conversation, and the answer lands where the next reader finds it. Answer it in place rather than opening a second record.",
+  "fields": {
+    "status": {
+      "type": "enum",
+      "values": ["open", "answered"],
+      "required": true,
+      "default": "open",
+      "description": "Whether it is still a fork."
+    },
+    "answer": {
+      "type": "text",
+      "required": false,
+      "description": "What settled it, in prose."
+    },
+    "options": {
+      "type": "array",
+      "items": { "type": "string" },
+      "required": false,
+      "description": "The choices offered, when the answer is a choice rather than free text."
+    },
+    "multi_select": {
+      "type": "boolean",
+      "required": false,
+      "default": false,
+      "description": "Whether more than one option may be chosen."
+    }
+  },
+  "relationships": {
+    "answered_by": {
+      "target": "project-memory.decision",
+      "description": "The decision this question was resolved into."
+    },
+    "references": {
+      "target": "any",
+      "description": "Another record this one rests on, cites or is about."
+    }
+  }
+}
