@@ -1,0 +1,17 @@
+{
+  "formatVersion": 1,
+  "id": "project-memory",
+  "versions": [
+    {
+      "version": "1.0.0",
+      "syncApi": "^2.0",
+      "description": "Every project builds up answers that never get written down: why this database and not that one, what must never be changed without checking first, a workaround and the reason it is there, a question nobody has decided yet. They stay in a chat window or in one person's head, and a month later somebody asks again — or quietly does the opposite. This gives them a place. Five kinds of note — a choice, a rule, something you found out, an open question, and a pointer to something kept elsewhere — written and read in Records, next to everything else the project holds. They live in the repository, so they go wherever the code goes and anyone who has the code has them too. It also tells the assistants you connect what is worth writing down and how to word it, which is the difference between an assistant that leaves you useful notes and one that leaves you a transcript.",
+      "changelog": "",
+      "artefact": {
+        "url": "https://github.com/sync-buzz/sync-extensions/releases/download/v1.0.0/project-memory-1.0.0.syncext",
+        "sha256": "8a7e3b8c3dd20298f271209cc5813ea7ecfa36fc2f01542bfe85fd5fe52d2338",
+        "bytes": 7410
+      }
+    }
+  ]
+}

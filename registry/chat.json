@@ -1,0 +1,17 @@
+{
+  "formatVersion": 1,
+  "id": "chat",
+  "versions": [
+    {
+      "version": "1.0.0",
+      "syncApi": "^2.0",
+      "description": "Chat runs an agent as a process and speaks the Agent Client Protocol to it, so the conversation happens here rather than in a terminal beside here. Which agents it can raise is a fact about this machine, not about this build: the ones that are installed are offered, the ones that are not say what is missing, and Codex — which does not speak the protocol at all — is reached through a bridge that ships inside the application. Where an agent offers its models in protocol, they are listed as it stated them; where it takes one only at launch, that is said instead of a picker that could not work. A conversation belongs to the project rather than to the screen: switching sections leaves the agent working, and coming back finds everything it said meanwhile.",
+      "changelog": "",
+      "artefact": {
+        "url": "https://github.com/sync-buzz/sync-extensions/releases/download/v1.0.0/chat-1.0.0.syncext",
+        "sha256": "ae1c0e6702ef67a2631e70df66bd343c3bf0391ed3df05c4be838c844982b6bd",
+        "bytes": 15314
+      }
+    }
+  ]
+}

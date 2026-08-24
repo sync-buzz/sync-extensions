@@ -1,0 +1,102 @@
+{
+  "formatVersion": 1,
+  "extensions": [
+    {
+      "id": "chat",
+      "name": "Chat",
+      "summary": "Talk to the coding agents installed on this machine, in this project's folder, without leaving the window.",
+      "icon": "message-square",
+      "version": "1.0.0",
+      "syncApi": "^2.0",
+      "capabilities": [
+        "records",
+        "agents.acp"
+      ],
+      "requires": [],
+      "publishes": [
+        "chat.conversation"
+      ],
+      "areas": [
+        {
+          "id": "chat",
+          "label": "Chat"
+        }
+      ],
+      "prompt": false,
+      "npm": [
+        "@zed-industries/claude-code-acp"
+      ],
+      "author": null,
+      "license": "MIT",
+      "repository": null,
+      "artefact": {
+        "url": "https://github.com/sync-buzz/sync-extensions/releases/download/v1.0.0/chat-1.0.0.syncext",
+        "sha256": "ae1c0e6702ef67a2631e70df66bd343c3bf0391ed3df05c4be838c844982b6bd",
+        "bytes": 15314
+      }
+    },
+    {
+      "id": "project-memory",
+      "name": "Project memory",
+      "summary": "A place for the answers your project has already worked out, so nobody works them out twice.",
+      "icon": "book-marked",
+      "version": "1.0.0",
+      "syncApi": "^2.0",
+      "capabilities": [
+        "records"
+      ],
+      "requires": [],
+      "publishes": [
+        "project-memory.decision",
+        "project-memory.constraint",
+        "project-memory.observation",
+        "project-memory.question",
+        "project-memory.artifact"
+      ],
+      "areas": [],
+      "prompt": true,
+      "npm": [],
+      "author": null,
+      "license": "MIT",
+      "repository": null,
+      "artefact": {
+        "url": "https://github.com/sync-buzz/sync-extensions/releases/download/v1.0.0/project-memory-1.0.0.syncext",
+        "sha256": "8a7e3b8c3dd20298f271209cc5813ea7ecfa36fc2f01542bfe85fd5fe52d2338",
+        "bytes": 7410
+      }
+    },
+    {
+      "id": "records",
+      "name": "Records",
+      "summary": "The project's types, and every record written as one — created, renamed and removed from this window or by an agent.",
+      "icon": "shapes",
+      "version": "1.0.0",
+      "syncApi": "^2.0",
+      "capabilities": [
+        "records",
+        "folders",
+        "sheets",
+        "markdown.plugins",
+        "native-menu"
+      ],
+      "requires": [],
+      "publishes": [],
+      "areas": [
+        {
+          "id": "records",
+          "label": "Records"
+        }
+      ],
+      "prompt": false,
+      "npm": [],
+      "author": null,
+      "license": "MIT",
+      "repository": null,
+      "artefact": {
+        "url": "https://github.com/sync-buzz/sync-extensions/releases/download/v1.0.0/records-1.0.0.syncext",
+        "sha256": "413724c8955c0df9f2d2ab85d41b9db8d733f522f0020c4f145bdd869bd18251",
+        "bytes": 11472
+      }
+    }
+  ]
+}
