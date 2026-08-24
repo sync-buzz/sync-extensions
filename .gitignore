@@ -2,3 +2,4 @@ node_modules/
 dist/
 *.syncext
 .DS_Store
+extensions/*/ui/

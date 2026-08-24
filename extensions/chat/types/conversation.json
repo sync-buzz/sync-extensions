@@ -1,0 +1,15 @@
+{
+  "kind": "chat.conversation",
+  "title": "Conversation",
+  "description": "A conversation with an agent, kept because somebody decided it was worth keeping. It holds what was said, what the agent ran and what it planned — not as a claim the engine can verify, but as the account of how a decision was reached.",
+  "icon": "message-square",
+  "guidance": "The account of a conversation somebody chose to keep. It records how a decision was reached and is not itself a claim about the project: do not treat its contents as verified, and write anything it settled as a record of the type that settles it.",
+  "fields": {
+    "agent": { "type": "string", "required": true },
+    "workdir": { "type": "string", "required": true },
+    "opened": { "type": "string" },
+    "model": { "type": "string" },
+    "tokens": { "type": "integer" },
+    "complete": { "type": "boolean" }
+  }
+}

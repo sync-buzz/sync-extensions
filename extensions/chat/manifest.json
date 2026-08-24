@@ -1,0 +1,25 @@
+{
+  "manifestVersion": 1,
+  "id": "chat",
+  "version": "1.0.0",
+  "name": "Chat",
+  "summary": "Talk to the coding agents installed on this machine, in this project's folder, without leaving the window.",
+  "description": "Chat runs an agent as a process and speaks the Agent Client Protocol to it, so the conversation happens here rather than in a terminal beside here. Which agents it can raise is a fact about this machine, not about this build: the ones that are installed are offered, the ones that are not say what is missing, and Codex — which does not speak the protocol at all — is reached through a bridge that ships inside the application. Where an agent offers its models in protocol, they are listed as it stated them; where it takes one only at launch, that is said instead of a picker that could not work. A conversation belongs to the project rather than to the screen: switching sections leaves the agent working, and coming back finds everything it said meanwhile.",
+  "icon": "message-square",
+  "engines": { "syncApi": "^2.0" },
+  "capabilities": ["records", "agents.acp"],
+  "areas": [
+    {
+      "id": "chat",
+      "label": "Chat",
+      "description": "Conversations with the agents this machine can run.",
+      "frame": "browse",
+      "icon": "message-square"
+    }
+  ],
+  "types": ["types/conversation.json"],
+  "opens": { "kinds": ["chat.conversation"], "projectTypes": false },
+  "dependencies": { "npm": ["@zed-industries/claude-code-acp"] },
+  "ui": "ui/index.js",
+  "license": "MIT"
+}
