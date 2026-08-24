@@ -1,0 +1,103 @@
+# What publishing an extension is: one tag, and everything after it is derived.
+#
+# Nobody writes `registry.json` and nobody edits a ledger. The archives are built
+# from the manifests, the index is generated from the same manifests, and the
+# ledger is appended to from the artefact that was actually released — so the
+# registry cannot come to disagree with the packages it indexes. A version
+# already published with different bytes stops the run rather than being
+# overwritten: `integrity` in a project's record exists to notice exactly that,
+# and a ledger saying otherwise would make the check compare against a lie.
+name: release
+
+on:
+  push:
+    tags: ["v*"]
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    name: release
+    runs-on: ubuntu-24.04
+    steps:
+      # `main`, because the index and the ledgers are committed back to it and
+      # a ledger has to be appended to the one that is current. What makes that
+      # safe rather than approximate is the guard below.
+      - uses: actions/checkout@v4
+        with:
+          ref: main
+          fetch-depth: 0
+
+      # A tag somewhere other than the head of `main` would release one tree and
+      # index another, and the two would differ by exactly whatever was pushed
+      # in between — which is the kind of thing nobody notices until an artefact
+      # does not match its manifest. Releases come from `main`; this says so
+      # instead of assuming it.
+      - name: The tag is the head of main
+        env:
+          TAG: ${{ github.ref_name }}
+        run: |
+          set -eu
+          tagged=$(git rev-parse "refs/tags/${TAG}^{commit}")
+          head=$(git rev-parse HEAD)
+          if [ "$tagged" != "$head" ]; then
+            echo "${TAG} is ${tagged}, and main is at ${head}." >&2
+            echo "A release is cut from the head of main, so that what is packed" >&2
+            echo "and what is indexed are one tree. Move the tag, or merge first." >&2
+            exit 1
+          fi
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+
+      # Nothing is released that would not have passed on a desk.
+      - run: pnpm verify
+
+      # The script rather than the command, so there is one spelling of where
+      # the archives go and CI cannot drift from what a person runs.
+      - name: Pack every extension
+        run: pnpm run pack
+
+      # The release first, because the index names URLs that have to resolve.
+      # An index published ahead of its artefacts is a marketplace offering
+      # downloads that 404.
+      - name: Attach the archives to the release
+        env:
+          GH_TOKEN: ${{ github.token }}
+          TAG: ${{ github.ref_name }}
+        run: gh release create "$TAG" dist/*.syncext --title "$TAG" --generate-notes
+
+      - name: Generate the index and the ledgers
+        env:
+          TAG: ${{ github.ref_name }}
+        run: |
+          pnpm exec sync-ext registry extensions/* \
+            --archives dist \
+            --base-url "https://github.com/${GITHUB_REPOSITORY}/releases/download/${TAG}" \
+            --out registry.json \
+            --ledgers registry
+
+      # Committed rather than attached to the release: the window reads one file
+      # at a fixed URL on the default branch, with an ETag, and a raw file is
+      # the cheapest thing GitHub serves. A release asset would mean asking the
+      # API which release is current, which is a rate limit and a token.
+      - name: Commit what changed
+        env:
+          TAG: ${{ github.ref_name }}
+        run: |
+          set -eu
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add registry.json registry
+          # A tag that changed no manifest changes no index, and a commit saying
+          # so would be noise in the history of a file people read diffs of.
+          if git diff --cached --quiet; then
+            echo "The index already describes this release."
+            exit 0
+          fi
+          git commit -m "Registry index for ${TAG}"
+          git push origin HEAD:main

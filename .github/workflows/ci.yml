@@ -1,0 +1,34 @@
+# Every push proves the same three things `pnpm verify` proves on a desk, and it
+# proves them against the *published* contract rather than against a checkout
+# beside it. That is the difference worth paying for: an author outside this
+# organisation installs `@sync-buzz/extension-api` from npm, and a green build
+# here means what they will get is what these extensions were built against.
+name: ci
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+permissions:
+  contents: read
+
+jobs:
+  verify:
+    name: verify
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      # Types, then the modules, then the manifests against the modules. The
+      # order is the point: `check` runs each module against a stand-in host and
+      # compares what came back with what its manifest declared, which is the
+      # one failure nothing in the type system can catch — an area renamed in
+      # one and not the other type-checks perfectly and installs as an empty
+      # column.
+      - run: pnpm verify

@@ -1,4 +1,19 @@
-# esbuild arrives through @sync-buzz/extension-api and fetches a platform binary in a
-# postinstall script. It is what `sync-ext build` runs on.
+# Which dependencies may run a script while they install, decided here rather
+# than left to a prompt: an install that stops to ask is an install CI cannot
+# do, and a build script is the one place a dependency runs code on this machine.
 allowBuilds:
+  # esbuild arrives through @sync-buzz/extension-api and fetches a platform
+  # binary in a postinstall script. It is what `sync-ext build` runs on.
   esbuild: true
+  # Tailwind's file watcher, and it compiles a native binding. Nothing here
+  # watches through it — `sync-ext build --watch` is esbuild's own watcher and
+  # the stylesheet is compiled once per build — so it is refused rather than
+  # allowed for a mode this repository does not use.
+  '@parcel/watcher': false
+
+# The contract is ours, published by the same hands as this repository, and it
+# is installed the moment it is published. pnpm's age guard is about a
+# stranger's package appearing under a familiar name; excluding by name rather
+# than by version is what keeps that from being one more line on every release.
+minimumReleaseAgeExclude:
+  - '@sync-buzz/extension-api'
