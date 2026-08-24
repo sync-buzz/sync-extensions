@@ -42,6 +42,7 @@ import {
   useDocument,
   useAgents,
   useAgentSession,
+  useBadge,
   useLiveSessions,
   type Agent,
   type AgentSession,
@@ -200,7 +201,16 @@ export function ChatAreaProvider({
   const { agents, isLoading: agentsLoading } = useAgents();
   // Read from the application rather than held here, so that an area which was
   // unmounted while agents ran comes back to the list it left.
-  const { sessions: running, reload } = useLiveSessions(active);
+  //
+  // **Watched while this section is frozen too, and only then when there is
+  // something to watch.** A frozen area stops reading the store; it does not
+  // stop existing, and the one thing it goes on saying is what its row shows —
+  // an agent that answered while somebody was in another section is exactly the
+  // news a badge is for, and nothing but this list would notice it. When the
+  // last conversation ends there is nothing left to hear, and the reading stops
+  // with it rather than running for the life of the window.
+  const [watching, setWatching] = useState(false);
+  const { sessions: running, reload } = useLiveSessions(active || watching);
   const [picked, setKey] = useState<Chosen | null>(null);
   // The last ask this area has stopped honouring. What an intent shows is
   // derived from it rather than copied into state — an area that copied an ask
@@ -289,6 +299,69 @@ export function ChatAreaProvider({
   const key = row?.key ?? null;
   const session = useAgentSession(key);
   const document = useDocument(project.path, chosen?.at === "kept" ? chosen.key : null);
+
+  // ------------------------------------------------------------------
+  // What this section's row says while nobody is looking at it.
+  // ------------------------------------------------------------------
+
+  // Whether anything is still worth listening to. Derived from what the last
+  // read said rather than from whether the section is open: a conversation
+  // running when somebody leaves is one that can still answer.
+  useEffect(() => {
+    setWatching(mine.length > 0);
+  }, [mine.length]);
+
+  // A turn that ended is an agent that answered. It is the finest signal there
+  // is without holding a transcript open for every conversation at once, and it
+  // is the right one: what a person left was a question, and what they want to
+  // know is that it has been answered.
+  const before = useRef(new Map<string, SessionRow["status"]>());
+  const [answered, setAnswered] = useState<ReadonlySet<string>>(() => new Set());
+
+  useEffect(() => {
+    const was = before.current;
+    const now = new Map(mine.map((candidate) => [candidate.key, candidate.status]));
+    const arrived = [...now].filter(
+      ([conversation, status]) =>
+        was.get(conversation) === "working" && status !== "working",
+    );
+    before.current = now;
+    if (arrived.length === 0) return;
+
+    setAnswered((held) => {
+      const next = new Set(held);
+      for (const [conversation] of arrived) {
+        // Not news if it is the conversation on screen in the section somebody
+        // is looking at: they watched it arrive.
+        if (active && conversation === key) continue;
+        next.add(conversation);
+      }
+      return next.size === held.size ? held : next;
+    });
+  }, [mine, active, key]);
+
+  // Opening one is reading it. Also drops a conversation that has ended and
+  // gone from the list, so news never outlives what it was about.
+  useEffect(() => {
+    setAnswered((held) => {
+      const next = new Set(
+        [...held].filter(
+          (conversation) =>
+            conversation !== (active ? key : null) &&
+            mine.some((candidate) => candidate.key === conversation),
+        ),
+      );
+      return next.size === held.size ? held : next;
+    });
+  }, [active, key, mine]);
+
+  // A dot rather than how many, and the difference is the point: how many
+  // conversations there are is declared in the manifest and the host counts it,
+  // so the row already carries a figure. Answering with a second figure would
+  // put two different quantities in one place and leave nobody able to say
+  // which. What is being said here is *something happened* — the one thing a
+  // number cannot say and a dot says exactly.
+  useBadge(answered.size > 0 ? "some" : null);
 
   // Opening anything is this person answering whatever was asked.
   const open = (next: Chosen | null) => {
