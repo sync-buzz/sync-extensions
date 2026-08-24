@@ -21,5 +21,6 @@
   "opens": { "kinds": ["chat.conversation"], "projectTypes": false },
   "dependencies": { "npm": ["@zed-industries/claude-code-acp"] },
   "ui": "ui/index.js",
+  "styles": "ui/index.css",
   "license": "MIT"
 }

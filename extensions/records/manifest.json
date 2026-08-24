@@ -19,5 +19,6 @@
   ],
   "opens": { "kinds": [], "projectTypes": true },
   "ui": "ui/index.js",
+  "styles": "ui/index.css",
   "license": "MIT"
 }
