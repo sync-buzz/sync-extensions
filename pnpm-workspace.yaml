@@ -1,5 +1,4 @@
-# esbuild fetches a platform binary in a postinstall script. It is the bundler
-# this repository builds extensions with, so the script is what makes the
-# toolchain work at all rather than an optional convenience.
+# esbuild arrives through @sync/extension-api and fetches a platform binary in a
+# postinstall script. It is what `sync-ext build` runs on.
 allowBuilds:
   esbuild: true

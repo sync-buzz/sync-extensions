@@ -3,17 +3,18 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "build": "node build.mjs records && node build.mjs chat",
-    "check": "node check.mjs",
+    "build": "sync-ext build extensions/*",
+    "check": "sync-ext check extensions/*",
+    "pack": "sync-ext pack extensions/* --out dist",
     "typecheck": "tsc --noEmit",
     "verify": "pnpm typecheck && pnpm build && pnpm check",
     "contract": "cd ../sync && pnpm api:publish"
   },
   "devDependencies": {
+    "@sync/extension-api": "link:../sync-extension-api",
     "@types/react": "^19.2.18",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
-    "esbuild": "^0.25.0",
     "lucide-react": "^1.31.0",
     "radix-ui": "^1.6.7",
     "react": "19.2.8",

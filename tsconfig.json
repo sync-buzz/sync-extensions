@@ -1,8 +1,8 @@
 {
   // What an extension is allowed to name.
   //
-  // `@sync/extension-api` resolves to the declarations Sync published, and
-  // there is nothing else to resolve: an extension has no access to Sync's
+  // `@sync/extension-api` resolves through node_modules like any dependency,
+  // and there is nothing else to resolve: an extension has no access to Sync's
   // source, so an import that reaches past the contract does not type-check
   // rather than being caught by review.
   "compilerOptions": {
@@ -15,10 +15,7 @@
     "noEmit": true,
     "skipLibCheck": true,
     "esModuleInterop": true,
-    "resolveJsonModule": true,
-    "paths": {
-      "@sync/extension-api": ["./vendor/sync-extension-api.d.ts"]
-    }
+    "resolveJsonModule": true
   },
   "include": ["extensions/*/src/**/*.ts", "extensions/*/src/**/*.tsx"]
 }
