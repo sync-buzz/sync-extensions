@@ -885,6 +885,25 @@ export declare interface InstalledExtension {
      * Absent for an extension with nothing to say, which is most of them.
      */
     readonly prompt?: string;
+    /**
+     * The sha256 of the artefact this version resolved to.
+     *
+     * What turns the declaration into a lockfile: a release re-tagged under a
+     * version somebody already has is detected rather than trusted. Absent for a
+     * package with no fixed content to hash — a folder somebody is writing in —
+     * and that absence is the honest answer rather than a gap to fill.
+     */
+    readonly integrity?: string;
+    /**
+     * Where the package came from: `registry`, `file` or `folder`.
+     *
+     * The difference between a dependency and somebody's working tree. A project
+     * declaring one that came from a folder was composed against code being
+     * written, and anybody opening it elsewhere deserves to know that before
+     * wondering why a section is missing. The path is deliberately not here: it
+     * belongs to one machine, and in a shared record it is noise at best.
+     */
+    readonly source?: string;
 }
 
 /**
