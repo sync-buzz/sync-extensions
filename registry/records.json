@@ -3,6 +3,17 @@
   "id": "records",
   "versions": [
     {
+      "version": "1.0.1",
+      "syncApi": "^2.0",
+      "description": "Records brings no vocabulary of its own, and is named after what it holds rather than after anything it knows. It is the section a project's types are made and read in: what a decision is in this project is this project's answer, not ours, and a type another extension published is read here beside the ones somebody typed. What is written lives in the repository's own refs, so it travels with the code and is as shared as it is, and memory-hub reconciles it against code history — a claim whose files moved is marked stale rather than quietly believed.",
+      "changelog": "The archive now carries the stylesheet it declares.\n\n`1.0.0` named `ui/index.css` in its manifest and did not contain it, so Sync\nrefused to open the package after downloading it — the download succeeded, the\nsha256 matched the registry, and the install failed at the last step. Nothing in\nthe extension itself changed.",
+      "artefact": {
+        "url": "https://github.com/sync-buzz/sync-extensions/releases/download/v1.0.1/records-1.0.1.syncext",
+        "sha256": "22f73fbec95938d17bd18e3f87f30c6a29090bd369e246a9dac2e6076a27cd74",
+        "bytes": 13555
+      }
+    },
+    {
       "version": "1.0.0",
       "syncApi": "^2.0",
       "description": "Records brings no vocabulary of its own, and is named after what it holds rather than after anything it knows. It is the section a project's types are made and read in: what a decision is in this project is this project's answer, not ours, and a type another extension published is read here beside the ones somebody typed. What is written lives in the repository's own refs, so it travels with the code and is as shared as it is, and memory-hub reconciles it against code history — a claim whose files moved is marked stale rather than quietly believed.",
