@@ -1,6 +1,7 @@
 "use client";
 
 import {
+  useEffect,
   useLayoutEffect,
   useRef,
   useState,
@@ -16,10 +17,15 @@ import {
   TooltipTrigger,
   chooseAttachments,
   cn,
+  explain,
+  type Agent,
   type AgentSession,
   type PastedContent,
+  type SessionConfigOption,
 } from "@sync-buzz/extension-api";
 import { ArrowUp, FileText, Paperclip, Square, X } from "lucide-react";
+
+import { AgentPicker, ModePicker, ModelPicker } from "./pickers";
 
 /**
  * What is half-written in one conversation.
@@ -40,6 +46,41 @@ export interface Draft {
 
 /** A conversation nobody has started writing in. */
 export const EMPTY_DRAFT: Draft = { text: "", attached: [], pasted: [] };
+
+/**
+ * What a message will be sent *with*, as the strip above the field draws it.
+ *
+ * Here rather than in the panel that describes the conversation, and the move
+ * is the point. An inspector says what is true of the thing in the workspace and
+ * does nothing to it — that is the rule this window states for the column, and
+ * the model picker sitting there broke it. It is also the column that collapses,
+ * and below a certain width cannot be opened at all, so the choice a person
+ * makes most often lived in the one place that can go away.
+ *
+ * The composer is where it belongs by the same argument the attachment shelf
+ * already won: which agent, which model and how freely it may act are all part
+ * of what pressing Return does, and they are read in the moment before pressing
+ * it.
+ */
+export interface Settings {
+  /** Every agent this machine could raise, for the choice before the first word. */
+  readonly agents: readonly Agent[];
+  /** Whether the read behind {@link Settings.agents} is still out. */
+  readonly agentsLoading: boolean;
+  readonly agentId: string;
+  readonly agentName: string;
+  /** Whether an agent is being raised right now. */
+  readonly starting: boolean;
+  /**
+   * Whether the agent is fixed, which it is the moment anything has been said.
+   * A conversation is held *by* a process; changing which one would be a
+   * different conversation, and this window has a command for that already.
+   */
+  readonly settled: boolean;
+  readonly onAgent: (agentId: string) => void;
+  /** The model option the agent stated, or `null` where it stated none. */
+  readonly model: SessionConfigOption | null;
+}
 
 /**
  * What happened to the last send, and which conversation it happened in.
@@ -88,6 +129,7 @@ export function Composer({
   acceptsImages,
   draft,
   onDraft,
+  settings,
 }: {
   session: AgentSession;
   /** Where the system's open panel starts, which is where a person is working. */
@@ -107,6 +149,8 @@ export function Composer({
    * read began would delete it.
    */
   onDraft: (change: (held: Draft) => Draft) => void;
+  /** What this message will be sent with — see {@link Settings}. */
+  settings: Settings;
 }) {
   const { text, attached, pasted } = draft;
   // Held *with* the conversation they are about, rather than reset when it
@@ -118,6 +162,25 @@ export function Composer({
   // second render of the right one.
   const [turn, setTurn] = useState<Turn>(NO_TURN);
   const { refused, sending } = turn.of === session.key ? turn : NO_TURN;
+  // A model or a mode the agent would not take, said in the same line a refused
+  // send is said in. The shell's rule is that a command which did not happen
+  // says so where it was asked for, and both of these are one gesture with one
+  // answer — without this they are a menu that closes and changes nothing.
+  //
+  // Keyed by session for the same reason the turn is: a refusal belonging to a
+  // conversation somebody has left explains nothing where they are now.
+  const [denied, setDenied] = useState<{ of: string | null; said: string } | null>(null);
+  const said = denied?.of === session.key ? denied.said : null;
+
+  /** Runs one setting change, and keeps whatever the agent said about it. */
+  const settle = async (change: Promise<unknown>) => {
+    try {
+      await change;
+      setDenied(null);
+    } catch (failure) {
+      setDenied({ of: session.key, said: explain(failure) });
+    }
+  };
   const field = useRef<HTMLTextAreaElement>(null);
 
   const write = (change: (held: Draft) => Partial<Draft>) =>
@@ -218,6 +281,21 @@ export function Composer({
     node.style.height = `${node.scrollHeight + border}px`;
   }, [text]);
 
+  // A conversation with nothing in it is one somebody has just opened in order
+  // to say something, so the caret is already where they are about to type.
+  // That is the whole of what "the conversation starts immediately" means at
+  // the keyboard, and it is the half a button cannot do.
+  //
+  // Only when nothing has been said. Opening a conversation with a transcript
+  // is reading it — a person who clicks a row to see what an agent replied
+  // overnight has not asked for the caret, and taking focus would move them off
+  // whatever they were about to scroll or select.
+  const unspoken = session.transcript.entries.length === 0;
+  useEffect(() => {
+    if (!unspoken) return;
+    field.current?.focus();
+  }, [session.key, unspoken]);
+
   const onKeyDown = (event: KeyboardEvent<HTMLTextAreaElement>) => {
     if (event.key === "Enter" && !event.shiftKey) {
       event.preventDefault();
@@ -249,9 +327,54 @@ export function Composer({
         </p>
       ) : null}
       <div className="mx-auto flex w-full max-w-(--prose-measure) flex-col gap-1.5">
-        {refused === null ? null : (
-          <p className="text-xs text-fg-tertiary">{refused}</p>
+        {refused === null && said === null ? null : (
+          <p className="text-xs text-fg-tertiary">{refused ?? said}</p>
         )}
+
+        {/* Above the field rather than below it, which is the order the two are
+            read in: what this is being sent with, then what is being sent. It
+            is the arrangement Mail uses for the account a message goes out
+            under, and the one thing the alternative had going for it — nearness
+            to the send button — is bought at the price of putting controls at
+            the very bottom edge of the window, where this system keeps state
+            rather than choices.
+
+            Leading edge, sharing it with the row beneath, so the strip and the
+            field read as one block rather than two. */}
+        <div className="flex w-full min-w-0 items-center gap-1">
+          <AgentPicker
+            agents={settings.agents}
+            loading={settings.agentsLoading}
+            currentId={settings.agentId}
+            currentName={settings.agentName}
+            starting={settings.starting}
+            settled={settings.settled}
+            onChoose={settings.onAgent}
+          />
+          {/* Absent rather than empty, in both cases. An agent that states no
+              models and one that states no modes are saying they have none to
+              offer, and a pop-up button over nothing is a promise this build
+              cannot keep. What the agent does offer is the whole of what is
+              drawn — no table in this build decides it. */}
+          {/* Nothing is offered on a conversation whose agent has gone. Both
+              calls go to the process, and the host refuses one that is not up —
+              so a picker still drawn here would not be a control that quietly
+              did nothing, it would be a rejected promise nobody is holding. The
+              agent's name stays, because that is a fact and it stays true. */}
+          {closed || settings.model === null ? null : (
+            <ModelPicker
+              option={settings.model}
+              onChoose={(valueId) => void settle(session.choose(settings.model!.id, valueId))}
+            />
+          )}
+          {closed || session.modes.length === 0 ? null : (
+            <ModePicker
+              modes={session.modes}
+              current={session.transcript.mode}
+              onChoose={(modeId) => void settle(session.setMode(modeId))}
+            />
+          )}
+        </div>
 
         <div className="flex w-full items-end gap-2">
           <Tooltip>

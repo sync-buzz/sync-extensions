@@ -42,6 +42,7 @@ import {
   useDocument,
   useAgents,
   useAgentSession,
+  useAppMenu,
   useBadge,
   useLiveSessions,
   type Agent,
@@ -52,14 +53,15 @@ import {
   type MemoryRecord,
   type RememberedConversation,
   type SessionConfigOption,
+  type SessionConfigValue,
   type SessionRow,
+  type SessionSource,
 } from "@sync-buzz/extension-api";
 import { ChevronDown, ChevronLeft, Play, Plus } from "lucide-react";
 
 import { Composer, EMPTY_DRAFT, type Draft } from "./composer";
 import { Conversation } from "./conversation";
 import { CONVERSATION_KIND, asMarkdown, facts, suggestTitle } from "./keeping";
-import { AgentPicker, ModelPicker } from "./pickers";
 
 /**
  * Chat — talking to an agent, in this project.
@@ -108,6 +110,76 @@ type ConversationEntry =
       readonly held: RememberedConversation;
     };
 
+/**
+ * Who asked for a conversation, whichever half of the list it came from.
+ *
+ * One function because a live row and a pointer answer this the same way and
+ * must go on doing so: a conversation that changed groups the moment its agent
+ * stopped would be the "Running"/"Not running" mistake again, one field over.
+ */
+function orderedBy(entry: ConversationEntry): SessionSource | undefined {
+  return entry.at === "live" ? entry.row.source : entry.held.source;
+}
+
+/** One heading and the conversations under it. */
+interface Bucket {
+  /** `null` for the conversations nobody ordered — the ones somebody started. */
+  readonly extensionId: string | null;
+  readonly label: string;
+  readonly entries: readonly ConversationEntry[];
+}
+
+/**
+ * The list, split by who asked for it.
+ *
+ * **A group per extension, and the rest together.** Somebody who set an
+ * extension working on five tickets is watching five conversations that belong
+ * to one thing, and a caption on each row would make them read every row to
+ * find out which. A heading answers it once, collapses when they are done with
+ * it, and keeps saying how many there are while collapsed.
+ *
+ * **Groups are ordered by their newest conversation, and so are the rows inside
+ * them.** That is what keeps "what happened last" at the top of the list rather
+ * than somewhere inside the third group: splitting the list must not cost the
+ * one order it always had.
+ *
+ * The conversations nobody ordered lead, whether or not anything else is there.
+ * They are the ones somebody started themselves, and a person's own work does
+ * not move down the window because an extension has begun some.
+ */
+function bucketed(entries: readonly ConversationEntry[]): readonly Bucket[] {
+  const mine: ConversationEntry[] = [];
+  const byExtension = new Map<string, { label: string; entries: ConversationEntry[] }>();
+
+  for (const entry of entries) {
+    const source = orderedBy(entry);
+    if (source === undefined) {
+      mine.push(entry);
+      continue;
+    }
+    const held = byExtension.get(source.extensionId);
+    if (held === undefined) {
+      // The name from the newest conversation, because the entries arrive
+      // newest first and a package that was renamed should be called what it
+      // is called now rather than what it was called the first time it asked.
+      byExtension.set(source.extensionId, {
+        label: source.extensionName,
+        entries: [entry],
+      });
+    } else {
+      held.entries.push(entry);
+    }
+  }
+
+  const ordered: Bucket[] = [...byExtension]
+    .map(([extensionId, held]) => ({ extensionId, label: held.label, entries: held.entries }))
+    .sort((left, right) => (right.entries[0]?.at_ms ?? 0) - (left.entries[0]?.at_ms ?? 0));
+
+  return mine.length === 0
+    ? ordered
+    : [{ extensionId: null, label: "Conversations", entries: mine }, ...ordered];
+}
+
 interface ChatContext {
   readonly project: OpenProject;
   readonly agents: readonly Agent[];
@@ -122,7 +194,37 @@ interface ChatContext {
   readonly session: AgentSession;
   readonly row: SessionRow | null;
   readonly model: SessionConfigOption | null;
-  readonly start: (agentId: string) => Promise<void>;
+  /** Raises one, answering with its key, or `null` when it would not start. */
+  readonly start: (agentId: string) => Promise<string | null>;
+  /**
+   * Opens a conversation, with no question asked first.
+   *
+   * `null` for {@link ChatContext.preferredAgent} is the one case this cannot
+   * do — a machine with no agent installed at all — and the command that calls
+   * it is disabled rather than made to explain itself in a menu nobody opened.
+   */
+  readonly begin: () => Promise<void>;
+  /**
+   * The agent a new conversation opens with: the one this project was last held
+   * with, and failing that the first this machine can raise.
+   *
+   * Read from the list rather than remembered anywhere, because the list is
+   * already the answer and already survives a restart. A preference file for it
+   * would be a second place to keep a fact this window can see, and it would be
+   * wrong the first time somebody used a different agent from another screen.
+   *
+   * `null` on a machine that can raise nothing.
+   */
+  readonly preferredAgent: string | null;
+  /**
+   * Replaces the agent of a conversation nothing has been said in.
+   *
+   * Only ever reached before the first word — the strip stops offering the
+   * choice after it — so there is nothing to carry over and nothing to lose.
+   * What is half-written *is* carried, because it is the person's sentence and
+   * it is about to be sent to whoever they have just chosen instead.
+   */
+  readonly switchAgent: (key: string, agentId: string) => Promise<void>;
   readonly stop: (key: string) => Promise<void>;
   readonly forget: (key: string) => Promise<void>;
   /** Calls a conversation something. An empty name puts the derived one back. */
@@ -223,6 +325,16 @@ export function ChatAreaProvider({
   // so rather than looking as if the click missed.
   const [keeping, setKeeping] = useState<ReadonlySet<string>>(() => new Set());
   const [resuming, setResuming] = useState<ReadonlySet<string>>(() => new Set());
+  // The conversation this person opened and has not spoken in yet, or `null`.
+  //
+  // Held here because nothing else can answer it. A session that has been
+  // raised and not prompted writes no pointer and is otherwise an ordinary row,
+  // and the host does not say on the row whether anything was said — so what is
+  // remembered is the narrower and sufficient fact: which key *this column*
+  // opened for somebody who had not typed yet. A conversation an extension
+  // ordered is never one, which is the whole reason it is remembered rather
+  // than derived from an empty transcript.
+  const [draft, setDraft] = useState<string | null>(null);
   // The pointers this machine holds for this project. Re-read whenever the
   // running list moves, because the two together are what the navigator draws:
   // opening, keeping or ending a conversation all change which pointers are
@@ -300,6 +412,21 @@ export function ChatAreaProvider({
   const session = useAgentSession(key);
   const document = useDocument(project.path, chosen?.at === "kept" ? chosen.key : null);
 
+  // A draft stops being one the moment anything is said in it. That is the
+  // whole rule, and the absence of the other half is deliberate: a draft is
+  // *not* forgotten because its key has left the running list.
+  //
+  // It would read as the tidier version and it is a race. The list is polled,
+  // and the moment after one is opened it does not hold it yet — so a draft
+  // would be forgotten by the first render after it was made, every time.
+  // Nothing is bought by the branch either: a key pointing at a conversation
+  // that has ended is only ever used to end it again, which fails and is
+  // caught. Keys are minted and never reused, so it can never name another.
+  useEffect(() => {
+    if (draft === null || key !== draft) return;
+    if (session.transcript.entries.length > 0) setDraft(null);
+  }, [draft, key, session.transcript.entries.length]);
+
   // ------------------------------------------------------------------
   // What this section's row says while nobody is looking at it.
   // ------------------------------------------------------------------
@@ -369,12 +496,91 @@ export function ChatAreaProvider({
     setKey(next);
   };
 
-  const start = async (agentId: string) => {
+  const start = async (agentId: string): Promise<string | null> => {
     setStarting(agentId);
     setTrouble(null);
     try {
       const opened = await startSession({ agentId, cwd: project.path });
       open({ at: "live", key: opened.key });
+      return opened.key;
+    } catch (error) {
+      setTrouble(error instanceof Error ? error.message : String(error));
+      return null;
+    } finally {
+      setStarting(null);
+      reload();
+    }
+  };
+
+  /**
+   * The other agent, for a conversation that has not begun.
+   *
+   * The new one is raised *before* the old one is deleted, and that order is
+   * the whole of it: a raise that fails leaves the person where they were, with
+   * the agent they had and the sentence they were writing, rather than with
+   * nothing. Only once there is somewhere to move to does the empty session go.
+   */
+  // The newest conversation's agent, whichever half of the list it came from,
+  // and the first raisable one before there is a list. The catalogue's order is
+  // the registry's; nothing here reorders it, because a preference this build
+  // invented would be a preference nobody stated.
+  const preferredAgent =
+    conversations[0] === undefined
+      ? (agents.find((agent) => agent.available)?.id ?? null)
+      : conversations[0].at === "live"
+        ? conversations[0].row.agentId
+        : conversations[0].held.agentId;
+
+  /**
+   * Opens one, and leaves the choosing to the strip beside the field.
+   *
+   * A conversation raised and not spoken in writes no pointer — the host is
+   * explicit about that — so an abandoned one costs a row in this list and
+   * nothing on disk. What it does cost is a process, which is why only one of
+   * them is allowed to be waiting at a time: pressing this three times used to
+   * leave three agents running for three sentences nobody wrote.
+   */
+  const begin = async () => {
+    if (preferredAgent === null) return;
+    const abandoned = draft;
+    const opened = await start(preferredAgent);
+    if (opened === null) return;
+    setDraft(opened);
+    if (abandoned !== null && abandoned !== opened) {
+      // Best effort and after the new one is up, for the same reason switching
+      // agents deletes in that order: what a person asked for is the new
+      // conversation, and tidying is not allowed to cost them one.
+      await deleteSession(abandoned).catch(() => {});
+      reload();
+    }
+  };
+
+  const switchAgent = async (target: string, agentId: string) => {
+    if (agentId === mine.find((candidate) => candidate.key === target)?.agentId) return;
+    setStarting(agentId);
+    setTrouble(null);
+    try {
+      const opened = await startSession({ agentId, cwd: project.path });
+      // The sentence moves with the person. It was written to be sent, and
+      // which process ends up reading it is not something they had said yet.
+      setDrafts((held) => {
+        const carried = held[target];
+        if (carried === undefined) return held;
+        const rest = { ...held, [opened.key]: carried };
+        delete rest[target];
+        return rest;
+      });
+      open({ at: "live", key: opened.key });
+      // The marker moves with the conversation. Switching agents is only ever
+      // reached before the first word, so what is replaced is a draft and what
+      // replaces it is one too — and a marker left pointing at the old key
+      // would let the next `begin` believe there was no draft waiting.
+      setDraft((held) => (held === target ? opened.key : held));
+      await deleteSession(target).catch(() => {
+        // The old session outliving this is a stray row in the list, which is
+        // something a person can end themselves. Refusing the switch over it
+        // would be the larger failure by a wide margin.
+      });
     } catch (error) {
       setTrouble(error instanceof Error ? error.message : String(error));
     } finally {
@@ -618,6 +824,32 @@ export function ChatAreaProvider({
     }
   };
 
+  // The menu bar is the application's, and this area is what can write
+  // something while it is selected. `⌘N` opens a conversation, which is the
+  // command this section exists for and the one thing in it a keyboard had no
+  // way of reaching: the `+` is in a column that collapses, and below a certain
+  // window width cannot be opened at all.
+  //
+  // No `⇧⌘N`. That command names a *type*, and Chat has one type it did not
+  // invent and nobody adds another — so it keeps its place in the menu and is
+  // disabled, which is what this window does with a command that has nothing to
+  // act on rather than removing the item and teaching nobody where it lives.
+  useAppMenu(
+    {
+      selected:
+        preferredAgent === null
+          ? null
+          : { kind: CONVERSATION_KIND, title: "Conversation" },
+      // The kind is ignored: there is one thing this section makes, the menu
+      // named it a moment ago, and asking again would be asking about the
+      // answer already on screen.
+      createRecord: () => void begin(),
+      createType: null,
+      table: null,
+    },
+    active,
+  );
+
   return (
     <Context.Provider
       value={{
@@ -632,6 +864,9 @@ export function ChatAreaProvider({
         row,
         model: modelOption(session.configuration),
         start,
+        begin,
+        preferredAgent,
+        switchAgent,
         stop,
         forget,
         rename,
@@ -679,6 +914,9 @@ const AT_FIRST = 15;
 /** The conversations, and the control that starts another. */
 export function ChatNavigator() {
   const chat = useChat();
+  // Derived here rather than in the context, because it is a way of drawing the
+  // list and not a second answer to what the list holds.
+  const buckets = useMemo(() => bucketed(chat.conversations), [chat.conversations]);
 
   return (
     <PanelSurface className="bg-panel">
@@ -690,18 +928,27 @@ export function ChatNavigator() {
         ) : (
           <ScrollArea className="h-full">
             <div className="flex flex-col p-2">
-              {/* One group of conversations, whether or not an agent is
-                  attached to one right now. They used to be two — "Running" and
-                  "Not running" — which described this application's processes
-                  rather than the person's work, and made a conversation jump
-                  between groups the moment it was continued: it appeared in one
-                  before it left the other, so for a moment there were two of it.
-                  Whether an agent is up is a state of the row, and it belongs on
-                  the row. */}
-              {chat.conversations.length === 0 ? null : (
-                <Group label="Conversations" count={chat.conversations.length}>
+              {/* Whether an agent is attached right now is *not* what splits
+                  these. There were two groups once — "Running" and "Not
+                  running" — which described this application's processes rather
+                  than the person's work, and made a conversation jump between
+                  groups the moment it was continued: it appeared in one before
+                  it left the other, so for a moment there were two of it.
+                  Whether an agent is up is a state of the row and belongs on
+                  the row.
+
+                  Who *asked* for a conversation is the opposite kind of fact:
+                  it is set when the work is ordered and never edited, so a row
+                  cannot change group. That is what makes this split safe where
+                  that one was not. */}
+              {buckets.map((bucket) => (
+                <Group
+                  key={bucket.extensionId ?? "mine"}
+                  label={bucket.label}
+                  count={bucket.entries.length}
+                >
                   {(shown) =>
-                    chat.conversations.slice(0, shown).map((entry) =>
+                    bucket.entries.slice(0, shown).map((entry) =>
                       entry.at === "live" ? (
                         <LiveRow key={entry.row.key} row={entry.row} />
                       ) : (
@@ -710,7 +957,7 @@ export function ChatNavigator() {
                     )
                   }
                 </Group>
-              )}
+              ))}
               {chat.kept.length === 0 ? null : (
                 <Group label="Memory" count={chat.kept.length}>
                   {(shown) =>
@@ -726,18 +973,25 @@ export function ChatNavigator() {
       </div>
 
       <PanelFooter>
-        <AgentPicker
-          agents={chat.agents}
-          loading={chat.agentsLoading}
-          starting={chat.starting}
-          onChoose={(agentId) => void chat.start(agentId)}
-          trigger={
-            <Button variant="ghost" size="sm">
-              <Plus />
-              New conversation
-            </Button>
-          }
-        />
+        {/* A command, not a menu. Choosing an agent used to stand between
+            wanting to say something and being able to: five rows, opened every
+            time, answering a question most people answer the same way every
+            day. The conversation now opens with the agent this project was last
+            held with, and changing it is a pop-up in the composer — beside the
+            sentence it would be sent to, in the moment somebody realises they
+            wanted the other one.
+
+            One `+`, acting on the list it sits beneath, which is what this band
+            is for. */}
+        <Button
+          variant="ghost"
+          size="sm"
+          disabled={chat.starting !== null || chat.preferredAgent === null}
+          onClick={() => void chat.begin()}
+        >
+          <Plus />
+          New conversation
+        </Button>
       </PanelFooter>
     </PanelSurface>
   );
@@ -1231,14 +1485,45 @@ export function ChatWorkspace() {
         <div className="flex h-(--panel-header-height) shrink-0 items-center border-b border-separator px-3">
           <h2 className="min-w-0 truncate text-sm font-semibold text-fg">Chat</h2>
         </div>
-        <div className="flex min-h-0 flex-1 items-center justify-center p-6">
+        {/* The command is here as well as in the bottom bar, and this is the
+            copy that matters: the navigator collapses, and below a certain
+            window width cannot be opened at all, so a placeholder whose only
+            instruction was "start one from the foot of the list" was pointing
+            at a column that can go away. The same argument moved Reopen and
+            Continue into this column already.
+
+            Beneath the placeholder rather than inside it, because the shell's
+            placeholder takes no control of its own — giving it one would give
+            every empty column in the window a slot for a button. */}
+        <div className="flex min-h-0 flex-1 flex-col items-center justify-center gap-3 p-6">
           <PanelPlaceholder
             headline={chat.trouble === null ? "No conversation open" : "That agent did not start"}
             detail={
               chat.trouble ??
-              "Start one from the foot of the list. The agent runs in this project's folder, and keeps running while you are somewhere else."
+              // Three answers, and the third is why this is not two. While the
+              // catalogue is still being read this window does not know what
+              // the machine has — and "nothing is installed" is a claim, not a
+              // way of saying so. Saying it and taking it back a moment later
+              // is worse than the sentence that is true either way.
+              (chat.agentsLoading
+                ? "The agent runs in this project's folder, and keeps running while you are somewhere else."
+                : chat.preferredAgent === null
+                  ? "No agent this window can run is installed on this machine. Settings ▸ Agents lists every one Sync knows."
+                  : "The agent runs in this project's folder, and keeps running while you are somewhere else.")
             }
           />
+          {/* Present and disabled while the catalogue is being read, rather
+              than absent: a control that appears a moment after the column did
+              is one nobody saw arrive. */}
+          {!chat.agentsLoading && chat.preferredAgent === null ? null : (
+            <Button
+              size="sm"
+              disabled={chat.starting !== null || chat.preferredAgent === null}
+              onClick={() => void chat.begin()}
+            >
+              New conversation
+            </Button>
+          )}
         </div>
       </section>
     );
@@ -1287,6 +1572,21 @@ export function ChatWorkspace() {
         session={chat.session}
         projectPath={chat.project.path}
         agentName={chat.row?.agentName ?? "This agent"}
+        settings={{
+          agents: chat.agents,
+          agentsLoading: chat.agentsLoading,
+          agentId: chat.row?.agentId ?? "",
+          agentName: chat.row?.agentName ?? "Agent",
+          starting: chat.starting !== null,
+          // The agent is fixed by the first thing said and by nothing else.
+          // Not by the session existing: a conversation raised and not spoken
+          // in is not yet held by anything a person would mind replacing, and
+          // it is exactly the moment somebody realises they wanted the other
+          // agent.
+          settled: chat.session.transcript.entries.length > 0,
+          onAgent: (agentId) => void chat.switchAgent(open, agentId),
+          model: chat.model,
+        }}
         // Not yet answered while the session is being raised — it arrives with
         // `initialize`, a moment later — and taken as yes until it is, because
         // refusing a paste then would be refusing it for a reason that is not
@@ -1460,6 +1760,26 @@ function seedFrom(title: string, transcript: string): string {
  * written, so it is narrowed rather than cast: a panel that rendered an object
  * because the schema moved under it would throw where it is drawn.
  */
+/**
+ * The model's name as the agent stated it, or `undefined` where it stated none.
+ *
+ * The *value* rather than the option's own name: an option is called "Model"
+ * and its current value is called "Sonnet 4.5", and a panel that printed the
+ * former would answer "Model" under the word `Model`. That is what this column
+ * said before the picker beneath it was moved away and stopped covering for it.
+ */
+function modelName(option: SessionConfigOption | null): string | undefined {
+  if (option === null) return undefined;
+  const values = (option.options ?? []).flatMap((entry) =>
+    "options" in entry ? entry.options : [entry as SessionConfigValue],
+  );
+  return (
+    values.find((value) => value.value === option.currentValue)?.name ??
+    option.currentValue ??
+    undefined
+  );
+}
+
 function fieldText(value: unknown): string | undefined {
   if (typeof value === "string" && value !== "") return value;
   if (typeof value === "number") return String(value);
@@ -1510,31 +1830,36 @@ export function ChatInspector() {
           )}
           <Field label="Folder" value={row?.cwd ?? chat.project.path} />
           {chat.session.transcript.mode === null ? null : (
-            <Field label="Mode" value={chat.session.transcript.mode} />
+            <Field
+              label="Mode"
+              value={
+                chat.session.modes.find(
+                  (mode) => mode.id === chat.session.transcript.mode,
+                )?.name ?? chat.session.transcript.mode
+              }
+            />
           )}
           {chat.session.transcript.stopReason === null ? null : (
             <Field label="Last turn ended" value={chat.session.transcript.stopReason} />
           )}
           <Usage session={chat.session} />
 
-          {chat.model === null ? (
-            <Field
-              label="Model"
-              value={
+          {/* Stated, not chosen. The picker that used to be here has gone to
+              the composer, where the choice is made in the moment it matters —
+              and its leaving is what puts this column back inside its own rule,
+              stated at the foot of this file and broken by the one control that
+              was still here. What a person reads here is the same fact the
+              strip shows, in the column whose job is facts. */}
+          <Field
+            label="Model"
+            value={
+              modelName(chat.model) ?? (
                 <span className="text-fg-tertiary">
                   This agent does not offer a choice in protocol.
                 </span>
-              }
-            />
-          ) : (
-            <div className="flex flex-col gap-1.5">
-              <span className="text-xs text-fg-tertiary">{chat.model.name}</span>
-              <ModelPicker
-                option={chat.model}
-                onChoose={(valueId) => void chat.session.choose(chat.model!.id, valueId)}
-              />
-            </div>
-          )}
+              )
+            }
+          />
         </div>
       </ScrollArea>
 

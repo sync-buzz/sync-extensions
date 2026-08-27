@@ -1,11 +1,14 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useState } from "react";
 
 import {
   Button,
   Markdown,
   ScrollArea,
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
   cn,
   sessionImage,
   showNativeContextMenu,
@@ -14,7 +17,8 @@ import {
   type OpenQuestion,
   type PastedImage,
 } from "@sync-buzz/extension-api";
-import { ChevronRight, Paperclip } from "lucide-react";
+import { ChevronDown, ChevronRight, Paperclip } from "lucide-react";
+import { useStickToBottom } from "use-stick-to-bottom";
 
 import { fileName } from "./composer";
 
@@ -42,14 +46,71 @@ export function Conversation({
   /** Which session's images to ask for. `null` when none is open. */
   sessionKey: string | null;
 }) {
-  const { entries, question, dropped } = session.transcript;
-  const foot = useRef<HTMLDivElement>(null);
+  // Remounted per conversation, which is what resets the reading position.
+  // Whether somebody has scrolled away from the end is a fact about the
+  // conversation they scrolled away from: carried into the next one it would
+  // open a conversation part way up, at an offset belonging to a different
+  // transcript.
+  return <Reading key={sessionKey ?? ""} session={session} sessionKey={sessionKey} />;
+}
 
-  // Follow the answer as it is written. Anchored to a node at the end rather
-  // than by setting a scroll offset, so the panel owns its own scrolling.
-  useEffect(() => {
-    foot.current?.scrollIntoView({ block: "end" });
-  }, [entries]);
+/**
+ * How far a jump moves, given what this machine asked for.
+ *
+ * Asked at the press rather than held in state. The setting can change while
+ * the window is open, and a value read once would answer for the setting as it
+ * was when the conversation opened.
+ */
+function jump(): "smooth" | "instant" {
+  return window.matchMedia("(prefers-reduced-motion: reduce)").matches
+    ? "instant"
+    : "smooth";
+}
+
+/**
+ * One conversation, and the rule about where it is read from.
+ *
+ * An answer arrives a chunk at a time and the view has to follow it — but only
+ * for somebody who is *at* the end. The version before this followed it for
+ * everybody: every chunk called `scrollIntoView` on a node at the foot, so
+ * reading back through what an agent had already said was impossible while it
+ * was still writing. Each chunk threw the reader to the bottom again, and
+ * `scrollIntoView` asks every scrollable ancestor to help rather than the one
+ * panel that owns this scrolling — the call `docs/design-foundation.md` forbids
+ * for exactly that reason.
+ *
+ * The rule instead: follow the end while the reader is within reach of it, let
+ * go the moment they scroll away, and take it back when they come back. Reach
+ * is 70 px, and it is the library's number rather than one chosen here.
+ *
+ * `use-stick-to-bottom` owns it. Written by hand this is a scroll listener, a
+ * `ResizeObserver` and a wheel listener that have to agree about which of them
+ * moved the scroll — because a scroll the code performs looks exactly like a
+ * scroll a person performed, and telling them apart is where every hand-written
+ * version of this gets it wrong. The library also answers the case the naive
+ * version cannot see at all: markdown and images finish laying out *after* the
+ * chunk that carried them arrives, so the content grows a frame later, and the
+ * observer is what notices.
+ *
+ * `instant` for both, deliberately. A stream is followed the way a terminal
+ * follows one, and the spring the library defaults to would leave the last line
+ * chasing the edge for a third of a second after every chunk. The jump a person
+ * asks for is the one that animates — that is a movement they initiated and can
+ * see the length of — and it does not, when this machine has asked for less
+ * motion.
+ */
+function Reading({
+  session,
+  sessionKey,
+}: {
+  session: AgentSession;
+  sessionKey: string | null;
+}) {
+  const { entries, question, dropped } = session.transcript;
+  const { scrollRef, contentRef, isAtBottom, scrollToBottom } = useStickToBottom({
+    initial: "instant",
+    resize: "instant",
+  });
 
   if (entries.length === 0 && question === null) {
     return (
@@ -62,27 +123,60 @@ export function Conversation({
   }
 
   return (
-    <ScrollArea className="min-h-0 flex-1">
-      <div className="mx-auto flex w-full max-w-(--prose-measure) flex-col gap-6 px-6 py-5">
-        {dropped > 0 ? (
-          <p className="text-xs text-fg-tertiary">
-            {dropped} earlier {dropped === 1 ? "event is" : "events are"} no longer kept.
-          </p>
-        ) : null}
+    <div className="relative flex min-h-0 flex-1 flex-col">
+      <ScrollArea viewportRef={scrollRef} className="min-h-0 flex-1">
+        {/* The measured column is also what is watched for growth. Its height
+            is the whole of the question "has the conversation got longer",
+            which is why the observer is on it rather than on the viewport —
+            a viewport is the size of the panel and stays that size. */}
+        <div
+          ref={contentRef}
+          className="mx-auto flex w-full max-w-(--prose-measure) flex-col gap-6 px-6 py-5"
+        >
+          {dropped > 0 ? (
+            <p className="text-xs text-fg-tertiary">
+              {dropped} earlier {dropped === 1 ? "event is" : "events are"} no longer kept.
+            </p>
+          ) : null}
 
-        {runs(entries).map((run) =>
-          run.kind === "tools" ? (
-            <ToolRun key={run.id} entries={run.entries} />
-          ) : (
-            <Block key={run.id} entry={run.entry} sessionKey={sessionKey} />
-          ),
-        )}
+          {runs(entries).map((run) =>
+            run.kind === "tools" ? (
+              <ToolRun key={run.id} entries={run.entries} />
+            ) : (
+              <Block key={run.id} entry={run.entry} sessionKey={sessionKey} />
+            ),
+          )}
 
-        {question === null ? null : <Question question={question} session={session} />}
+          {question === null ? null : <Question question={question} session={session} />}
+        </div>
+      </ScrollArea>
 
-        <div ref={foot} />
-      </div>
-    </ScrollArea>
+      {/* Shown only while the end is not being followed, because that is the
+          only state it means anything in — a control that is always there,
+          and does nothing for most of the time it is there, is one nobody
+          reads. It sits at the trailing edge beside the scrollbar rather than
+          over the column, where it belongs to the scrolling rather than to the
+          sentence it would otherwise cover, and it is the corner this system
+          puts it in. Round, one hairline, the raised surface the composer
+          below it is made of: no colour, because it says nothing about status
+          — the shape and the arrow carry it, and both survive greyscale. */}
+      {isAtBottom ? null : (
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <Button
+              variant="outline"
+              size="icon-sm"
+              className="absolute right-4 bottom-4 rounded-full bg-raised"
+              aria-label="Jump to the end"
+              onClick={() => void scrollToBottom({ animation: jump() })}
+            >
+              <ChevronDown />
+            </Button>
+          </TooltipTrigger>
+          <TooltipContent>Jump to the end</TooltipContent>
+        </Tooltip>
+      )}
+    </div>
   );
 }
 

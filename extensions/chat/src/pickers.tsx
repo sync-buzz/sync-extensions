@@ -6,73 +6,192 @@ import {
   Button,
   DropdownMenu,
   DropdownMenuContent,
-  DropdownMenuItem,
   DropdownMenuLabel,
   DropdownMenuRadioGroup,
   DropdownMenuRadioItem,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
   cn,
   type Agent,
   type SessionConfigOption,
   type SessionConfigValue,
+  type SessionMode,
 } from "@sync-buzz/extension-api";
 import { ChevronDown } from "lucide-react";
 
 /**
- * Choosing which agent to talk to.
+ * The three choices a person makes about a conversation, drawn the one way
+ * macOS draws a choice between mutually exclusive states: a **pop-up button**.
  *
- * Every agent is listed, including the ones this machine cannot raise. An
- * absence would be the window quietly deciding a person did not want Codex; a
- * row that says the executable was not found is something they can act on.
+ * Not a pull-down, which the guidelines reserve for a list of commands. Which
+ * agent, which model and which mode are each a flat set of states that change
+ * what happens to the person's content, which is the pop-up button's own
+ * definition — and the button shows the current one, which is the other half of
+ * it.
  *
- * Finding them is two reads — the catalogue, and which adapters have been
- * downloaded — and both cross into Rust, so a menu opened in the first moment
- * of the section has nothing to draw yet. It says so. An empty menu is a claim
- * that this machine can raise nothing, which is a different answer from not
- * knowing yet, and it is the answer a person would act on by closing the menu.
+ * # Saying what a button chooses before it is opened
+ *
+ * The guidelines ask for a way to predict a pop-up button's options without
+ * opening it, and offer two: an introductory label, or a button label that
+ * describes the effect. Neither survives here as written — three labels in a
+ * band this narrow would leave no room for the values they introduce, and a
+ * value *is* the label on a pop-up button. So the third carrier this window
+ * already uses does it: a tooltip, exactly as the `+` in the workspace header
+ * says which kind it writes, with the same word repeated as the menu's own
+ * heading when it opens.
+ *
+ * That word is the whole of the label, and it is why `Plan` alone is legible
+ * here: on its own it is a word, and under a pointer it is a mode.
+ */
+
+/** One pop-up button, at the size and tone the composer's strip is set in. */
+function Popup({
+  /** What this button chooses, said under the pointer and again in the menu. */
+  of,
+  /** The current selection, which is what a pop-up button shows. */
+  shown,
+  disabled,
+  children,
+}: {
+  of: string;
+  shown: string;
+  disabled?: boolean;
+  children: ReactNode;
+}) {
+  return (
+    <DropdownMenu>
+      <Tooltip>
+        <TooltipTrigger asChild>
+          <DropdownMenuTrigger asChild disabled={disabled}>
+            <Button
+              variant="ghost"
+              size="xs"
+              className="max-w-44 text-fg-secondary"
+              aria-label={`${of}: ${shown}`}
+            >
+              <span className="min-w-0 truncate">{shown}</span>
+              <ChevronDown />
+            </Button>
+          </DropdownMenuTrigger>
+        </TooltipTrigger>
+        <TooltipContent>{of}</TooltipContent>
+      </Tooltip>
+      <DropdownMenuContent align="start" className="min-w-56">
+        <DropdownMenuLabel>{of}</DropdownMenuLabel>
+        <DropdownMenuSeparator />
+        {children}
+      </DropdownMenuContent>
+    </DropdownMenu>
+  );
+}
+
+/**
+ * What a conversation is being held with.
+ *
+ * **Only the agents this machine can raise.** Every row used to be listed,
+ * including the ones that are not installed, on the argument that "Codex is not
+ * installed" is an answer a person can act on and an absence is not. That is
+ * still true, and it is still said — but once, under the list, rather than four
+ * times inside the list somebody opened to pick one of the two that work.
+ *
+ * The filter is here and not in the catalogue the host answers with, which goes
+ * on listing every agent. It has to: an extension ordering work names an agent
+ * without consulting this column, and the settings window lists the ones that
+ * are missing in order to offer connecting them. What is narrowed is this menu,
+ * which is the only place the noise was.
+ *
+ * A choice, and then a fact. An agent is a process, and a conversation that has
+ * been spoken in is being held by one — so once anything has been said the
+ * button is not a button. It says which agent, in the same place, at the same
+ * height, without the chevron: a disabled pop-up would promise that the choice
+ * comes back, and it never does.
  */
 export function AgentPicker({
   agents,
   loading,
+  currentId,
+  currentName,
   starting,
+  settled,
   onChoose,
-  trigger,
 }: {
   agents: readonly Agent[];
   /** Whether the two reads behind {@link agents} are still out. */
   loading: boolean;
-  starting: string | null;
+  /** The id of the agent this conversation is with, which is what is chosen. */
+  currentId: string;
+  /**
+   * What that agent is called, which is what is shown.
+   *
+   * Taken from the conversation rather than looked up here: a session names its
+   * own agent, and the catalogue may not have answered yet — a button that read
+   * the id until a read came back would say `claude` for a moment and then
+   * `Claude Code`, under the pointer, for no reason a person could see.
+   */
+  currentName: string;
+  starting: boolean;
+  /** Whether anything has been said, which is what fixes the agent. */
+  settled: boolean;
   onChoose: (agentId: string) => void;
-  trigger: ReactNode;
 }) {
+  if (settled) {
+    // Set as the buttons beside it are, so the strip is one line rather than a
+    // line with a gap in it. The padding matches a `size="xs"` button's, which
+    // is what keeps the words in the same place they were a moment ago.
+    return (
+      <span className="max-w-44 truncate px-2 text-xs text-fg-tertiary">
+        {currentName}
+      </span>
+    );
+  }
+
+  const raisable = agents.filter((agent) => agent.available);
+
   return (
-    <DropdownMenu>
-      <DropdownMenuTrigger asChild disabled={starting !== null}>
-        {trigger}
-      </DropdownMenuTrigger>
-      <DropdownMenuContent align="start" className="min-w-56">
-        <DropdownMenuLabel>Agents on this machine</DropdownMenuLabel>
-        <DropdownMenuSeparator />
-        {loading ? (
-          // The one punctuation this shell allows: an action in progress.
-          <div className="px-2 py-1.5 text-sm text-fg-tertiary">Looking for agents…</div>
-        ) : null}
-        {agents.map((agent) => (
-          <DropdownMenuItem
-            key={agent.id}
-            disabled={!agent.available}
-            onSelect={() => onChoose(agent.id)}
-            className="flex-col items-start gap-0.5"
-          >
-            <span className={cn("text-sm", !agent.available && "text-fg-tertiary")}>
-              {agent.name}
+    <Popup of="Agent" shown={currentName} disabled={starting}>
+      {loading ? (
+        // The one punctuation this shell allows: an action in progress. An
+        // empty menu is a claim that this machine can raise nothing, which is a
+        // different answer from not knowing yet.
+        <div className="px-2 py-1.5 text-sm text-fg-tertiary">Looking for agents…</div>
+      ) : null}
+      <DropdownMenuRadioGroup
+        value={currentId}
+        onValueChange={(value) => onChoose(value)}
+      >
+        {raisable.map((agent) => (
+          <DropdownMenuRadioItem key={agent.id} value={agent.id}>
+            <span className="flex min-w-0 flex-col items-start gap-0.5">
+              <span className="text-sm">{agent.name}</span>
+              <Note agent={agent} />
             </span>
-            <Note agent={agent} />
-          </DropdownMenuItem>
+          </DropdownMenuRadioItem>
         ))}
-      </DropdownMenuContent>
-    </DropdownMenu>
+      </DropdownMenuRadioGroup>
+      {loading || agents.length === raisable.length ? null : (
+        <>
+          <DropdownMenuSeparator />
+          {/* Explanatory text under the list, which is what the guidelines
+              offer for exactly this — a pop-up button whose options are the
+              useful ones and whose full set lives elsewhere. Text and not an
+              item: nothing here can open the settings window, and a row that
+              looked like a command and did nothing would be worse than the four
+              refusals this replaced.
+
+              It says the count and it names the place. Reaching it is the
+              gesture this system already has for reaching it. */}
+          <p className="px-2 py-1.5 text-xs text-fg-tertiary">
+            {agents.length - raisable.length === 1
+              ? "One more agent is not installed on this machine."
+              : `${agents.length - raisable.length} more agents are not installed on this machine.`}{" "}
+            Settings ▸ Agents lists every one.
+          </p>
+        </>
+      )}
+    </Popup>
   );
 }
 
@@ -80,15 +199,10 @@ export function AgentPicker({
  * The one line under an agent's name.
  *
  * Whichever fact is most worth knowing before choosing it, and only when there
- * is one. An agent reached through an adapter used to be marked slow to start
- * unconditionally; now the adapter is downloaded when the extension is
- * installed, so the warning is only true when it has not been — and saying it
- * anyway would be a warning about something that is no longer the case.
+ * is one. Nothing is said about an agent not being installed any more, because
+ * one that is not installed is no longer in this list.
  */
 function Note({ agent }: { agent: Agent }) {
-  if (!agent.available) {
-    return <span className="text-xs text-fg-tertiary">{agent.unavailableReason}</span>;
-  }
   if (agent.adapterReady === false) {
     return (
       <span className="text-xs text-fg-tertiary">
@@ -106,10 +220,9 @@ function Note({ agent }: { agent: Agent }) {
  * Choosing a model.
  *
  * Drawn from what the session said it offers, never from a table in this build.
- * The agents that answer `session/new` with a model option are the ones that get
- * a picker; the ones that take a model only when they are raised get the note
- * beside this, because offering a choice that cannot be applied is worse than
- * saying there is none.
+ * The agents that answer with a model option are the ones that get a picker;
+ * where an agent offers none there is no button at all, because a pop-up button
+ * with nothing behind it is a promise this build cannot keep.
  */
 export function ModelPicker({
   option,
@@ -122,35 +235,72 @@ export function ModelPicker({
   const current = values.find((value) => value.value === option.currentValue);
 
   return (
-    <DropdownMenu>
-      <DropdownMenuTrigger asChild>
-        <Button variant="ghost" size="sm" className="justify-between">
-          <span className="min-w-0 truncate">{current?.name ?? option.currentValue ?? "—"}</span>
-          <ChevronDown />
-        </Button>
-      </DropdownMenuTrigger>
-      <DropdownMenuContent align="start" className="min-w-56">
-        <DropdownMenuRadioGroup
-          value={option.currentValue ?? ""}
-          onValueChange={(value) => onChoose(value)}
-        >
-          {values.map((value) => (
-            <DropdownMenuRadioItem key={value.value} value={value.value}>
-              {value.name}
-            </DropdownMenuRadioItem>
-          ))}
-        </DropdownMenuRadioGroup>
-      </DropdownMenuContent>
-    </DropdownMenu>
+    <Popup of="Model" shown={current?.name ?? option.currentValue ?? "—"}>
+      <DropdownMenuRadioGroup
+        value={option.currentValue ?? ""}
+        onValueChange={(value) => onChoose(value)}
+      >
+        {values.map((value) => (
+          <DropdownMenuRadioItem key={value.value} value={value.value}>
+            {value.name}
+          </DropdownMenuRadioItem>
+        ))}
+      </DropdownMenuRadioGroup>
+    </Popup>
+  );
+}
+
+/**
+ * How much the agent may do without asking.
+ *
+ * The choice a person changes most often — Plan to read before it writes,
+ * Accept Edits to stop being asked about every file — and until this build there
+ * was nowhere in the window to make it. The agents were stating these all along,
+ * in the same answer the model options arrive in.
+ *
+ * Each mode's own sentence is under its name, because "Accept Edits" and "Plan"
+ * are names for policies rather than descriptions of them, and choosing between
+ * policies from four words is how somebody ends up in the wrong one.
+ */
+export function ModePicker({
+  modes,
+  current,
+  onChoose,
+}: {
+  modes: readonly SessionMode[];
+  /** The id the agent says it is in, or `null` before it has said. */
+  current: string | null;
+  onChoose: (modeId: string) => void;
+}) {
+  const shown = modes.find((mode) => mode.id === current);
+
+  return (
+    <Popup of="Mode" shown={shown?.name ?? current ?? "—"}>
+      <DropdownMenuRadioGroup
+        value={current ?? ""}
+        onValueChange={(value) => onChoose(value)}
+      >
+        {modes.map((mode) => (
+          <DropdownMenuRadioItem key={mode.id} value={mode.id}>
+            <span className="flex min-w-0 flex-col items-start gap-0.5">
+              <span className="text-sm">{mode.name}</span>
+              {mode.description ? (
+                <span className="text-xs text-fg-tertiary">{mode.description}</span>
+              ) : null}
+            </span>
+          </DropdownMenuRadioItem>
+        ))}
+      </DropdownMenuRadioGroup>
+    </Popup>
   );
 }
 
 /**
  * The values of a select, whether the agent grouped them or not.
  *
- * Grouping is the agent's presentation of its own list; a picker in one column
- * of a panel is not where it earns its keep, and flattening keeps one shape to
- * draw instead of two.
+ * Grouping is the agent's presentation of its own list; a pop-up button in a
+ * band this narrow is not where it earns its keep, and flattening keeps one
+ * shape to draw instead of two.
  */
 function flatten(option: SessionConfigOption): readonly SessionConfigValue[] {
   const raw = option.options ?? [];
