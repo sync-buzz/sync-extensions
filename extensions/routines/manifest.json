@@ -1,0 +1,71 @@
+{
+  "manifestVersion": 1,
+  "id": "routines",
+  "version": "0.2.0",
+  "name": "Routines",
+  "summary": "Standing instructions an agent carries out on a clock, whether or not anybody has a window open.",
+  "description": "A routine is one instruction, written to an agent, that Sync hands over on an interval — check the tracker, read the inbox, look at what changed overnight. Sync raises the agent and the agent does the work with the tools it already has on this machine, so what a routine can reach is whatever its agent can reach, and nothing here needs to know what a mailbox or an issue is. A routine is a record like any other, so it is read, edited and searched where the rest of the project is, and it travels with the repository. Nothing runs until somebody switches it on: a routine spends an agent's tokens, and arriving at somebody else's clone already running is not something they agreed to.",
+  "icon": "alarm-clock",
+  "engines": {
+    "syncApi": "^2.10"
+  },
+  "capabilities": [
+    "records",
+    "folders",
+    "sheets",
+    "native-menu",
+    "agents.acp",
+    "background",
+    "schedule",
+    "work.agent"
+  ],
+  "areas": [
+    {
+      "id": "routines",
+      "label": "Routines",
+      "description": "Standing instructions, the groups they are kept in, and when each one is carried out.",
+      "frame": "browse",
+      "icon": "alarm-clock",
+      "badge": {
+        "kinds": [
+          "routines.routine"
+        ]
+      }
+    }
+  ],
+  "types": [
+    "types/routine.json"
+  ],
+  "opens": {
+    "kinds": [
+      "routines.routine"
+    ],
+    "projectTypes": false
+  },
+  "ui": "ui/index.js",
+  "styles": "ui/index.css",
+  "service": "service/index.js",
+  "schedule": [
+    {
+      "handler": "routines.quarterly",
+      "description": "Carries out the routines set to every fifteen minutes",
+      "every": "15m"
+    },
+    {
+      "handler": "routines.hourly",
+      "description": "Carries out the routines set to every hour",
+      "every": "1h"
+    },
+    {
+      "handler": "routines.sixHourly",
+      "description": "Carries out the routines set to every six hours",
+      "every": "6h"
+    },
+    {
+      "handler": "routines.daily",
+      "description": "Carries out the routines set to once a day",
+      "every": "24h"
+    }
+  ],
+  "license": "MIT"
+}

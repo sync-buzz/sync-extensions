@@ -1,0 +1,22 @@
+{
+  "kind": "routines.routine",
+  "title": "Routine",
+  "description": "A standing instruction an agent carries out on a clock, whether or not anybody has a window open.",
+  "icon": "alarm-clock",
+  "guidance": "The body is what the agent is told, and it is the whole of the routine: write it as an instruction to somebody competent who has not seen this project — what to look at, what counts as worth reporting, and what to do about it. Say explicitly what to do when there is nothing to report, because the answer is almost always 'nothing, and say nothing'. A routine runs unattended and spends tokens each time, so ask for one thing per record rather than a list of chores.",
+  "fields": {
+    "every": {
+      "type": "enum",
+      "values": ["15m", "1h", "6h", "24h"],
+      "description": "How often it is carried out. Absent means hourly. The set is closed because each value is a handler Sync declares a clock for, and a value outside it names no clock."
+    },
+    "agent": {
+      "type": "string",
+      "description": "Which agent on this machine carries it out. Absent means the first one Sync names."
+    },
+    "enabled": {
+      "type": "boolean",
+      "description": "Whether it runs. Absent and false both mean it does not."
+    }
+  }
+}
