@@ -1,0 +1,17 @@
+{
+  "formatVersion": 1,
+  "id": "tasks",
+  "versions": [
+    {
+      "version": "0.2.0",
+      "syncApi": "^2.13",
+      "description": "A task is one record: what to do, the criteria that decide it is finished, and what is out of bounds. Nothing else — no milestones, no estimates, no sprint. The criteria are an ordinary checklist in the body, so a person ticks one with the mouse and an agent writes one as Markdown, and the same list is what says how far along the work is. Because a task lives in the project's memory it travels with the repository: an agent in a clone reads it with no network, no token and no access to anybody's tracker, and the task and the commit that closes it end up in one history rather than two systems joined by a number. Its state is data rather than a word in the title, so it can be counted, filtered and shown on the section's own row. Tasks are grouped in folders, by what the work is about rather than by how far it has got — a person makes one and drags work into it, an agent files a task into the right one and says what a folder it made is for, and both are reading the same hierarchy. And a task is handed over rather than described: Send to agent opens a conversation in Chat with the task as its brief, the agent classifies the work and loads the skills it needs before touching anything, reports back into the task itself, and takes it to in review — where somebody who did not do the work decides whether it is done.",
+      "changelog": "",
+      "artefact": {
+        "url": "https://github.com/sync-buzz/sync-extensions/releases/download/v1.2.1/tasks-0.2.0.syncext",
+        "sha256": "5b914be84255547b2b413f8f3f9aaeab8022e3567fbf065366d96882fb36ee7a",
+        "bytes": 23344
+      }
+    }
+  ]
+}
