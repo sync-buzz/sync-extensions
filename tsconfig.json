@@ -15,7 +15,24 @@
     "noEmit": true,
     "skipLibCheck": true,
     "esModuleInterop": true,
-    "resolveJsonModule": true
+    "resolveJsonModule": true,
+
+    // One React, and one set of its types.
+    //
+    // `@sync-buzz/extension-api` is linked from its own repository, which has a
+    // `@types/react` of its own — the same version, at a different path, and
+    // that is enough for the compiler to treat the two as unrelated. Anything
+    // crossing the boundary in a React type then fails to type-check for a
+    // reason no reading of the code can explain: passing a ref to a component
+    // the surface publishes reports that `VoidOrUndefinedOnly` is not
+    // assignable to `VoidOrUndefinedOnly`.
+    //
+    // Pinned here rather than worked around at the call site, because the call
+    // site cannot see the problem and every future one would meet it again.
+    "paths": {
+      "react": ["./node_modules/@types/react"],
+      "react/*": ["./node_modules/@types/react/*"]
+    }
   },
   "include": ["extensions/*/src/**/*.ts", "extensions/*/src/**/*.tsx"]
 }
