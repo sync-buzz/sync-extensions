@@ -1,13 +1,21 @@
 {
   "manifestVersion": 1,
   "id": "records",
-  "version": "1.0.1",
+  "version": "1.0.2",
   "name": "Records",
   "summary": "The project's types, and every record written as one — created, renamed and removed from this window or by an agent.",
   "description": "Records brings no vocabulary of its own, and is named after what it holds rather than after anything it knows. It is the section a project's types are made and read in: what a decision is in this project is this project's answer, not ours, and a type another extension published is read here beside the ones somebody typed. What is written lives in the repository's own refs, so it travels with the code and is as shared as it is, and memory-hub reconciles it against code history — a claim whose files moved is marked stale rather than quietly believed.",
   "icon": "shapes",
-  "engines": { "syncApi": "^2.0" },
-  "capabilities": ["records", "folders", "sheets", "markdown.plugins", "native-menu"],
+  "engines": {
+    "syncApi": "^2.0"
+  },
+  "capabilities": [
+    "records",
+    "folders",
+    "sheets",
+    "markdown.plugins",
+    "native-menu"
+  ],
   "areas": [
     {
       "id": "records",
@@ -17,7 +25,10 @@
       "icon": "shapes"
     }
   ],
-  "opens": { "kinds": [], "projectTypes": true },
+  "opens": {
+    "kinds": [],
+    "projectTypes": true
+  },
   "ui": "ui/index.js",
   "styles": "ui/index.css",
   "license": "MIT"
