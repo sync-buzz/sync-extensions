@@ -1,0 +1,40 @@
+{
+  "kind": "tasks.task",
+  "title": "Task",
+  "description": "One piece of work somebody committed to, written so that whoever finishes it can be checked rather than believed.",
+  "icon": "list-checks",
+  "guidance": "One task per record, and the body is what makes it a task rather than a wish: three sections, in this order — what to do in a sentence or two, then the criteria that decide it is finished as a Markdown task list, then what is out of bounds as plain bullets. All three, in the project's own language: the shape is read back, and a task missing one of them is shown as missing it. Write every criterion so an agent can settle it by running something, reading a file or looking at the screen — a criterion nobody can check is a criterion nobody can close. Between two and five criteria: one is the title said twice, and more than five is two tasks. File it in the folder that holds the work it belongs with, and read what that folder says it is for before you do. Keep it short: a task is read by somebody about to act on it, not studied.",
+  "fields": {
+    "status": {
+      "type": "enum",
+      "values": ["todo", "in_progress", "in_review", "blocked", "done", "canceled"],
+      "required": true,
+      "default": "todo",
+      "description": "Where the work has got to. Whoever does the work may take it as far as `in_review`; `done` is the reader's, because a task closed by the one who did it was never checked."
+    },
+    "priority": {
+      "type": "enum",
+      "values": ["high", "normal", "low"],
+      "required": true,
+      "default": "normal",
+      "description": "How much it matters relative to the rest. Three values and no `critical`: a scale with a top value nobody can refuse ends with everything at the top, which sorts nothing."
+    },
+    "type": {
+      "type": "enum",
+      "values": ["feature", "fix", "refactor", "chore", "docs", "test"],
+      "required": true,
+      "default": "feature",
+      "description": "What kind of change this is. It is the first thing an agent reads: it decides which skills to load and what counts as evidence the work is finished."
+    }
+  },
+  "relationships": {
+    "references": {
+      "target": "any",
+      "description": "What this task rests on — the decision that called for it, the observation that exposed it, the question it settles."
+    },
+    "subtask_of": {
+      "target": "tasks.task",
+      "description": "The task this one was split out of. A split is only worth making when the parts can be worked on separately."
+    }
+  }
+}
