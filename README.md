@@ -5,7 +5,7 @@ Every extension Sync publishes, and nothing that is compiled into Sync itself.
 An extension is a package: a manifest, the types it publishes, what it tells an
 agent, and — when it draws something — a built ES module. Sync installs one from
 a `.syncext` archive, from a folder while it is being written, or from the
-registry this repository will generate. There is no fourth way, and in
+registry this repository generates. There is no fourth way, and in
 particular there is no way that involves rebuilding the application.
 
 ```
@@ -14,16 +14,32 @@ extensions/<id>/
   types/*.json            one type definition per file, as the engine asks for them
   prompt/instructions.md  what a connected agent is told, as topic extension:<id>
   src/index.tsx           `export default function activate(host)`
-  ui/index.js             the built module — produced by `pnpm build`, not committed
+  src/service.ts          the half that runs on a clock, with no window open
+  ui/index.js             the drawn half, built by `pnpm build` and not committed
+  service/index.js        the other half, built by the same command
+  CHANGELOG.md            what changed, per version — the registry carries it in
 ```
+
+The manifest is the only one of those every package has. `routines` is the only
+one with the service half: a module the host runs on a clock in its own process,
+so what it does happens with no window open at all, and nothing the drawn half
+holds is reachable from it.
 
 ## What is here
 
-| Extension | Brings | Publishes | Code |
-| --- | --- | --- | --- |
-| `records` | the Records section | nothing | yes |
-| `chat` | the Chat section | a conversation | yes |
-| `project-memory` | the Questions section | five kinds of claim | yes |
+| Extension | Brings | Publishes |
+| --- | --- | --- |
+| `records` | the Records section | nothing — it draws what other packages define |
+| `project-memory` | the Questions section | five kinds of claim |
+| `tasks` | the Tasks section | a task |
+| `routines` | the Routines section | a routine |
+| `chat` | the Chat section | a conversation |
+| `posts` | the Posts section | a draft and a publication |
+| `issues` | the Issues section | nothing — it reads a tracker over the network |
+
+No version numbers in that table. They move on every release and the registry is
+what answers for them; a number written in two places is a number that will
+come to disagree with itself.
 
 `project-memory` publishes five kinds and draws one of them, which is worth
 saying out loud because both halves are cases an extension system usually gets
@@ -49,13 +65,17 @@ it lies, marked *Development* on its card **and beside its section in the
 sidebar**. Unsigned code running out of somebody's working tree should be
 visible from wherever a person is standing.
 
-To produce an archive, use Sync's packer until `sync-ext pack` exists:
+To produce the archives:
 
 ```
-node ../sync/scripts/pack-extension.mjs extensions/records --out /tmp
+pnpm run pack      # every extension, into dist/
 ```
 
-The archive is reproducible — the same input produces the same bytes — so
+`run` rather than `pnpm pack`, which is pnpm's own command for something else.
+The release does it by the same script, so there is one spelling of where the
+archives go.
+
+An archive is reproducible — the same input produces the same bytes — so
 "build it yourself and compare" is available from the first one.
 
 ## What an extension may import, and how it reaches the window's objects
@@ -81,9 +101,14 @@ uses costs a couple of kilobytes — where serving the library from the host wou
 mean the application bundling fifteen hundred icon modules so an extension can
 pick six.
 
-The contract itself is vendored in `vendor/`, refreshed by `pnpm contract` from
-a Sync checkout beside this one. It carries the rolled-up declarations and the
-list of which of their names exist at runtime; the second cannot be derived
+The contract is an ordinary dependency, installed from npm and pinned in the
+lockfile. CI builds against the published package rather than against a checkout
+beside it, which is the difference worth paying for: an author outside this
+organisation installs the same package, and a green build here means what they
+get is what these extensions were built against. `pnpm contract` publishes a new
+one, and is the single command here that needs a Sync checkout next to this
+repository. The package carries the rolled-up declarations and the list of which
+of their names exist at runtime; the second cannot be derived
 downstream, because a `.d.ts` describes types and values in one grammar and a
 shim that guessed would bind interfaces to `undefined`.
 
@@ -110,9 +135,24 @@ person who caused it rather than in front of somebody opening a project.
 - **`engines.syncApi` is checked before anything runs.** An extension outside
   the range is not loaded and says which way the mismatch goes.
 
-## What is not here yet
+## Releasing
 
-`registry.json` and `dist/`, which arrive with the registry; the `sync-ext` CLI
-and the published `@sync-buzz/extension-api`, which arrive with the contract
-repository. Until then a folder or a locally packed archive is how an extension
-reaches a window.
+One tag, and everything after it is derived. Pushing `v*` packs every extension
+from its manifest, attaches the archives to a release, generates `registry.json`
+and the per-extension ledgers under `registry/` from those same manifests, and
+commits the two back to `main`. Nobody writes the index and nobody edits a
+ledger, so the registry cannot come to disagree with the packages it indexes.
+
+Two things it refuses rather than works around:
+
+- **The tag has to be the head of `main`.** A tag anywhere else releases one
+  tree and indexes another, and the two differ by exactly whatever was pushed in
+  between — which nobody notices until an archive does not match its manifest.
+- **A version already published with different bytes stops the run.** The ledger
+  keeps the sha256 of what was released and a project's record is checked
+  against it, so overwriting a version would make that check compare against a
+  lie. The number moves instead.
+
+A release covers every package at once, because the index is generated from all
+of the manifests together. There is no way to release one extension on its own,
+and a tag that changed no manifest changes no index.
