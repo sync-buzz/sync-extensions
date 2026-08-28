@@ -8,7 +8,7 @@
       "description": "Records brings no vocabulary of its own, and is named after what it holds rather than after anything it knows. It is the section a project's types are made and read in: what a decision is in this project is this project's answer, not ours, and a type another extension published is read here beside the ones somebody typed. What is written lives in the repository's own refs, so it travels with the code and is as shared as it is, and memory-hub reconciles it against code history — a claim whose files moved is marked stale rather than quietly believed.",
       "changelog": "Relinked against a newer contract. Nothing in the extension changed.\n\n`ui/index.js` is built against `@sync-buzz/extension-api`, and the shim that\nbuild generates lists the surface it was generated from — so a contract that\nmoved from `2.2.1` to `2.13.0` is a different archive for identical source.\nA released version is immutable, which leaves a version of its own as the only\nhonest way to ship it: the alternative is a registry whose sha256 no longer\nmatches the bytes anybody downloads.",
       "artefact": {
-        "url": "https://github.com/sync-buzz/sync-extensions/releases/download/v1.3.1/records-1.0.2.syncext",
+        "url": "https://github.com/sync-buzz/sync-extensions/releases/download/v1.3.2/records-1.0.2.syncext",
         "sha256": "27c9873eb0634c1b3aba8ecf3b5c2fe6a3d94a7b9199ff2e8fe633168a1ccd20",
         "bytes": 13567
       }
