@@ -11,25 +11,24 @@ import {
   type ReactNode,
 } from "react";
 
-import { Info, type LucideIcon } from "lucide-react";
+import type { LucideIcon } from "lucide-react";
 
 import {
-  Button,
-  DocumentView,
   FolderRemovalSheet,
   FolderSheet,
   MoveArea,
-  PanelPlaceholder,
   RecordRemovalSheet,
   createMemoryFolder,
   deleteMemoryFolder,
   deleteSession,
   describeMemoryFolder,
   explain,
+  folderName,
   forgetRememberedConversation,
   kindIcon,
   memoryFolderToll,
   moveMemoryDocument,
+  parentFolder,
   rememberedConversations,
   renameMemoryFolder,
   renameSession,
@@ -37,7 +36,6 @@ import {
   updateMemoryDocument,
   useAgentSession,
   useAgents,
-  useCorpus,
   useDocument,
   useFolders,
   useLiveSessions,
@@ -51,17 +49,9 @@ import {
   type OpenProject,
 } from "@sync-buzz/extension-api";
 
-import {
-  KIND,
-  ROW_FIELDS,
-  enabledOf,
-  folderRow,
-  nameOf,
-  openTo,
-  parentOf,
-  routineRow,
-  rowSubject,
-} from "./model";
+import { KIND, enabledOf } from "./model";
+import { useRoutines, type RoutinesFilter } from "./filter";
+import { ALL_ROW, folderRow, parentRow } from "./navigator";
 
 /**
  * What a trial run answered with, and which of the two kinds of answer it is.
@@ -69,8 +59,7 @@ import {
  * Two members rather than a string, because the string alone cannot be drawn
  * correctly: *started* and *did not start* are opposite news, and this column
  * showed both in the same tertiary grey — so a routine that refused to run read
- * exactly like one that had. `design-foundation.md` is explicit that a command
- * which did not happen says so.
+ * exactly like one that had.
  */
 interface Ran {
   readonly said: string;
@@ -80,69 +69,40 @@ interface Ran {
 interface AreaState {
   readonly project: OpenProject;
   readonly corpus: Corpus;
-  /** The routines in play: everything the project holds that is not archived. */
-  readonly routines: readonly MemoryRecord[];
-  /**
-   * The archived ones, which are deliberately not among the above.
-   *
-   * `design-foundation.md` §510: archiving is the reversible half of removing
-   * something, and what makes it that is that **the record leaves the lists**.
-   * Mixed back in behind a filter they were rows nothing told apart from the
-   * live ones — so they are their own group, the way an archived message is its
-   * own mailbox rather than a preference over the inbox.
-   */
-  readonly archived: readonly MemoryRecord[];
-  /** The mark this project's own type declares for a routine. */
-  readonly kindIcon: LucideIcon;
-  /** The same rows by key, for the commands that act on one. */
-  readonly byKey: ReadonlyMap<string, MemoryRecord>;
   readonly folders: readonly MemoryFolder[];
-  /** The selected row of the tree, stated in the tree's own ids. */
-  readonly selected: string | null;
-  readonly subject: ReturnType<typeof rowSubject>;
-  readonly select: (id: string | null) => void;
+  /** How many routines are in play, and how many have been put away. */
+  readonly counts: { readonly live: number; readonly archived: number };
+  readonly filter: RoutinesFilter;
+  readonly select: (filter: RoutinesFilter) => void;
   readonly expanded: readonly string[];
   readonly setExpanded: (expanded: readonly string[]) => void;
-  /**
-   * The selected routine, or `null` while the selection is a folder or nothing.
-   * What the inspector describes: a folder's own description is a document the
-   * workspace shows and never something with a clock.
-   */
-  readonly routineKey: string | null;
-  /** What the workspace is showing: the selected routine, or a folder's note. */
+  /** The record the workspace has given its whole surface to, or `null`. */
   readonly openKey: string | null;
   readonly open: OpenDocument;
-  /** True while what is open is what a folder says about itself. */
-  readonly readingNote: boolean;
-  /** Put that description away, leaving the folder it belongs to selected. */
-  readonly closeNote: () => void;
-  /**
-   * The folder a new routine or folder goes into: the one selected, the one the
-   * selected routine is filed in, or the top. Somebody looking at a folder
-   * means that folder, and something that appeared elsewhere would be the
-   * window ignoring where they were standing.
-   */
+  /** The open routine, when what is open is one — never a folder's own note. */
+  readonly routineKey: string | null;
+  readonly openRoutine: (key: string) => void;
+  readonly closeRoutine: () => void;
+  /** What a new routine or folder goes into: the folder in view, else the top. */
   readonly folderInView: string;
-  readonly selectedFolder: MemoryFolder | null;
   readonly folderNote: OpenDocument;
   readonly agents: readonly AgentDescriptor[];
   readonly agentName: (id: string) => string;
+  readonly kindIcon: LucideIcon;
   readonly failure: string | null;
   readonly dismissFailure: () => void;
+  readonly justCreated: string | null;
 
   readonly createRoutine: (folder: string) => void;
   readonly toggle: (record: MemoryRecord) => void;
   readonly archive: (record: MemoryRecord) => void;
-  readonly moveTo: (key: string, folder: string) => void;
   readonly askRemoval: (key: string | null) => void;
   readonly askNewFolder: (parent: string) => void;
   readonly askRenameFolder: (folder: string) => void;
   readonly askRemoveFolder: (folder: string) => void;
-  readonly describeFolder: (folder: string) => void;
+  readonly describeFolder: () => void;
 
-  /** Carry one routine out now, without waiting for its interval. */
   readonly runNow: (key: string | null) => void;
-  /** What happened to the last `Run now`, or `null` when nothing has. */
   readonly ran: Ran | null;
   readonly running: boolean;
 }
@@ -157,25 +117,25 @@ export function useArea(): AreaState {
   return held;
 }
 
+/** The kinds whose folders this area reads. Held steady: a fresh array each
+ *  render would be a read of the tree each render. */
+const KINDS: readonly string[] = [KIND];
+const NO_FOLDERS: readonly MemoryFolder[] = [];
+const EVERYTHING: RoutinesFilter = { view: "all" };
+
 /**
  * Routines, as an area of the window.
  *
- * Three columns, because a routine is a record and this window already knows
- * how to show one: the list, the record, and what is true *of* it. That last
- * division is `design-foundation.md`'s and it is what the first draft of this
- * area got wrong — it drew the interval, the agent and the switch as a settings
- * page in the middle column, which made a record look like a preferences pane
- * and left the instruction as one field among four. The instruction *is* the
- * routine; everything else is metadata, and metadata is edited beside the
- * record rather than in front of it.
+ * Three columns, and the division between the first two is the one this area
+ * had to be rebuilt to get right. **The navigator is where you stand and the
+ * workspace is what is there** — that is what Records does with its types and
+ * Tasks with its register, and putting the routines themselves into the tree
+ * made the section a list that folded shut behind one triangle.
  *
- * The first column is a tree rather than a list, and that is the second thing
- * this area got wrong. A project accumulates routines the way it accumulates
- * anything else, and a flat column of them offered no way to say *these three
- * are about the tracker* — so the folders every other record in Sync already
- * had were the missing half. They cost this package nothing to hold: a folder
- * is the engine's, the same one Records draws, and what is filed where travels
- * with the repository.
+ * It is also what gives a routine somewhere to carry a switch. A source list
+ * row is a name and a mark; a row on the surface is markup this package writes,
+ * and *whether this runs* is a decision somebody makes several times a day —
+ * which on this system is a checkbox in the row.
  */
 export function RoutinesProvider({
   project,
@@ -183,30 +143,16 @@ export function RoutinesProvider({
   intent,
   children,
 }: AreaProviderProps & { children?: ReactNode }) {
-  // The three fields every row draws, asked for by name. A listing carries what
-  // it was asked for and nothing else, so a column that says *this one runs,
-  // hourly, as Claude* names them here rather than opening every record to find
-  // out — which a column cannot do at all, the only read of a single record on
-  // this surface being a hook.
-  const corpus = useCorpus(
-    project.path,
-    { kind: KIND, fields: [...ROW_FIELDS] },
-    undefined,
-    active,
-  );
-  // The folders, read live and separately from the records. A group somebody
-  // made and has not filed anything in yet is a real place; one derived from
-  // the rows in it would vanish the moment it was emptied.
+  const [filter, setFilter] = useState<RoutinesFilter>(EVERYTHING);
+  const corpus = useRoutines(project.path, filter, active);
   const folders = useFolders(project.path, KINDS, corpus.revision, active);
   const { agents } = useAgents();
 
-  const [selected, setSelected] = useState<string | null>(null);
-  const [expanded, setExpanded] = useState<readonly string[]>([]);
+  const [expanded, setExpanded] = useState<readonly string[]>([ALL_ROW]);
+  const [openKey, setOpenKey] = useState<string | null>(null);
   const [failure, setFailure] = useState<string | null>(null);
+  const [justCreated, setJustCreated] = useState<string | null>(null);
 
-  // The sheets this area opens. Each is the shell's own: a deletion has to say
-  // what holds on to what is going, and an area drawing its own version of that
-  // question would be a second answer to it.
   const [removing, setRemoving] = useState<string | null>(null);
   const [namingFolder, setNamingFolder] = useState<{
     parent: string;
@@ -214,112 +160,78 @@ export function RoutinesProvider({
   } | null>(null);
   const [removingFolder, setRemovingFolder] = useState<string | null>(null);
 
-  // What a folder says about itself, while somebody is reading it. Held apart
-  // from the tree's selection rather than expressed in it, and that separation
-  // is load-bearing: the engine leaves the record that *is* a folder out of
-  // listings, so a selection naming it would be a selection the tree cannot
-  // draw — and the guard below, which drops a selection no row answers to,
-  // would take it away in the same breath it was made.
-  const [noteKey, setNoteKey] = useState<string | null>(null);
-
-  const subject = rowSubject(selected);
-  const routineKey =
-    subject !== null && "routine" in subject ? subject.routine : null;
-  const openKey = routineKey ?? noteKey;
   const open = useDocument(project.path, openKey);
-
-  // Moving in the tree puts a folder's description away. It was opened from one
-  // row, and it is that row's; carrying it to the next would be the middle
-  // column showing something the navigator no longer points at.
-  const select = useCallback((id: string | null) => {
-    setNoteKey(null);
-    setSelected(id);
-  }, []);
-
-  const mine = folders.byKind.get(KIND) ?? EMPTY_FOLDERS;
-  // The glyph the project's own type names for a routine, resolved once. A
-  // type invented on this machine is the project's to mark, so it is read from
-  // the corpus rather than chosen here.
+  const mine = folders.byKind.get(KIND) ?? NO_FOLDERS;
   const mark = kindIcon(
     corpus.types.find((type) => type.kind === KIND)?.icon ?? "alarm-clock",
   );
 
-  const { routines, archived, byKey } = useMemo(() => {
-    const byKey = new Map<string, MemoryRecord>();
-    const routines: MemoryRecord[] = [];
-    const archived: MemoryRecord[] = [];
+  const counts = useMemo(() => {
+    let live = 0;
+    let archived = 0;
     for (const record of corpus.records) {
-      byKey.set(record.key, record);
-      (record.archived ? archived : routines).push(record);
+      if (record.isFolder) continue;
+      if (record.archived) archived += 1;
+      else live += 1;
     }
-    return { routines, archived, byKey };
+    return { live, archived };
   }, [corpus.records]);
 
+  const folderInView = "folder" in filter ? filter.folder : "";
   const selectedFolder =
-    subject !== null && "folder" in subject
-      ? (mine.find((entry) => entry.path === subject.folder) ?? null)
+    "folder" in filter
+      ? (mine.find((entry) => entry.path === filter.folder) ?? null)
       : null;
   // What that folder says about itself, read by key: the engine leaves the
-  // record that *is* a folder out of listings, so it is not among the rows and
-  // has to be asked for.
+  // record that *is* a folder out of listings, so it is not among the rows.
   const folderNote = useDocument(project.path, selectedFolder?.describedBy ?? null);
 
-  const folderInView =
-    subject === null
-      ? ""
-      : "folder" in subject
-        ? subject.folder
-        : (byKey.get(subject.routine)?.folder ?? "");
-
-  // A routine that was deleted, or a project that answered without it, must not
-  // leave the other columns drawing a record nobody can reach. The same is true
-  // of a folder that has gone, and of a routine the archive filter just hid:
-  // a selection pointing at a row that is no longer drawn is a window whose two
-  // halves disagree about what is on screen.
-  useEffect(() => {
-    if (selected === null) return;
-    // Not while the store is still answering. An empty list is not the same
-    // claim as *this row is gone*, and an ask arriving before the first read —
-    // a search result, a backlink — named a row the list did not hold yet, so
-    // the selection it made was taken away in the same breath.
-    if (corpus.isLoading || folders.isLoading) return;
-    const held = rowSubject(selected);
-    if (held === null) return;
-    if ("routine" in held) {
-      if (!routines.some((row) => row.key === held.routine)) select(null);
-    } else if (!mine.some((entry) => entry.path === held.folder)) {
-      select(null);
-    }
-  }, [routines, mine, selected, select, corpus.isLoading, folders.isLoading]);
-
-  useApplied(intent, active, (key) => {
-    // A routine reached from outside this column may be archived, filed in a
-    // folder that is closed, or both. Every one of those is a row the tree
-    // would not be drawing, so the ask opens the way to it rather than landing
-    // on a selection nobody can see.
-    const record = corpus.records.find((row) => row.key === key);
-    const folder = record?.folder ?? null;
-    if (folder !== null) setExpanded((was) => openTo(was, folder));
-    select(routineRow(key));
-  });
-
   /**
-   * What a write the store refused says for itself.
+   * What is open, and which of the two things it is.
    *
-   * Every command here reports through this. Creating a routine or moving one
-   * is a click and an answer, and without this the answer is a control that
-   * appears to do nothing — the failure mode this window is least allowed to
-   * have.
+   * A folder's own description is a document this surface shows and never
+   * something with a clock, so the inspector is told apart from the workspace:
+   * one draws whatever is open, the other only a routine.
    */
+  const routineKey =
+    openKey !== null && open.document?.isFolder === true ? null : openKey;
+
+  const select = useCallback((next: RoutinesFilter) => {
+    setOpenKey(null);
+    setFilter(next);
+  }, []);
+
   const refused = useCallback((failure: unknown) => setFailure(explain(failure)), []);
   const done = useCallback(() => setFailure(null), []);
+
+  // A folder that has gone must not leave the surface listing a place nobody
+  // can reach. Not while the read is in flight: an empty answer is not the same
+  // claim as *this folder is gone*.
+  useEffect(() => {
+    if (!("folder" in filter) || filter.folder === "") return;
+    if (folders.isLoading) return;
+    if (!mine.some((entry) => entry.path === filter.folder)) select(EVERYTHING);
+  }, [filter, mine, folders.isLoading, select]);
+
+  useApplied(intent, active, (key) => {
+    const record = corpus.records.find((row) => row.key === key);
+    // Shown where it actually is, so the row the ask names is one the surface
+    // is drawing: archived routines are their own view, and a routine in a
+    // folder is reached by opening that folder's branch.
+    if (record?.archived === true) setFilter({ view: "archived" });
+    else if (record?.folder) {
+      setExpanded((was) => openTo(was, record.folder ?? ""));
+      setFilter({ folder: record.folder });
+    } else setFilter(EVERYTHING);
+    setOpenKey(key);
+  });
 
   const createRoutine = useCallback(
     (folder: string) => {
       void corpus.createRecord(KIND, folder).then((made) => {
         done();
-        select(routineRow(made.key));
-        if (folder !== "") setExpanded((was) => openTo(was, folder));
+        setJustCreated(made.key);
+        setOpenKey(made.key);
         // Written straight away, so the routine is complete the moment it
         // exists. `enabled` is deliberately not among them: absent reads as
         // off, and off is what a routine starts as.
@@ -327,24 +239,24 @@ export function RoutinesProvider({
           fields: { every: "1h", agent: agents[0]?.id ?? "claude" },
         }).then(
           () => corpus.reload(),
-          (failure: unknown) => {
-            refused(failure);
+          (bad: unknown) => {
+            refused(bad);
             corpus.reload();
           },
         );
       }, refused);
     },
-    [corpus, project.path, agents, select, refused, done],
+    [corpus, project.path, agents, refused, done],
   );
 
   /**
-   * Switch one routine on or off, from the list.
+   * Switch one routine on or off, from the row it is drawn on.
    *
-   * The one fact about a routine somebody changes more than once, and until now
-   * it could only be reached by opening the record first. It is a write to the
-   * store rather than a draft, for the same reason the panel's own switch is:
-   * the clock reads the store, and a switch left on the pause that text is
-   * written on is a routine somebody turned on that is still off.
+   * A write to the store rather than a draft, and that is the difference
+   * between switching a routine on and having switched it on: the clock reads
+   * the store. Left on the pause that text is written on, a switch flicked and
+   * a window closed within the second was a routine somebody had turned on and
+   * that was still off.
    */
   const toggle = useCallback(
     (record: MemoryRecord) => {
@@ -371,24 +283,6 @@ export function RoutinesProvider({
     [project.path, corpus, refused, done],
   );
 
-  const moveTo = useCallback(
-    (key: string, folder: string) => {
-      void moveMemoryDocument(project.path, key, folder).then(() => {
-        done();
-        corpus.reload();
-        folders.reload();
-        if (folder !== "") setExpanded((was) => openTo(was, folder));
-      }, refused);
-    },
-    [project.path, corpus, folders, refused, done],
-  );
-
-  /**
-   * Make a folder, and show it.
-   *
-   * Thrown rather than swallowed: the sheet that asked for the name is still up
-   * and is what reports a name the store would not take.
-   */
   const makeFolder = useCallback(
     async (parent: string, name: string) => {
       const path = parent === "" ? name : `${parent}/${name}`;
@@ -400,51 +294,44 @@ export function RoutinesProvider({
       // something in it — and its parent with it, or the new row would be
       // inside a branch that is still closed.
       setExpanded((was) => openTo(was, path));
-      select(folderRow(path));
+      select({ folder: path });
     },
     [project.path, folders, corpus, select, done],
   );
 
-  /**
-   * Rename a folder, carrying everything under it.
-   *
-   * One engine transaction, and keys do not change, so nothing that points at
-   * these routines breaks. The selection follows the folder to its new path,
-   * because somebody who just renamed the thing they were looking at is still
-   * looking at it.
-   */
   const renameFolder = useCallback(
     async (from: string, name: string) => {
-      const parent = parentOf(from);
+      const parent = parentFolder(from);
       const to = parent === "" ? name : `${parent}/${name}`;
       await renameMemoryFolder(project.path, from, to);
       done();
       folders.reload();
       corpus.reload();
       setExpanded((was) => openTo(was, to));
-      select(folderRow(to));
+      select({ folder: to });
     },
     [project.path, folders, corpus, select, done],
   );
 
   /**
-   * Open what a folder says about itself, writing it if it has said nothing.
+   * Open what the folder in view says about itself, writing it if it has said
+   * nothing yet.
    *
    * There is no separate command for the second case: somebody who clicks an
-   * empty description is asking to fill it in. What opens is the ordinary
-   * editor, because what opens is an ordinary document.
+   * empty description is asking to fill it in.
    */
-  const describeFolder = useCallback(
-    (folder: string) => {
-      void describeMemoryFolder(project.path, folder, KIND).then((document_) => {
+  const describeFolder = useCallback(() => {
+    if (!("folder" in filter) || filter.folder === "") return;
+    void describeMemoryFolder(project.path, filter.folder, KIND).then(
+      (document_) => {
         done();
         corpus.reload();
         folders.reload();
-        setNoteKey(document_.key);
-      }, refused);
-    },
-    [project.path, corpus, folders, refused, done],
-  );
+        setOpenKey(document_.key);
+      },
+      refused,
+    );
+  }, [project.path, filter, corpus, folders, refused, done]);
 
   /**
    * Something was dragged onto a row that takes drops.
@@ -465,7 +352,7 @@ export function RoutinesProvider({
         } else if (what?.folder !== undefined) {
           const from = what.folder;
           if (to === from || to.startsWith(`${from}/`)) return;
-          const moved = to === "" ? nameOf(from) : `${to}/${nameOf(from)}`;
+          const moved = to === "" ? folderName(from) : `${to}/${folderName(from)}`;
           if (moved === from) return;
           await renameMemoryFolder(project.path, from, moved);
         } else {
@@ -474,9 +361,9 @@ export function RoutinesProvider({
         done();
         corpus.reload();
         folders.reload();
-        setExpanded((was) => openTo(was, to));
-      } catch (failure) {
-        refused(failure);
+        if (to !== "") setExpanded((was) => openTo(was, to));
+      } catch (bad) {
+        refused(bad);
       }
     },
     [project.path, corpus, folders, refused, done],
@@ -488,36 +375,32 @@ export function RoutinesProvider({
     () => ({
       project,
       corpus,
-      routines,
-      archived,
-      kindIcon: mark,
-      byKey,
       folders: mine,
-      selected,
-      subject,
+      counts,
+      filter,
       select,
       expanded,
       setExpanded,
-      routineKey,
       openKey,
       open,
-      readingNote: routineKey === null && noteKey !== null,
-      closeNote: () => setNoteKey(null),
+      routineKey,
+      openRoutine: setOpenKey,
+      closeRoutine: () => setOpenKey(null),
       folderInView,
-      selectedFolder,
       folderNote,
       agents,
       agentName: (id) => agents.find((one) => one.id === id)?.name ?? id,
+      kindIcon: mark,
       failure,
       dismissFailure: done,
+      justCreated,
       createRoutine,
       toggle,
       archive,
-      moveTo,
       askRemoval: setRemoving,
       askNewFolder: (parent) => setNamingFolder({ parent }),
       askRenameFolder: (folder) =>
-        setNamingFolder({ parent: parentOf(folder), renaming: nameOf(folder) }),
+        setNamingFolder({ parent: parentFolder(folder), renaming: folderName(folder) }),
       askRemoveFolder: setRemovingFolder,
       describeFolder,
       runNow,
@@ -527,29 +410,24 @@ export function RoutinesProvider({
     [
       project,
       corpus,
-      routines,
-      archived,
-      mark,
-      byKey,
       mine,
-      selected,
-      subject,
+      counts,
+      filter,
       select,
       expanded,
-      routineKey,
       openKey,
-      noteKey,
       open,
+      routineKey,
       folderInView,
-      selectedFolder,
       folderNote,
       agents,
+      mark,
       failure,
       done,
+      justCreated,
       createRoutine,
       toggle,
       archive,
-      moveTo,
       describeFolder,
       runNow,
       ran,
@@ -558,30 +436,32 @@ export function RoutinesProvider({
   );
 
   // The row the removal sheet is about. Read from the list rather than held
-  // when the command was chosen, so the sheet is never asking about a record as
-  // it stood a minute ago.
-  const goingRecord = removing === null ? null : (byKey.get(removing) ?? null);
+  // when the command was chosen, so the sheet never asks about a record as it
+  // stood a minute ago.
+  const going =
+    removing === null
+      ? null
+      : (corpus.records.find((record) => record.key === removing) ?? null);
 
   return (
     <Area.Provider value={state}>
       {/* Above the columns, because the drag that matters crosses them: a
-          routine is picked up in the navigator and lands on a folder in the
-          same column, and a drop that left the tree would have nothing to
-          land on. */}
+          routine is picked up on the surface and lands on a folder in the
+          navigator. */}
       <MoveArea onDrop={(target, payload) => void dropOn(target, payload)}>
         {children}
       </MoveArea>
 
       <RecordRemovalSheet
-        open={goingRecord !== null}
+        open={going !== null}
         onOpenChange={(isOpen) => setRemoving(isOpen ? removing : null)}
-        record={goingRecord}
+        record={going}
         types={corpus.types}
         dependentsOf={corpus.dependentsOf}
         onDelete={async (keys) => {
-          // The selection goes before the record does, or the columns beside
-          // this one spend a render drawing something that has been deleted.
-          if (removing !== null && routineKey === removing) select(null);
+          // The surface lets go before the record does, or it spends a render
+          // drawing something that has been deleted.
+          if (removing !== null && openKey === removing) setOpenKey(null);
           await corpus.deleteRecords(keys);
           done();
         }}
@@ -611,7 +491,7 @@ export function RoutinesProvider({
         onDelete={async (folder) => {
           await deleteMemoryFolder(project.path, folder);
           done();
-          select(null);
+          select(EVERYTHING);
           corpus.reload();
           folders.reload();
         }}
@@ -620,188 +500,12 @@ export function RoutinesProvider({
   );
 }
 
-/** The kinds whose folders this area reads. One, and it is held steady: a
- *  fresh array each render would be a read of the tree each render. */
-const KINDS: readonly string[] = [KIND];
-const EMPTY_FOLDERS: readonly MemoryFolder[] = [];
-
-/**
- * The routine itself: its name and the instruction, as a record is read.
- *
- * Or the folder, when the selection is one. A folder is a place, and a place a
- * person selected has to answer with something — an empty column beside a row
- * they just clicked is the window refusing to say what it did.
- */
-export function RoutinesWorkspace() {
-  const area = useArea();
-  const folder = area.selectedFolder;
-
-  return (
-    <div className="flex h-full min-w-0 flex-col">
-      <ActionFailure message={area.failure} onDismiss={area.dismissFailure} />
-      {area.openKey === null ? (
-        <Empty />
-      ) : (
-        <DocumentView
-          open={area.open}
-          icon="alarm-clock"
-          // What a folder says about itself is an ordinary document, and it is
-          // opened in the ordinary editor — but a person who clicked a strip on
-          // a folder should be told which of the two they are now typing into.
-          note={
-            area.readingNote
-              ? "What this folder is for. It is a document like any other, filed in the folder it describes, and it is what somebody reads before putting a routine here."
-              : "What an agent is told, every time. Write it for somebody competent who has not seen this project — and say what to do when there is nothing to report."
-          }
-          // The record that *is* a folder is not one this column removes: it
-          // goes when the folder does, and archiving it would leave a folder
-          // describing itself to nobody. Both commands are drawn and refused
-          // rather than left out — a menu missing an item explains nothing.
-          fixed={area.readingNote}
-          onBack={() => (area.readingNote ? area.closeNote() : area.select(null))}
-          backLabel={
-            area.readingNote && folder !== null ? nameOf(folder.path) : "Routines"
-          }
-          onArchive={() => {
-            if (area.open.draft === null) return;
-            area.open.edit({ archived: !area.open.draft.archived });
-            void area.open.write().then(() => area.corpus.reload(), () => undefined);
-          }}
-          onDelete={() => area.askRemoval(area.routineKey)}
-        />
-      )}
-    </div>
-  );
-}
-
-/**
- * The column with no document open: a folder, or nothing at all.
- *
- * The band is drawn either way. It is one height across the slab, and a column
- * that skips it leaves the hairline broken at its own edge.
- */
-function Empty() {
-  const area = useArea();
-  const folder = area.selectedFolder;
-
-  return (
-    <section className="flex h-full min-w-0 flex-col bg-workspace">
-      <div className="flex h-(--panel-header-height) shrink-0 items-center border-b border-separator px-3">
-        <h2 className="min-w-0 truncate text-sm font-semibold text-fg">
-          {folder === null
-            ? "Routine"
-            : folder.path === ""
-              ? "All routines"
-              : nameOf(folder.path)}
-        </h2>
-      </div>
-      <div className="flex min-h-0 flex-1 flex-col items-center justify-center gap-3 p-6">
-        {folder === null ? (
-          <PanelPlaceholder
-            headline="Nothing selected"
-            detail="Choose a routine, or make one. Each is an instruction an agent carries out on a clock — whether or not this window is open."
-          />
-        ) : folder.path === "" ? (
-          // The top of the list, which is a place and not a folder: there is
-          // nothing above it to describe it from, and the engine refuses to be
-          // asked. What it is for is what the section is for, and the sentence
-          // beside an empty list already says that.
-          <PanelPlaceholder
-            headline={
-              area.routines.length === 0
-                ? "No routines yet"
-                : `${area.routines.length} ${area.routines.length === 1 ? "routine" : "routines"}`
-            }
-            detail="Everything this project runs on a clock, and the groups it is kept in. Drag a routine onto this row to take it out of a folder."
-          />
-        ) : (
-          <>
-            <PanelPlaceholder
-              headline={
-                folder.records === 0
-                  ? "Nothing filed here yet"
-                  : `${folder.records} ${folder.records === 1 ? "routine" : "routines"} in this folder`
-              }
-              // What the folder says about itself, when it says anything. It is
-              // the answer to *why is this group here*, and it belongs above
-              // the invitation to write it rather than behind a second click.
-              detail={
-                said(area.folderNote) ??
-                "A folder is a place to keep the routines that belong together. Drag one onto it, or write a new one here."
-              }
-            />
-            {/* A folder can say what it is for, and the way to say it is to
-                click where it would be said. No verb to find in a menu first,
-                and nothing to know about how it is stored: what opens is the
-                ordinary editor, because what opens is an ordinary document. */}
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => area.describeFolder(folder.path)}
-            >
-              <Info />
-              {folder.describedBy === null
-                ? "Say what this folder is for"
-                : "Read what this folder is for"}
-            </Button>
-          </>
-        )}
-      </div>
-    </section>
-  );
-}
-
-/**
- * The opening line of what a folder says about itself, or `null`.
- *
- * Markdown's own marks are stepped over rather than rendered: a description
- * beginning `# Overnight` says "Overnight" to a person, and showing the hash
- * would be the window quoting syntax at them.
- */
-function said(note: OpenDocument): string | null {
-  const line = (note.document?.content ?? "")
-    .split("\n")
-    .map((text) => text.replace(/^#+\s*/, "").trim())
-    .find((text) => text !== "");
-  return line ?? null;
-}
-
-/**
- * What a command that did not happen says for itself.
- *
- * It stays until it is dismissed or until the next command succeeds. There is
- * no "try again": what failed was a single action, and asking for it again is
- * the same click that was already there.
- */
-function ActionFailure({
-  message,
-  onDismiss,
-}: {
-  message: string | null;
-  onDismiss: () => void;
-}) {
-  if (message === null) return null;
-
-  return (
-    <div className="flex shrink-0 items-center gap-3 border-b border-separator bg-panel px-3 py-2">
-      <p className="min-w-0 flex-1 text-xs text-fg-secondary">
-        <span className="font-medium text-danger">That did not happen.</span>{" "}
-        {message}
-      </p>
-      <Button variant="outline" size="sm" onClick={onDismiss} className="shrink-0">
-        Dismiss
-      </Button>
-    </div>
-  );
-}
-
 /**
  * Apply what the window is asking this area to show.
  *
  * Identity is the signal rather than the key: the same object is handed over
  * until the next ask, so asking twice for one routine is two objects and opens
- * it twice — somebody who wandered off and wants it back, not a duplicate to
- * swallow.
+ * it twice — somebody who wandered off and wants it back, not a duplicate.
  */
 function useApplied(
   intent: AreaIntent | null | undefined,
@@ -819,6 +523,27 @@ function useApplied(
     settled.current = intent;
     if (intent.show === "record" && intent.kind === KIND) apply.current(intent.key);
   }, [intent, active]);
+}
+
+/**
+ * The branches that have to be open for one folder to be visible.
+ *
+ * A row inside a closed branch is a selection nobody can see, so anything that
+ * moves the selection into a folder opens the folder *and everything above it*.
+ * Opening only the immediate parent left a new folder two levels down invisible
+ * and the column apparently unchanged.
+ */
+function openTo(expanded: readonly string[], folder: string): readonly string[] {
+  const wanted: string[] = [];
+  let path = folder;
+  while (path !== "") {
+    const row = folderRow(path);
+    if (!expanded.includes(row) && !wanted.includes(row)) wanted.push(row);
+    path = parentFolder(path);
+  }
+  // The top is always the branch everything else is inside.
+  if (!expanded.includes(ALL_ROW) && !wanted.includes(ALL_ROW)) wanted.push(ALL_ROW);
+  return wanted.length === 0 ? expanded : [...expanded, ...wanted];
 }
 
 /**

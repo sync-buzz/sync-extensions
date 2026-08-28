@@ -1,5 +1,37 @@
 # Changelog
 
+## 0.3.0
+
+The navigator is where you stand; the surface beside it is what is there.
+
+0.2.x put the routines themselves into the tree, under the row that stands for
+the whole list — so one triangle folded the entire section shut, and a row that
+is not a folder behaved like one. That division is not this package's to
+invent: Records draws its types and their folders in the navigator and its
+records on the surface, and Tasks does the same with its register. This now
+does what they do.
+
+**The navigator holds three kinds of row and no others**: `All routines`, the
+folders somebody made, and `Archived`. Every one is a place to stand. The
+folder counts, the drop that takes a routine back out of a group, and the
+archive as a place rather than a preference all stay exactly as they were.
+
+**The surface holds the list**, which is the only place a row can carry a
+control. Whether a routine runs is a decision somebody makes several times a
+day, and on this system that is a checkbox in the row — Mail's rules keep one,
+System Settings' login items keep one. It replaces the dimming 0.2.1 used, and
+with it the last of the state the mark was carrying: the glyph says what a
+routine is and the checkbox says whether it runs, which is the division
+`design-foundation.md` §284 asks for.
+
+Under each name: how often, which agent, and the folder it is filed in when the
+list is not already one folder's. Writing a routine is `+` beside the list it
+joins, where macOS puts the command that belongs to the content.
+
+A folder's own description is a strip above its list rather than a button in an
+empty column, and it opens the ordinary editor because it is an ordinary
+document.
+
 ## 0.2.2
 
 A routine could be dragged into a group and not out again.
