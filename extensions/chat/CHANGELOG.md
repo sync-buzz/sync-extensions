@@ -1,5 +1,20 @@
 # Changelog
 
+## 1.2.2
+
+A conversation would not open at all.
+
+Following the end when the panel changes shape means watching the viewport, and
+the viewport was read back out of the scroller's own ref. That ref is a callback
+function carrying a `current` written onto it at the moment React attaches it,
+so before the first attachment it reads `undefined` rather than `null` — and a
+conversation with nothing in it yet draws no scroller to attach. A guard against
+`null` passed that through, and asking to observe it threw. The pass it threw on
+is the one every conversation opens with, because the transcript arrives after
+the section does, so no chat could be entered. The element is now held as state
+and handed to the observer itself, which is also what has the observer follow a
+viewport that is replaced.
+
 ## 1.2.1
 
 Typing pulled the conversation off the end of itself.
