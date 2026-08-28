@@ -3,6 +3,17 @@
   "id": "routines",
   "versions": [
     {
+      "version": "0.2.2",
+      "syncApi": "^2.10",
+      "description": "A routine is one instruction, written to an agent, that Sync hands over on an interval — check the tracker, read the inbox, look at what changed overnight. Sync raises the agent and the agent does the work with the tools it already has on this machine, so what a routine can reach is whatever its agent can reach, and nothing here needs to know what a mailbox or an issue is. A routine is a record like any other, so it is read, edited and searched where the rest of the project is, and it travels with the repository. Nothing runs until somebody switches it on: a routine spends an agent's tokens, and arriving at somebody else's clone already running is not something they agreed to.",
+      "changelog": "A routine could be dragged into a group and not out again.\n\nEvery folder took drops and nothing stood for *no folder*, so the gesture\nworked in one direction only and getting a routine back out meant finding a\nmenu. `All routines` is that row — the top of the hierarchy the folders hang\nfrom, carrying the drop that files something at the top. It is the row Records\ngives each of its types and Tasks gives its register, spelled the way they\nspell it.\n\nIt is a folder everywhere the rest of this column is concerned — where a new\nroutine is written, what a drop means — and two of the four folder commands are\nrefused on it rather than hidden: there is nothing above the top to rename it\ninto, and deleting it would mean deleting the list.\n\nAn archived routine no longer offers to be dragged. It would have moved and\nstayed exactly where it is drawn, under `Archived`, which is not a folder — a\ngesture that looks like it failed. Bringing it back comes first.",
+      "artefact": {
+        "url": "https://github.com/sync-buzz/sync-extensions/releases/download/v1.2.4/routines-0.2.2.syncext",
+        "sha256": "9502858a56f54581f760d625906fb01ff1358e96027864c9a40a27c0f0caa262",
+        "bytes": 14815
+      }
+    },
+    {
       "version": "0.2.1",
       "syncApi": "^2.10",
       "description": "A routine is one instruction, written to an agent, that Sync hands over on an interval — check the tracker, read the inbox, look at what changed overnight. Sync raises the agent and the agent does the work with the tools it already has on this machine, so what a routine can reach is whatever its agent can reach, and nothing here needs to know what a mailbox or an issue is. A routine is a record like any other, so it is read, edited and searched where the rest of the project is, and it travels with the repository. Nothing runs until somebody switches it on: a routine spends an agent's tokens, and arriving at somebody else's clone already running is not something they agreed to.",
