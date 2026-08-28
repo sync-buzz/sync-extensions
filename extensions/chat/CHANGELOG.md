@@ -1,5 +1,29 @@
 # Changelog
 
+## 1.2.1
+
+Typing pulled the conversation off the end of itself.
+
+The field is as tall as what is in it, and it learns that by resetting its own
+height and reading back what the text asks for. That reset is a layout: for one
+pass the field is a single row, the transcript above it grows into the pixels
+let go of, and the browser clamps a scroller whose maximum has just fallen. The
+height goes straight back — the position does not. A field a hundred pixels tall
+moved the conversation a hundred pixels on every keystroke, and left the reader
+part way up a transcript nobody had scrolled. The box around the field now holds
+its height for the length of the measurement: nothing outside it moves, so there
+is nothing to clamp.
+
+Following the end also survives the panel changing shape. A column is a fixed
+height, so every pixel the composer takes is a pixel the transcript gives up — a
+message onto a second line, a shelf of attachments, the line saying the agent is
+waiting for an answer. The content has not changed, so the observer watching it
+never fires, and the end moves below where the reader is: five lines of typing
+put it 130 px down, past the 70 px that counts as being at the end. The viewport
+is now watched for its own size, and somebody who is at the end stays there.
+Somebody who has scrolled up is left alone — a resize is not a request to leave
+what they are reading.
+
 ## 1.2.0
 
 The conversation starts, and what it is held with is chosen beside it.

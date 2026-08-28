@@ -107,12 +107,40 @@ function Reading({
   sessionKey: string | null;
 }) {
   const { entries, question, dropped } = session.transcript;
-  const { scrollRef, contentRef, isAtBottom, scrollToBottom } = useStickToBottom({
+  const { scrollRef, contentRef, isAtBottom, scrollToBottom, state } = useStickToBottom({
     initial: "instant",
     resize: "instant",
   });
 
-  if (entries.length === 0 && question === null) {
+  const empty = entries.length === 0 && question === null;
+
+  // The other half of following the end, and the half the library does not
+  // hold: it watches the *content* for growth, and this watches the window
+  // onto it for shrinkage.
+  //
+  // The two are not the same event. A panel is a column of fixed height, so
+  // every pixel the composer takes is a pixel this viewport gives up — and the
+  // composer grows for several ordinary reasons: a message typed onto a second
+  // line, a shelf of attachments, the line that says the agent is waiting for
+  // an answer. The content has not changed, so the library's observer never
+  // fires; the position is where it was, but the end has moved below it. A
+  // field grown from one line to five puts the end 130 px down, which is past
+  // the 70 px the library allows, so the conversation stops being followed
+  // while somebody is still writing the message.
+  //
+  // Only for a reader who is at the end. Somebody who has scrolled up is
+  // reading something, and a resize is not their asking to leave it.
+  useEffect(() => {
+    const viewport = scrollRef.current;
+    if (viewport === null) return;
+    const watch = new ResizeObserver(() => {
+      if (state.isAtBottom) void scrollToBottom({ animation: "instant" });
+    });
+    watch.observe(viewport);
+    return () => watch.disconnect();
+  }, [empty, scrollRef, scrollToBottom, state]);
+
+  if (empty) {
     return (
       <div className="flex min-h-0 flex-1 items-center justify-center p-6">
         <p className="max-w-prose text-center text-sm text-fg-tertiary">

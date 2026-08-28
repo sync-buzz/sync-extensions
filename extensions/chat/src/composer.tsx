@@ -182,6 +182,7 @@ export function Composer({
     }
   };
   const field = useRef<HTMLTextAreaElement>(null);
+  const frame = useRef<HTMLDivElement>(null);
 
   const write = (change: (held: Draft) => Partial<Draft>) =>
     onDraft((held) => ({ ...held, ...change(held) }));
@@ -273,12 +274,31 @@ export function Composer({
   // the border is added back: everything here is `border-box`, `scrollHeight`
   // counts padding but not border, and setting the height to it exactly would
   // take two pixels off the text — which is a scrollbar on a single line.
+  //
+  // A third the reset alone gets wrong, and it is the one that shows. Reading
+  // `scrollHeight` forces the layout, and for that one pass the field is a
+  // single row: the column gives the pixels it let go of to the transcript
+  // above, which grows by them, and the browser clamps that scroller's
+  // `scrollTop` to a maximum that has just fallen. The height is put straight
+  // back — the clamp is not. Left to itself that takes a field a hundred pixels
+  // tall and pulls the conversation a hundred pixels off the end on every
+  // keystroke, leaving the reader part way up a transcript nobody scrolled.
+  //
+  // So the box around the field holds its height for the length of the
+  // measurement. Nothing outside it moves, the scroller keeps the size it had,
+  // and its position is never clamped in the first place. The box rather than
+  // the field, because the field is what has to be free to change size for the
+  // measurement to mean anything.
   useLayoutEffect(() => {
     const node = field.current;
-    if (node === null) return;
+    const box = frame.current;
+    if (node === null || box === null) return;
+    const held = box.style.height;
+    box.style.height = `${box.offsetHeight}px`;
     node.style.height = "auto";
     const border = node.offsetHeight - node.clientHeight;
     node.style.height = `${node.scrollHeight + border}px`;
+    box.style.height = held;
   }, [text]);
 
   // A conversation with nothing in it is one somebody has just opened in order
@@ -397,6 +417,7 @@ export function Composer({
               well is what a person is writing in — a ring around the text alone
               would cut the shelf above it out of the thing being focused. */}
           <div
+            ref={frame}
             className={cn(
               "min-w-0 flex-1 rounded-(--radius-control)",
               "border border-separator bg-raised",
