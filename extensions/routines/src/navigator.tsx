@@ -28,6 +28,7 @@ import {
 
 import {
   ARCHIVED,
+  ROOT_ROW,
   TREE_ROOT,
   agentOf,
   enabledOf,
@@ -254,7 +255,7 @@ function SelectionActions() {
         ) : folder !== null ? (
           <>
             <DropdownMenuLabel className="truncate">
-              {nameOf(folder)}
+              {isRoot(folder) ? "All routines" : nameOf(folder)}
             </DropdownMenuLabel>
             <DropdownMenuItem onSelect={() => area.createRoutine(folder)}>
               New routine
@@ -263,11 +264,20 @@ function SelectionActions() {
               New folder
             </DropdownMenuItem>
             <DropdownMenuSeparator />
-            <DropdownMenuItem onSelect={() => area.askRenameFolder(folder)}>
+            {/* The top is a folder everywhere else in this column, and it is
+                not one here: there is nothing above it to rename it into and
+                deleting it would mean deleting the list. Drawn and refused
+                rather than left out — a menu missing an item explains
+                nothing. */}
+            <DropdownMenuItem
+              disabled={isRoot(folder)}
+              onSelect={() => area.askRenameFolder(folder)}
+            >
               Rename folder
             </DropdownMenuItem>
             <DropdownMenuItem
               variant="destructive"
+              disabled={isRoot(folder)}
               onSelect={() => area.askRemoveFolder(folder)}
             >
               Delete folder
@@ -388,7 +398,27 @@ function rows(area: ReturnType<typeof useArea>): {
     loose.push(routineRow(record.key));
   }
 
-  const top = [...topFolders, ...loose];
+  // **The row that stands for no folder at all.**
+  //
+  // It carries the drop that takes a routine back out of a group, which is the
+  // gesture this column was missing: folders took drops and nothing stood for
+  // the top, so a routine dragged into a group could only be got out again
+  // through a menu. It is also where a new routine or folder goes when nothing
+  // else is selected, and it is what the folders hang from.
+  items.set(ROOT_ROW, {
+    id: ROOT_ROW,
+    label: "All routines",
+    icon: area.kindIcon,
+    count: area.routines.length,
+    children: [...topFolders, ...loose],
+    drop: { folder: "" },
+    menu: () => [
+      { label: "New Routine", onSelect: () => area.createRoutine("") },
+      { label: "New Folder", onSelect: () => area.askNewFolder("") },
+    ],
+  });
+
+  const top = [ROOT_ROW];
 
   // **Archived routines are a place, not a filter.** They left the lists when
   // somebody archived them — that is what `design-foundation.md` §510 makes
@@ -416,7 +446,9 @@ function rows(area: ReturnType<typeof useArea>): {
   }
 
   items.set(TREE_ROOT, { id: TREE_ROOT, label: "Routines", children: top });
-  return { items, empty: top.length === 0 };
+  // Empty is about what the project holds, not about how many rows this built:
+  // the row that stands for the top is always one of them.
+  return { items, empty: area.routines.length === 0 && archived.length === 0 };
 }
 
 /** One routine, as a row: what it is called, and whether it runs. */
@@ -450,7 +482,11 @@ function routineItem(
         {record.archived ? " · archived" : null}
       </span>
     ),
-    drag: { record: record.key },
+    // Filed by dragging, and only while it is in play. An archived routine
+    // dragged onto a folder would move and stay exactly where it is drawn —
+    // under `Archived`, which is not a folder — so the gesture would look like
+    // it had failed. Bringing it back is what comes first, and the menu says so.
+    drag: record.archived ? undefined : { record: record.key },
     menu: () => routineMenu(area, record),
   };
 }
@@ -511,6 +547,9 @@ function folderMenu(
     { label: "Delete Folder", onSelect: () => area.askRemoveFolder(folder) },
   ];
 }
+
+/** Whether a folder is the top, which two of the four commands may not touch. */
+const isRoot = (folder: string) => folder === "";
 
 /**
  * The order routines are read in: by name, and by key for the ones with none.

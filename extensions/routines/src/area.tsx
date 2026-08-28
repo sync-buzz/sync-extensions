@@ -688,7 +688,11 @@ function Empty() {
     <section className="flex h-full min-w-0 flex-col bg-workspace">
       <div className="flex h-(--panel-header-height) shrink-0 items-center border-b border-separator px-3">
         <h2 className="min-w-0 truncate text-sm font-semibold text-fg">
-          {folder === null ? "Routine" : nameOf(folder.path)}
+          {folder === null
+            ? "Routine"
+            : folder.path === ""
+              ? "All routines"
+              : nameOf(folder.path)}
         </h2>
       </div>
       <div className="flex min-h-0 flex-1 flex-col items-center justify-center gap-3 p-6">
@@ -696,6 +700,19 @@ function Empty() {
           <PanelPlaceholder
             headline="Nothing selected"
             detail="Choose a routine, or make one. Each is an instruction an agent carries out on a clock — whether or not this window is open."
+          />
+        ) : folder.path === "" ? (
+          // The top of the list, which is a place and not a folder: there is
+          // nothing above it to describe it from, and the engine refuses to be
+          // asked. What it is for is what the section is for, and the sentence
+          // beside an empty list already says that.
+          <PanelPlaceholder
+            headline={
+              area.routines.length === 0
+                ? "No routines yet"
+                : `${area.routines.length} ${area.routines.length === 1 ? "routine" : "routines"}`
+            }
+            detail="Everything this project runs on a clock, and the groups it is kept in. Drag a routine onto this row to take it out of a folder."
           />
         ) : (
           <>
