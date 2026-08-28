@@ -3,6 +3,17 @@
   "id": "chat",
   "versions": [
     {
+      "version": "1.2.2",
+      "syncApi": "^2.12",
+      "description": "Chat runs an agent as a process and speaks the Agent Client Protocol to it, so the conversation happens here rather than in a terminal beside here. A conversation opens straight away, with the agent this project was last held with, and which agent, which model and how freely it may act are chosen in a strip above the field — beside the sentence they apply to. Which agents it can raise is a fact about this machine rather than about this build: the ones installed are offered, and Codex — which does not speak the protocol at all — is reached through a bridge that ships inside the application. Models and modes are listed as the agent itself stated them, never from a table in the build. A conversation belongs to the project rather than to the screen: switching sections leaves the agent working, and coming back finds everything it said meanwhile.",
+      "changelog": "A conversation would not open at all.\n\nFollowing the end when the panel changes shape means watching the viewport, and\nthe viewport was read back out of the scroller's own ref. That ref is a callback\nfunction carrying a `current` written onto it at the moment React attaches it,\nso before the first attachment it reads `undefined` rather than `null` — and a\nconversation with nothing in it yet draws no scroller to attach. A guard against\n`null` passed that through, and asking to observe it threw. The pass it threw on\nis the one every conversation opens with, because the transcript arrives after\nthe section does, so no chat could be entered. The element is now held as state\nand handed to the observer itself, which is also what has the observer follow a\nviewport that is replaced.",
+      "artefact": {
+        "url": "https://github.com/sync-buzz/sync-extensions/releases/download/v1.3.4/chat-1.2.2.syncext",
+        "sha256": "a8b62bdf346a679a3c2a54fa5de89be493b880dc3c782c112d63709298fb3500",
+        "bytes": 21322
+      }
+    },
+    {
       "version": "1.2.1",
       "syncApi": "^2.12",
       "description": "Chat runs an agent as a process and speaks the Agent Client Protocol to it, so the conversation happens here rather than in a terminal beside here. A conversation opens straight away, with the agent this project was last held with, and which agent, which model and how freely it may act are chosen in a strip above the field — beside the sentence they apply to. Which agents it can raise is a fact about this machine rather than about this build: the ones installed are offered, and Codex — which does not speak the protocol at all — is reached through a bridge that ships inside the application. Models and modes are listed as the agent itself stated them, never from a table in the build. A conversation belongs to the project rather than to the screen: switching sections leaves the agent working, and coming back finds everything it said meanwhile.",

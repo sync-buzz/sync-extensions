@@ -1,0 +1,17 @@
+{
+  "formatVersion": 1,
+  "id": "posts",
+  "versions": [
+    {
+      "version": "0.2.0",
+      "syncApi": "^2.13",
+      "description": "Posts holds two things and reaches nothing. A draft is what the project is about to say, written for one named network — the section knows how long a post may be there and who may read one, and counts down while somebody writes. A publication is what it said, carrying the text exactly as it went out, so editing a draft afterwards cannot rewrite the account of it. Both are ordinary records: they live in the project's memory, travel with the repository, and can be written or read by an agent as easily as by a person. Sending is deliberately not here. Sync has no connection to any network and stores no account for one; pressing Publish hands the post to an agent, which delivers it with a tool somebody connected to that agent — an MCP server for that network. So this section is worth installing where an agent has hands, and where one has not, it is a good place to write and a place that will tell you plainly that nothing can go out. Publishing is a person's act either way: there is no clock in here, and nothing that sends anything while nobody is looking.",
+      "changelog": "",
+      "artefact": {
+        "url": "https://github.com/sync-buzz/sync-extensions/releases/download/v1.3.4/posts-0.2.0.syncext",
+        "sha256": "026f3c9f7bb39bd2702e15dbab6efe39dbaf437731a71e4107f72ecfe77080d1",
+        "bytes": 18335
+      }
+    }
+  ]
+}
