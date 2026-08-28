@@ -7,6 +7,7 @@ import { Info, Plus } from "lucide-react";
 import {
   Button,
   DocumentView,
+  KindMark,
   PanelPlaceholder,
   ScrollArea,
   Tooltip,
@@ -186,7 +187,13 @@ function Register() {
                   than repeated down a column: a word that appears on every row
                   is not something anybody scans. */}
               {group.status === null ? null : (
-                <div className="flex items-baseline justify-between gap-3 border-b border-separator bg-workspace px-4 pt-4 pb-1">
+                // A heading rather than a banded row: the same weight, colour
+                // and size the navigator's own group labels use, so a person
+                // moving between the two columns is reading one thing. No rule
+                // under it — the rows below already have their own, and a line
+                // that only separates a label from what it labels is a line
+                // dividing nothing.
+                <div className="flex items-baseline justify-between gap-3 px-4 pt-5 pb-1.5">
                   <h3 className="min-w-0 truncate text-xs font-semibold text-fg-tertiary">
                     {group.status.label}
                   </h3>
@@ -225,11 +232,9 @@ function FieldsMissing() {
     <div className="flex shrink-0 items-start gap-3 border-b border-separator bg-panel px-3 py-2">
       <p className="min-w-0 flex-1 text-xs text-fg-secondary">
         <span className="font-medium text-warning">
-          Status, priority and type did not arrive with these rows.
+          The store did not send these tasks&rsquo; states.
         </span>{" "}
-        The list asks for them by name; the store answered without them, so the
-        tasks are shown ungrouped rather than all under one status they are not
-        in. Open a task to see and change its own state.
+        Shown ungrouped rather than all under one status they are not in.
       </p>
     </div>
   );
@@ -274,6 +279,28 @@ function TaskRow({ record }: { record: MemoryRecord }) {
       { label: "Delete", onSelect: () => area.askRemoval(record.key) },
     ]);
 
+  // What the row can say about itself, in the order it is worth reading. Built
+  // as a list rather than as nested conditions so the separators between them
+  // cannot disagree with what is actually drawn — the version that spelled each
+  // `·` beside its own value put one at the head of the line the moment the
+  // first value was missing.
+  //
+  // The key leads because a key *is* the task's number: it is permanent, it is
+  // what every conversation about the task refers to, and it is what somebody
+  // types to find this row again. Nothing else here is guaranteed to be there.
+  const facts: string[] = [record.key];
+  if (record.fields !== undefined) {
+    facts.push(typeLabel(typeOf(record.fields)));
+    // `normal` is what a task is unless somebody decided otherwise, so saying
+    // it on every row would be saying nothing on every row.
+    if (priority !== "normal") facts.push(priorityLabel(priority));
+  }
+  if (showing) facts.push(showing);
+  // Three at most: a row is one line of context, and a task tagged six ways
+  // would push everything else off the end of it.
+  if (record.tags.length > 0) facts.push(record.tags.slice(0, 3).join(", "));
+  if (record.archived) facts.push("archived");
+
   return (
     <button
       {...drag}
@@ -282,41 +309,23 @@ function TaskRow({ record }: { record: MemoryRecord }) {
       onContextMenu={menu}
       className="flex w-full items-start gap-3 px-4 py-3 text-left transition-colors duration-(--motion-duration-fast) ease-shell hover:bg-hover data-[dragging=true]:opacity-50"
     >
+      {/* The mark this window draws every record of a kind with. One kind here,
+          so it says nothing new — and that is not what it is for: it is the
+          left edge every row starts at, which is what makes a list of
+          differently sized titles read as a column rather than as paragraphs. */}
+      <KindMark icon="list-checks" className="mt-px" />
       <span className="min-w-0 flex-1">
         {/* Never truncated. It is an instruction with a verb and an object, and
             an interface that abbreviates it is hiding the one thing somebody
             has to read before agreeing to do it. */}
         <span className="block text-base text-fg">{title(record)}</span>
         <span className="mt-1 flex min-w-0 flex-wrap items-center gap-1.5 text-xs text-fg-tertiary">
-          {/* Drawn from what the row carries, and left off entirely when it
-              carries nothing: a row that printed the type's defaults would be
-              stating a fact about the task that nobody wrote. */}
-          {record.fields === undefined ? null : (
-            <>
-              <span className="shrink-0">{typeLabel(typeOf(record.fields))}</span>
-              {/* `normal` is what a task is unless somebody decided otherwise,
-                  so saying it on every row would be saying nothing on every
-                  row. */}
-              {priority === "normal" ? null : (
-                <>
-                  <span aria-hidden="true">·</span>
-                  <span className="shrink-0">{priorityLabel(priority)}</span>
-                </>
-              )}
-            </>
-          )}
-          {showing ? (
-            <>
-              {record.fields === undefined ? null : <span aria-hidden="true">·</span>}
-              <span className="truncate font-mono">{showing}</span>
-            </>
-          ) : null}
-          {record.archived ? (
-            <>
-              <span aria-hidden="true">·</span>
-              <span className="shrink-0">archived</span>
-            </>
-          ) : null}
+          {facts.map((fact, at) => (
+            <span key={fact} className="flex min-w-0 items-center gap-1.5">
+              {at === 0 ? null : <span aria-hidden="true">·</span>}
+              <span className={at === 0 ? "shrink-0 font-mono" : "truncate"}>{fact}</span>
+            </span>
+          ))}
         </span>
       </span>
     </button>
