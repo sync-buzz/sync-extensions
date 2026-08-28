@@ -30,7 +30,7 @@
       "license": "MIT",
       "repository": null,
       "artefact": {
-        "url": "https://github.com/sync-buzz/sync-extensions/releases/download/v1.2.1/chat-1.2.0.syncext",
+        "url": "https://github.com/sync-buzz/sync-extensions/releases/download/v1.2.2/chat-1.2.0.syncext",
         "sha256": "37f3751f02432915b894936e48a4394fce55148535a108ce2e835d00ea79aa8c",
         "bytes": 21207
       }
@@ -59,7 +59,7 @@
       "license": "MIT",
       "repository": null,
       "artefact": {
-        "url": "https://github.com/sync-buzz/sync-extensions/releases/download/v1.2.1/issues-0.1.0.syncext",
+        "url": "https://github.com/sync-buzz/sync-extensions/releases/download/v1.2.2/issues-0.1.0.syncext",
         "sha256": "0f315f5902e0375437e7f19339a0c3e12161a0dcd5e16e7bdc2848902116f4ce",
         "bytes": 10755
       }
@@ -89,7 +89,7 @@
       "license": "MIT",
       "repository": null,
       "artefact": {
-        "url": "https://github.com/sync-buzz/sync-extensions/releases/download/v1.2.1/project-memory-1.0.0.syncext",
+        "url": "https://github.com/sync-buzz/sync-extensions/releases/download/v1.2.2/project-memory-1.0.0.syncext",
         "sha256": "8a7e3b8c3dd20298f271209cc5813ea7ecfa36fc2f01542bfe85fd5fe52d2338",
         "bytes": 7410
       }
@@ -122,7 +122,7 @@
       "license": "MIT",
       "repository": null,
       "artefact": {
-        "url": "https://github.com/sync-buzz/sync-extensions/releases/download/v1.2.1/records-1.0.2.syncext",
+        "url": "https://github.com/sync-buzz/sync-extensions/releases/download/v1.2.2/records-1.0.2.syncext",
         "sha256": "27c9873eb0634c1b3aba8ecf3b5c2fe6a3d94a7b9199ff2e8fe633168a1ccd20",
         "bytes": 13567
       }
@@ -132,7 +132,7 @@
       "name": "Routines",
       "summary": "Standing instructions an agent carries out on a clock, whether or not anybody has a window open.",
       "icon": "alarm-clock",
-      "version": "0.2.0",
+      "version": "0.2.1",
       "syncApi": "^2.10",
       "capabilities": [
         "records",
@@ -160,9 +160,9 @@
       "license": "MIT",
       "repository": null,
       "artefact": {
-        "url": "https://github.com/sync-buzz/sync-extensions/releases/download/v1.2.1/routines-0.2.0.syncext",
-        "sha256": "fe944058e8c342ca76cd88174c87218c3f882de514365e01432f2bff495bb1aa",
-        "bytes": 15055
+        "url": "https://github.com/sync-buzz/sync-extensions/releases/download/v1.2.2/routines-0.2.1.syncext",
+        "sha256": "ea3a914d70b84392c235b3e853d2ca3d2eb91435671d9ffa99167e4c2a06cf6c",
+        "bytes": 14625
       }
     },
     {
@@ -170,7 +170,7 @@
       "name": "Tasks",
       "summary": "The work this project has committed to, written so that finishing it can be checked — and handed to an agent from the record itself.",
       "icon": "list-checks",
-      "version": "0.2.0",
+      "version": "0.2.1",
       "syncApi": "^2.13",
       "capabilities": [
         "records",
@@ -192,9 +192,9 @@
       "license": "MIT",
       "repository": null,
       "artefact": {
-        "url": "https://github.com/sync-buzz/sync-extensions/releases/download/v1.2.1/tasks-0.2.0.syncext",
-        "sha256": "5b914be84255547b2b413f8f3f9aaeab8022e3567fbf065366d96882fb36ee7a",
-        "bytes": 23344
+        "url": "https://github.com/sync-buzz/sync-extensions/releases/download/v1.2.2/tasks-0.2.1.syncext",
+        "sha256": "5c00ebf5b46fffc4d7870e9dfd34ed9585b54d366d4547086c7d9dae0e468da7",
+        "bytes": 23346
       }
     }
   ]
