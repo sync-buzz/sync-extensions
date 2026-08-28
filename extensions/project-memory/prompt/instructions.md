@@ -19,7 +19,10 @@ it. What is true, not what ought to be.
 **question** — one unresolved fork, and its answer once it has one. Raise these
 yourself: the moment you are about to ask the user something whose answer is
 not already recorded, write the question first, then ask. If the conversation
-ends, the next session finds it open instead of losing it.
+ends, the next session finds it open instead of losing it. How one is written
+so that it can be answered is *Asking a question* below, and it is not optional
+— a person answers these in a section of their own, and what they are shown is
+what you wrote.
 
 **artifact** — a pointer to something produced outside this memory: a design
 file, an issue, a gist. The record says what it is for; the thing stays where
@@ -32,6 +35,52 @@ a hard rule or a non-obvious fact into one, stop: it belongs in a record of the
 five above, linked from the document. A claim buried in prose is invisible to
 freshness — nothing can flag that one paragraph rotted — and unreachable by a
 link, because nothing can point at a sentence.
+
+## Asking a question
+
+A question is read by somebody who was not in the conversation that raised it,
+on its own, in a section built for settling it. So it is written for that
+reader rather than as a note to yourself.
+
+**The title is the question, and it ends in a question mark.** One sentence,
+answerable as it stands: *Where do an extension's settings live — the settings
+window or the extension's page?* A title that is a topic — *Extension settings*
+— is a heading over a fork nobody stated, and whoever opens it has to
+reconstruct what they are being asked before they can answer it.
+
+**Say what it is about with a link, not with a paragraph.** `references` → the
+task, the claim or the document the question came out of, and `scope_paths`
+when it is about code. That link is what is shown beside the question when
+somebody answers, and it is the difference between answering and guessing. A
+question pointing at nothing is answered from whatever the reader happens to
+remember.
+
+**The body says what is waiting, and what each option costs.** Two sections
+carry that, and the headings go in the project's language — `sync_project` says
+which:
+
+```markdown
+## Context
+What raised it, and what is blocked until it is answered.
+
+## Options
+- **A — a short name for it** what it buys, and what it costs
+- **B — another** …
+```
+
+Put the same text in `options` as the bullets name. A person choosing *A* and a
+person reading the case for *A* have to be looking at one thing, and they are
+two different surfaces: the field is the control, the body is the reasoning.
+
+**`options` is for a fork with named branches.** One option is a proposal
+rather than a choice, so ask it as prose. Where several could be taken at once,
+set `multi_select`. Where the answer is not a choice at all — *what should this
+be called?* — leave `options` empty; the prose field is the answer.
+
+**Do not answer your own question.** `status`, `chosen` and `answer` belong to
+whoever settles it, and a question you answered yourself is a decision you took
+while writing it down as somebody else's. What you write afterwards is what it
+settled: a decision record, with `answered_by` on the question pointing at it.
 
 ## The schema
 
@@ -46,8 +95,9 @@ refuses a field or a relation the type does not declare:
 - **question** — `status`: `open` | `answered`, required, starts at `open`.
   `answer`: prose, written when it is answered. `options`: a list of strings,
   when the answer is a choice rather than free text. `multi_select`: true when
-  more than one option may be chosen. Relations: `answered_by` → decision,
-  `references` → any.
+  more than one option may be chosen. `chosen`: the options that were taken,
+  spelled exactly as `options` spells them — written by whoever answers, never
+  by whoever asks. Relations: `answered_by` → decision, `references` → any.
 - **artifact** — `url`: required. `source`: `figma` | `url` | `file` | `gist` |
   `other`, default `url`. Relations: `references` → any.
 
@@ -144,7 +194,10 @@ work either way.
    answer.
 3. `memory_list_records` with `kind: "project-memory.question"` before you ask
    the user anything — an open question may already be waiting for exactly the
-   answer you are about to produce.
+   answer you are about to produce, and an answered one settles it without
+   asking at all. Read `chosen` and `answer` together: the first says which
+   fork was taken, the second says why. Answering archives the record, so
+   `archived: false` is how you ask for the ones still waiting.
 4. Trust-check what you rely on, by freshness.
 5. Write with `sync_apply` the moment something is true, not at the end of the
    task. Correct what your change falsified in the same session.

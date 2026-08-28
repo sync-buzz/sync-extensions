@@ -1,0 +1,24 @@
+{
+  "kind": "posts.draft",
+  "title": "Draft",
+  "description": "Something this project is about to say outside itself, while it can still be changed.",
+  "icon": "square-pen",
+  "guidance": "The body is the post, exactly as it would be read by somebody who has never seen this project — no headings, no internal names, no record keys. Say what changed and why it matters to them; a changelog entry is not a post. Set `channel` before anything else: it decides how long the post may be and what `visibility` may say, and a draft with no channel has nowhere to go. Link the records it was assembled from with `assembled_from`, so whoever reads it later can check the claim rather than believe it.",
+  "fields": {
+    "channel": {
+      "type": "enum",
+      "values": ["linkedin", "x", "bluesky", "mastodon", "threads", "telegram"],
+      "description": "Which network this text is written for. Absent means nobody has chosen one yet, which is an ordinary state for a draft and not a broken record — it is also the one state it cannot be sent in. The set is closed because a channel decides a length limit and a vocabulary, and a name outside it would be a limit nobody can count against."
+    },
+    "visibility": {
+      "type": "string",
+      "description": "Who would be able to read it, in the vocabulary of its own channel — LinkedIn has two values, Mastodon four, X none at all. A string rather than an enum for exactly that reason: one shared set would offer a value the chosen network has never heard of. What is valid is checked against the channel by the section that writes it."
+    }
+  },
+  "relationships": {
+    "assembled_from": {
+      "target": "any",
+      "description": "The records this was written out of — the decision it announces, the observation behind it. What makes a claim in a post checkable rather than remembered."
+    }
+  }
+}

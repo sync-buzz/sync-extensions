@@ -1,16 +1,32 @@
 {
   "manifestVersion": 1,
   "id": "project-memory",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "name": "Project memory",
-  "summary": "A place for the answers your project has already worked out, so nobody works them out twice.",
-  "description": "Every project builds up answers that never get written down: why this database and not that one, what must never be changed without checking first, a workaround and the reason it is there, a question nobody has decided yet. They stay in a chat window or in one person's head, and a month later somebody asks again \u2014 or quietly does the opposite. This gives them a place. Five kinds of note \u2014 a choice, a rule, something you found out, an open question, and a pointer to something kept elsewhere \u2014 written and read in Records, next to everything else the project holds. They live in the repository, so they go wherever the code goes and anyone who has the code has them too. It also tells the assistants you connect what is worth writing down and how to word it, which is the difference between an assistant that leaves you useful notes and one that leaves you a transcript.",
+  "summary": "A place for the answers your project has already worked out, so nobody works them out twice — and a section for the questions it has not.",
+  "description": "Every project builds up answers that never get written down: why this database and not that one, what must never be changed without checking first, a workaround and the reason it is there, a question nobody has decided yet. They stay in a chat window or in one person's head, and a month later somebody asks again — or quietly does the opposite. This gives them a place. Five kinds of note — a choice, a rule, something you found out, an open question, and a pointer to something kept elsewhere — written and read in Records, next to everything else the project holds. They live in the repository, so they go wherever the code goes and anyone who has the code has them too. It also tells the assistants you connect what is worth writing down and how to word it, which is the difference between an assistant that leaves you useful notes and one that leaves you a transcript. Questions get a section of their own, because answering one is an act rather than a read: what the question is about is shown beside it — the record it came out of, the code it concerns — and where the asker offered choices they are the controls, so settling a fork is a click and a sentence rather than an edit somewhere in a body of text.",
   "icon": "book-marked",
   "engines": {
-    "syncApi": "^2.0"
+    "syncApi": "^2.10"
   },
   "capabilities": [
-    "records"
+    "records",
+    "native-menu",
+    "sheets"
+  ],
+  "areas": [
+    {
+      "id": "questions",
+      "label": "Questions",
+      "description": "What this project has not settled, what each question is about, and the controls that settle it.",
+      "frame": "browse",
+      "icon": "circle-help",
+      "badge": {
+        "kinds": [
+          "project-memory.question"
+        ]
+      }
+    }
   ],
   "types": [
     "types/decision.json",
@@ -20,9 +36,13 @@
     "types/artifact.json"
   ],
   "opens": {
-    "kinds": [],
+    "kinds": [
+      "project-memory.question"
+    ],
     "projectTypes": false
   },
   "prompt": "prompt/instructions.md",
+  "ui": "ui/index.js",
+  "styles": "ui/index.css",
   "license": "MIT"
 }

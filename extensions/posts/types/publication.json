@@ -1,0 +1,34 @@
+{
+  "kind": "posts.publication",
+  "title": "Publication",
+  "description": "Something this project said outside itself: the text as it went out, where it went, and when.",
+  "icon": "megaphone",
+  "guidance": "Written when a post has actually gone out, and not before. Its body is the text exactly as it left — that is the whole reason it is a record of its own rather than a field on the draft: a draft edited afterwards would otherwise rewrite what was said. Write one as soon as the post is delivered, archive the draft it came from, and link the two with `sent_from`. Do not edit one. If what went out was wrong, that is a new post saying so — a correction is a thing that happened, not a thing that unhappens.",
+  "fields": {
+    "channel": {
+      "type": "enum",
+      "values": ["linkedin", "x", "bluesky", "mastodon", "threads", "telegram"],
+      "required": true,
+      "description": "Which network it went to. Required here where it is optional on a draft, and the difference is the point: a draft may not have been decided yet, and something that has already gone out went somewhere."
+    },
+    "sent": {
+      "type": "string",
+      "required": true,
+      "description": "When it went out, as an ISO 8601 timestamp. Required, because a publication is an account of an event and an event with no time is not one."
+    },
+    "identifier": {
+      "type": "string",
+      "description": "What the network calls this post — a URN, a numeric id, an AT URI. The only handle anybody has on it afterwards. Not required, deliberately: where it cannot be got, a record of what was said and when is still worth far more than no record at all."
+    },
+    "visibility": {
+      "type": "string",
+      "description": "Who could read it, as it was actually sent, in its channel's own vocabulary. Kept beside the text for the same reason the text is kept: what a draft says now is not evidence of what was agreed to then."
+    }
+  },
+  "relationships": {
+    "sent_from": {
+      "target": "posts.draft",
+      "description": "The draft this was written from, for the provenance. A pointer and never a source: the text lives here, so this link may be followed for context and never for what was said."
+    }
+  }
+}

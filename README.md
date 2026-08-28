@@ -23,14 +23,19 @@ extensions/<id>/
 | --- | --- | --- | --- |
 | `records` | the Records section | nothing | yes |
 | `chat` | the Chat section | a conversation | yes |
-| `project-memory` | nothing to look at | five kinds of claim | none |
+| `project-memory` | the Questions section | five kinds of claim | yes |
 
-`project-memory` has no `ui` at all, and that is worth saying out loud because
-it is the case an extension system usually gets wrong: an extension is not
-necessarily a screen. This one publishes a vocabulary and a prompt, both of
-which reach a project without a line of its code being executed. Sync's manifest
-reader treats a missing `ui` as an answer rather than as an omission — and
-refuses the other half of it, a section declared with no code to draw it.
+`project-memory` publishes five kinds and draws one of them, which is worth
+saying out loud because both halves are cases an extension system usually gets
+wrong. A vocabulary and a prompt reach a project without a line of the package
+being executed, and four of these kinds are read in the section that reads
+records — so an extension is not necessarily a screen, and Sync's manifest
+reader treats a missing `ui` as an answer rather than as an omission. The fifth
+kind is a question, and a question is the one record here addressed to somebody:
+it waits on an answer, and answering it is a choice and a sentence rather than
+an edit somewhere in a body of text. That is what a section is for, so it has
+one — and the other half of the same rule bites here, because a section declared
+with no code to draw it is refused.
 
 ## Building
 

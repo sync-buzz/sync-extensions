@@ -3,7 +3,7 @@
   "title": "Question",
   "description": "Something nobody has settled yet, and the answer once there is one.",
   "icon": "circle-help",
-  "guidance": "Raise one before asking a person, not after: a question written down outlives the conversation, and the answer lands where the next reader finds it. Answer it in place rather than opening a second record.",
+  "guidance": "Raise one before asking a person, not after: a question written down outlives the conversation, and the answer lands where the next reader finds it. The title is the question itself and ends in a question mark; the body says what prompted it and what each option costs. Link with `references` to whatever it is about — a question read with nothing beside it is answered by guessing. Offer `options` whenever the answer is a choice: the ones taken are written back into `chosen`, and `answer` says in prose what settled it. Answer it in place rather than opening a second record.",
   "fields": {
     "status": {
       "type": "enum",
@@ -28,6 +28,12 @@
       "required": false,
       "default": false,
       "description": "Whether more than one option may be chosen."
+    },
+    "chosen": {
+      "type": "array",
+      "items": { "type": "string" },
+      "required": false,
+      "description": "The options that were taken, spelled exactly as `options` spells them. Empty while the question is open, and empty for an answer that was prose rather than a choice. It is a field rather than a sentence inside `answer` because what was chosen is the half a list can show and a reader can count; the prose beside it is the half that says why."
     }
   },
   "relationships": {
@@ -37,7 +43,7 @@
     },
     "references": {
       "target": "any",
-      "description": "Another record this one rests on, cites or is about."
+      "description": "What the question is about — the task, the claim or the document it came out of. This is the context whoever answers reads first."
     }
   }
 }

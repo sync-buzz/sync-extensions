@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 
 import {
   Button,
@@ -130,15 +130,33 @@ function Reading({
   //
   // Only for a reader who is at the end. Somebody who has scrolled up is
   // reading something, and a resize is not their asking to leave it.
+  //
+  // The viewport is held as state, and the observer is given that element
+  // rather than sent to read the library's ref. There are renders where no
+  // viewport is attached at all — a conversation with nothing in it yet
+  // returns below without a scroller in it — and that ref is a callback
+  // function carrying a `current` written onto it, which before its first
+  // attachment is `undefined` and not `null`. A guard against `null` passes
+  // that through, and `observe(undefined)` throws; the render it throws on is
+  // the one every conversation opens with, so the section never draws. State
+  // is also what has the observer follow a viewport that is replaced.
+  const [viewport, setViewport] = useState<HTMLDivElement | null>(null);
+  const holdViewport = useCallback(
+    (node: HTMLDivElement | null) => {
+      scrollRef(node);
+      setViewport(node);
+    },
+    [scrollRef],
+  );
+
   useEffect(() => {
-    const viewport = scrollRef.current;
     if (viewport === null) return;
     const watch = new ResizeObserver(() => {
       if (state.isAtBottom) void scrollToBottom({ animation: "instant" });
     });
     watch.observe(viewport);
     return () => watch.disconnect();
-  }, [empty, scrollRef, scrollToBottom, state]);
+  }, [scrollToBottom, state, viewport]);
 
   if (empty) {
     return (
@@ -152,7 +170,7 @@ function Reading({
 
   return (
     <div className="relative flex min-h-0 flex-1 flex-col">
-      <ScrollArea viewportRef={scrollRef} className="min-h-0 flex-1">
+      <ScrollArea viewportRef={holdViewport} className="min-h-0 flex-1">
         {/* The measured column is also what is watched for growth. Its height
             is the whole of the question "has the conversation got longer",
             which is why the observer is on it rather than on the viewport —
