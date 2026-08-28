@@ -3,6 +3,17 @@
   "id": "routines",
   "versions": [
     {
+      "version": "0.3.0",
+      "syncApi": "^2.10",
+      "description": "A routine is one instruction, written to an agent, that Sync hands over on an interval — check the tracker, read the inbox, look at what changed overnight. Sync raises the agent and the agent does the work with the tools it already has on this machine, so what a routine can reach is whatever its agent can reach, and nothing here needs to know what a mailbox or an issue is. A routine is a record like any other, so it is read, edited and searched where the rest of the project is, and it travels with the repository. Nothing runs until somebody switches it on: a routine spends an agent's tokens, and arriving at somebody else's clone already running is not something they agreed to.",
+      "changelog": "The navigator is where you stand; the surface beside it is what is there.\n\n0.2.x put the routines themselves into the tree, under the row that stands for\nthe whole list — so one triangle folded the entire section shut, and a row that\nis not a folder behaved like one. That division is not this package's to\ninvent: Records draws its types and their folders in the navigator and its\nrecords on the surface, and Tasks does the same with its register. This now\ndoes what they do.\n\n**The navigator holds three kinds of row and no others**: `All routines`, the\nfolders somebody made, and `Archived`. Every one is a place to stand. The\nfolder counts, the drop that takes a routine back out of a group, and the\narchive as a place rather than a preference all stay exactly as they were.\n\n**The surface holds the list**, which is the only place a row can carry a\ncontrol. Whether a routine runs is a decision somebody makes several times a\nday, and on this system that is a checkbox in the row — Mail's rules keep one,\nSystem Settings' login items keep one. It replaces the dimming 0.2.1 used, and\nwith it the last of the state the mark was carrying: the glyph says what a\nroutine is and the checkbox says whether it runs, which is the division\n`design-foundation.md` §284 asks for.\n\nUnder each name: how often, which agent, and the folder it is filed in when the\nlist is not already one folder's. Writing a routine is `+` beside the list it\njoins, where macOS puts the command that belongs to the content.\n\nA folder's own description is a strip above its list rather than a button in an\nempty column, and it opens the ordinary editor because it is an ordinary\ndocument.",
+      "artefact": {
+        "url": "https://github.com/sync-buzz/sync-extensions/releases/download/v1.3.1/routines-0.3.0.syncext",
+        "sha256": "04285165ea3c9b0d53f3268f3e45d4c81b1966d7327ee2a522f8ae49a1016b9d",
+        "bytes": 15250
+      }
+    },
+    {
       "version": "0.2.2",
       "syncApi": "^2.10",
       "description": "A routine is one instruction, written to an agent, that Sync hands over on an interval — check the tracker, read the inbox, look at what changed overnight. Sync raises the agent and the agent does the work with the tools it already has on this machine, so what a routine can reach is whatever its agent can reach, and nothing here needs to know what a mailbox or an issue is. A routine is a record like any other, so it is read, edited and searched where the rest of the project is, and it travels with the repository. Nothing runs until somebody switches it on: a routine spends an agent's tokens, and arriving at somebody else's clone already running is not something they agreed to.",
