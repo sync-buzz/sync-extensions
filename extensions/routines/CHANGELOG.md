@@ -1,5 +1,38 @@
 # Changelog
 
+## 0.3.1
+
+Opening a folder showed every routine in the project.
+
+The read is deliberately not narrowed to the folder — 0.3.0 says why — which
+left the cut to the surface, and the surface never made it: the rows were
+filtered by the archive flag and by nothing else. Every view drew the whole
+page.
+
+What decides a row is now a function of the records and the view, and it is
+tested directly rather than looked at. That is the repair behind the repair: a
+folder's view lives in the provider's state, so no static render reaches it,
+and a filter that was never written passed every check there was. Thirteen
+cases now ask it what belongs where — the root against a named folder, a folder
+against the one nested under it, the archive against both.
+
+A folder's count comes from the same page its rows do. The engine counts every
+document filed in a folder, archived ones included; a folder holding two live
+routines and one put away said three on its row and drew two beneath it.
+
+**The checkbox has gone from the row.** A checkbox in a list is how a list says
+*this one is chosen* or *this one is done*, and a routine is neither. Nor does
+any list in this window carry a control: a row in Records and a row in Tasks is
+a mark, some text and a second mark, with the whole row one button.
+`design-foundation.md` §466 does say a flag is a checkbox — about the panel
+beside the record, which is where this one still is.
+
+So a row says whether it runs in words, the way §284 has a row say a state, and
+in both directions: a row that fell silent when a routine was off would put the
+answer in an absence, and *nothing here is running* is what somebody most needs
+to see. Switching one on or off is the secondary button, or the flag in the
+inspector.
+
 ## 0.3.0
 
 The navigator is where you stand; the surface beside it is what is there.

@@ -71,15 +71,3 @@ export function enabledOf(fields: Fields): boolean {
 export function everyLabel(every: string): string {
   return INTERVALS.find((interval) => interval.id === every)?.brief ?? every;
 }
-
-/**
- * What the switch on a row is called, for anybody not looking at it.
- *
- * The control is a checkbox and the name has to say what ticking it does, not
- * what it is: *Read the inbox* beside a tick is a label a screen reader reads
- * as a routine's name twice.
- */
-export function enabledLabel(record: { title: string; key: string }): string {
-  const named = record.title.trim() || record.key;
-  return `Run ${named} on its clock`;
-}

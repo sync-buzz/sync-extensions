@@ -50,7 +50,7 @@ import {
 } from "@sync-buzz/extension-api";
 
 import { KIND, enabledOf } from "./model";
-import { useRoutines, type RoutinesFilter } from "./filter";
+import { liveByFolder, useRoutines, type RoutinesFilter } from "./filter";
 import { ALL_ROW, folderRow, parentRow } from "./navigator";
 
 /**
@@ -72,6 +72,8 @@ interface AreaState {
   readonly folders: readonly MemoryFolder[];
   /** How many routines are in play, and how many have been put away. */
   readonly counts: { readonly live: number; readonly archived: number };
+  /** How many routines are in play in each folder, by path. */
+  readonly perFolder: ReadonlyMap<string, number>;
   readonly filter: RoutinesFilter;
   readonly select: (filter: RoutinesFilter) => void;
   readonly expanded: readonly string[];
@@ -88,7 +90,10 @@ interface AreaState {
   readonly folderNote: OpenDocument;
   readonly agents: readonly AgentDescriptor[];
   readonly agentName: (id: string) => string;
+  /** The glyph the tree draws, resolved. */
   readonly kindIcon: LucideIcon;
+  /** The same mark by name, which is what the surface's own rows take. */
+  readonly kindMark: string;
   readonly failure: string | null;
   readonly dismissFailure: () => void;
   readonly justCreated: string | null;
@@ -162,9 +167,11 @@ export function RoutinesProvider({
 
   const open = useDocument(project.path, openKey);
   const mine = folders.byKind.get(KIND) ?? NO_FOLDERS;
-  const mark = kindIcon(
-    corpus.types.find((type) => type.kind === KIND)?.icon ?? "alarm-clock",
-  );
+  // The mark the project's own type names for a routine. A type invented on
+  // this machine is the project's to mark, so it is read from the corpus rather
+  // than chosen here — by name for the surface, resolved for the tree.
+  const markName = corpus.types.find((type) => type.kind === KIND)?.icon ?? "alarm-clock";
+  const mark = kindIcon(markName);
 
   const counts = useMemo(() => {
     let live = 0;
@@ -176,6 +183,8 @@ export function RoutinesProvider({
     }
     return { live, archived };
   }, [corpus.records]);
+
+  const perFolder = useMemo(() => liveByFolder(corpus.records), [corpus.records]);
 
   const folderInView = "folder" in filter ? filter.folder : "";
   const selectedFolder =
@@ -377,6 +386,7 @@ export function RoutinesProvider({
       corpus,
       folders: mine,
       counts,
+      perFolder,
       filter,
       select,
       expanded,
@@ -391,6 +401,7 @@ export function RoutinesProvider({
       agents,
       agentName: (id) => agents.find((one) => one.id === id)?.name ?? id,
       kindIcon: mark,
+      kindMark: markName,
       failure,
       dismissFailure: done,
       justCreated,
@@ -412,6 +423,7 @@ export function RoutinesProvider({
       corpus,
       mine,
       counts,
+      perFolder,
       filter,
       select,
       expanded,
@@ -422,6 +434,7 @@ export function RoutinesProvider({
       folderNote,
       agents,
       mark,
+      markName,
       failure,
       done,
       justCreated,

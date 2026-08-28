@@ -1,12 +1,13 @@
 "use client";
 
-import { useId, useMemo, type MouseEvent } from "react";
+import { useMemo, type MouseEvent } from "react";
 
 import { Info, Plus } from "lucide-react";
 
 import {
   Button,
   DocumentView,
+  KindMark,
   PanelPlaceholder,
   ScrollArea,
   Tooltip,
@@ -19,8 +20,8 @@ import {
 } from "@sync-buzz/extension-api";
 
 import { useArea } from "./area";
-import type { RoutinesFilter } from "./filter";
-import { agentOf, enabledOf, enabledLabel, everyLabel, everyOf } from "./model";
+import { visible, type RoutinesFilter } from "./filter";
+import { agentOf, enabledOf, everyLabel, everyOf } from "./model";
 
 /** What the surface is showing, in the words its header says it in. */
 export function viewName(filter: RoutinesFilter): string {
@@ -78,12 +79,10 @@ function List() {
   const folder = "folder" in area.filter ? area.filter.folder : null;
   const archived = "view" in area.filter && area.filter.view === "archived";
 
-  const rows = useMemo(() => {
-    const held = area.corpus.records.filter(
-      (record) => !record.isFolder && record.archived === archived,
-    );
-    return [...held].sort(byName);
-  }, [area.corpus.records, archived]);
+  const rows = useMemo(
+    () => [...visible(area.corpus.records, area.filter)].sort(byName),
+    [area.corpus.records, area.filter],
+  );
 
   return (
     <section className="flex h-full min-w-0 flex-col bg-workspace">
@@ -145,12 +144,21 @@ function List() {
 }
 
 /**
- * One routine: whether it runs, what it is called, and when.
+ * One routine: what it is called, whether it runs, and when.
  *
- * The switch is a control of its own beside the row rather than inside it,
- * because a button inside a button is not a thing — and because they are two
- * different acts: one opens the instruction, the other decides whether an agent
- * carries it out tonight. Flicking it must not open anything.
+ * **No control on the row.** A checkbox was here and it was wrong twice over.
+ * A checkbox in a list is how a list says *this one is chosen* or *this one is
+ * done*, and a routine is neither; and no list in this window carries a control
+ * at all — a row in Records and a row in Tasks are a mark, some text and a
+ * second mark, and the whole row is one button. `design-foundation.md` §466
+ * does say a flag is a checkbox, and it says it about the panel beside the
+ * record, which is where this one still is.
+ *
+ * So the state is said the way §284 says a state on a row: in words, beside
+ * the facts it belongs with, and reinforced by the row's own tier. It is
+ * changed where changes are made — the secondary button here, and the flag in
+ * the inspector — which is one gesture rather than a control that has to hold
+ * still under the pointer.
  */
 function Row({
   record,
@@ -161,7 +169,6 @@ function Row({
 }) {
   const area = useArea();
   const drag = useDragHandle(`record:${record.key}`, { record: record.key });
-  const runs = useId();
   const on = enabledOf(record.fields);
 
   const menu = (event: MouseEvent) =>
@@ -188,7 +195,17 @@ function Row({
   // What the row can say about itself, in the order it is worth reading. Built
   // as a list rather than as nested conditions, so the separators between them
   // cannot disagree with what is actually drawn.
+  // What the row says about itself, in the order it is worth reading. Built as
+  // a list rather than as nested conditions, so the separators between the
+  // facts cannot disagree with what is actually drawn.
+  //
+  // **Whether it runs leads**, because it is the question this list is opened
+  // with. It is said in both directions rather than only when something is
+  // wrong: a row that fell silent when a routine was off would put the answer
+  // in an absence, and *nothing is running here* is exactly what somebody has
+  // to be able to see.
   const facts: string[] = [];
+  if (!record.archived) facts.push(on ? "Runs" : "Off");
   if (record.fields !== undefined) {
     facts.push(everyLabel(everyOf(record.fields)));
     facts.push(area.agentName(agentOf(record.fields)));
@@ -196,39 +213,29 @@ function Row({
   if (showFolder && record.folder) facts.push(record.folder);
 
   return (
-    <div className="flex items-start gap-3 px-4 py-3">
-      {/* The one control macOS puts in a row of standing rules — Mail's Rules,
-          System Settings' login items. A routine that is switched off is not a
-          different kind of thing, so nothing else on this row changes: the
-          state is said once, by the control that changes it. */}
-      <input
-        id={runs}
-        type="checkbox"
-        checked={on}
-        disabled={record.archived}
-        aria-label={enabledLabel(record)}
-        onChange={() => area.toggle(record)}
-        className="mt-0.5 size-3.5 shrink-0 accent-fg disabled:opacity-40"
-      />
-      <button
-        {...drag}
-        type="button"
-        onClick={() => area.openRoutine(record.key)}
-        onContextMenu={menu}
-        className="-my-3 flex min-w-0 flex-1 items-start py-3 text-left transition-colors duration-(--motion-duration-fast) ease-shell hover:bg-hover data-[dragging=true]:opacity-50"
-      >
-        <span className="min-w-0 flex-1">
-          {/* Never truncated. It is what the routine is called, and a list that
-              abbreviates it hides the one thing somebody scans for. */}
-          <span className="block text-base text-fg">{name(record)}</span>
-          {facts.length === 0 ? null : (
-            <span className="mt-1 block truncate text-xs text-fg-tertiary">
-              {facts.join(" · ")}
-            </span>
-          )}
-        </span>
-      </button>
-    </div>
+    <button
+      {...drag}
+      type="button"
+      onClick={() => area.openRoutine(record.key)}
+      onContextMenu={menu}
+      // The whole row is the button, as it is in every other list in this
+      // window. The quieter tier for one that is not running is the second
+      // half of the same claim the first word makes, and both survive a
+      // greyscale reading.
+      className="flex w-full items-start gap-3 px-4 py-3 text-left transition-colors duration-(--motion-duration-fast) ease-shell hover:bg-hover data-[dragging=true]:opacity-50"
+    >
+      <KindMark icon={area.kindMark} className="mt-px" />
+      <span className={on || record.archived ? "min-w-0 flex-1" : "min-w-0 flex-1 opacity-60"}>
+        {/* Never truncated. It is what the routine is called, and a list that
+            abbreviates it hides the one thing somebody scans for. */}
+        <span className="block text-base text-fg">{name(record)}</span>
+        {facts.length === 0 ? null : (
+          <span className="mt-1 block truncate text-xs text-fg-tertiary">
+            {facts.join(" · ")}
+          </span>
+        )}
+      </span>
+    </button>
   );
 }
 

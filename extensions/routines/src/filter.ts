@@ -1,7 +1,7 @@
 "use client";
 
 import { PAGE_LIMIT, useCorpus, type Corpus } from "@sync-buzz/extension-api";
-import type { MemorySelection } from "@sync-buzz/extension-api";
+import type { MemoryRecord, MemorySelection } from "@sync-buzz/extension-api";
 
 import { KIND, ROW_FIELDS } from "./model";
 
@@ -66,4 +66,62 @@ export function useRoutines(
  */
 function selection(_filter: RoutinesFilter): MemorySelection {
   return { kind: KIND, fields: [...ROW_FIELDS], limit: PAGE_LIMIT };
+}
+
+/**
+ * The rows one view is asking for, out of the page the store answered with.
+ *
+ * **A pure function, and that is the point.** The selection lives in the
+ * provider's state, so no static render can reach a folder's view — which is
+ * how a list that never filtered by folder at all shipped: every view showed
+ * every routine, and nothing that could be run without a window disagreed.
+ * What decides a row is here, where it can be asked directly.
+ *
+ * Three rules, in order:
+ *
+ * - The record that *is* a folder is never a row. It is what the folder says,
+ *   not something filed in it, which is the same reason the engine leaves it
+ *   out of a listing.
+ * - The archive is a place of its own. Everywhere else shows what is in play,
+ *   and only `archived` shows what is not — `design-foundation.md` §510, where
+ *   archiving means the record leaves the lists.
+ * - A folder shows what is filed **directly** in it. That is what opening a
+ *   folder means everywhere else: Finder shows a directory's contents and not
+ *   its descendants, and a count over the subtree would disagree with the rows
+ *   beneath it. `null` and `""` are one answer — the root — because the store
+ *   spells "filed nowhere" as the first and this column asks with the second.
+ */
+export function visible(
+  records: readonly MemoryRecord[],
+  filter: RoutinesFilter,
+): readonly MemoryRecord[] {
+  const archived = "view" in filter && filter.view === "archived";
+  return records.filter((record) => {
+    if (record.isFolder) return false;
+    if (record.archived !== archived) return false;
+    if (!("folder" in filter)) return true;
+    return (record.folder ?? "") === filter.folder;
+  });
+}
+
+/**
+ * How many routines are in play in each folder, counted from the same page the
+ * rows are drawn from.
+ *
+ * Counted here rather than read from the engine's own `records`, and the reason
+ * is that the two count different things: the engine counts every document
+ * filed in a folder, archived ones included, while this column shows what is in
+ * play. A folder holding two live routines and one put away would have said
+ * three on its row and drawn two beneath it.
+ */
+export function liveByFolder(
+  records: readonly MemoryRecord[],
+): ReadonlyMap<string, number> {
+  const counted = new Map<string, number>();
+  for (const record of records) {
+    if (record.isFolder || record.archived) continue;
+    const at = record.folder ?? "";
+    counted.set(at, (counted.get(at) ?? 0) + 1);
+  }
+  return counted;
 }

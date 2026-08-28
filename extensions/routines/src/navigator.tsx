@@ -86,7 +86,7 @@ export function RoutinesNavigator() {
   const area = useArea();
 
   const items = useMemo(
-    () => rows(area.folders, area.counts, area.kindIcon, area),
+    () => rows(area.folders, area.counts, area.perFolder, area.kindIcon, area),
     [area],
   );
 
@@ -227,6 +227,13 @@ function FolderActions() {
 function rows(
   folders: readonly MemoryFolder[],
   counts: { readonly live: number; readonly archived: number },
+  /**
+   * How many routines are in play in each folder — counted from the same page
+   * the surface draws its rows from, so a folder's number and the rows it opens
+   * cannot disagree. The engine's own count is of every document filed there,
+   * archived ones included, which is a different question.
+   */
+  perFolder: ReadonlyMap<string, number>,
   /** The mark the project's own type names for a routine. */
   mark: LucideIcon,
   commands: {
@@ -254,7 +261,7 @@ function rows(
       icon: Folder,
       // The routines filed directly in it — not the subtree — so it is the same
       // number as the rows the surface then shows.
-      count: folder.records,
+      count: perFolder.get(folder.path) ?? 0,
       children: mine,
       // Dragged to move it, and dropped on to file something in it.
       drag: { folder: folder.path },
