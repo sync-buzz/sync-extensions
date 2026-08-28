@@ -1,5 +1,25 @@
 # Changelog
 
+## 0.2.2
+
+A routine could be dragged into a group and not out again.
+
+Every folder took drops and nothing stood for *no folder*, so the gesture
+worked in one direction only and getting a routine back out meant finding a
+menu. `All routines` is that row — the top of the hierarchy the folders hang
+from, carrying the drop that files something at the top. It is the row Records
+gives each of its types and Tasks gives its register, spelled the way they
+spell it.
+
+It is a folder everywhere the rest of this column is concerned — where a new
+routine is written, what a drop means — and two of the four folder commands are
+refused on it rather than hidden: there is nothing above the top to rename it
+into, and deleting it would mean deleting the list.
+
+An archived routine no longer offers to be dragged. It would have moved and
+stayed exactly where it is drawn, under `Archived`, which is not a folder — a
+gesture that looks like it failed. Bringing it back comes first.
+
 ## 0.2.1
 
 Four things 0.2.0 got wrong, and none of them was cosmetic.
