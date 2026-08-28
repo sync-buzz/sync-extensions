@@ -88,6 +88,12 @@ export const TREE_ROOT = "/root";
  * this row* a read rather than a guess.
  */
 export const routineRow = (key: string) => `routine:${key}`;
+/**
+ * The heading the archived routines hang under. A row of the tree and the
+ * subject of none: `rowSubject` answers `null` for it, which is what keeps a
+ * heading from being selected as though it were a routine.
+ */
+export const ARCHIVED = "group:archived";
 export const folderRow = (path: string) => `folder:${path}`;
 
 /** What a row is, read back from its id. */

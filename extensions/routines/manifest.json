@@ -1,7 +1,7 @@
 {
   "manifestVersion": 1,
   "id": "routines",
-  "version": "0.2.0",
+  "version": "0.2.1",
   "name": "Routines",
   "summary": "Standing instructions an agent carries out on a clock, whether or not anybody has a window open.",
   "description": "A routine is one instruction, written to an agent, that Sync hands over on an interval — check the tracker, read the inbox, look at what changed overnight. Sync raises the agent and the agent does the work with the tools it already has on this machine, so what a routine can reach is whatever its agent can reach, and nothing here needs to know what a mailbox or an issue is. A routine is a record like any other, so it is read, edited and searched where the rest of the project is, and it travels with the repository. Nothing runs until somebody switches it on: a routine spends an agent's tokens, and arriving at somebody else's clone already running is not something they agreed to.",

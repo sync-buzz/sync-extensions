@@ -1,5 +1,43 @@
 # Changelog
 
+## 0.2.1
+
+Four things 0.2.0 got wrong, and none of them was cosmetic.
+
+**Folders were created and drawn nowhere.** Every answer the engine gives to
+*what folders has this type got* carries an entry for the root — the records
+filed nowhere — and this package took it for an ordinary folder. The folder
+above `""` is `""`, so the root became its own parent, and every top-level
+folder was hung under a row nothing reaches. The folders were written, were
+returned, and were invisible; nothing could be filed into one, renamed or
+deleted. The root is now what it always was — this tree's own root — and the
+routines in it are the ungrouped ones drawn at the end.
+
+The indent came back with them. `SourceTree` reserves the disclosure column
+across the whole tree the moment one folder exists, and with no folder ever
+reaching it the column stayed flat.
+
+**The mark said two things at once.** A switched-off routine was drawn with a
+struck-through alarm clock, which reads as a silenced alarm rather than an
+automation that is not running — and it made a routine appear to change kind
+when somebody switched it off. `design-foundation.md` §284 divides these: a
+kind is a glyph, a state is a mark of its own, and neither is the other. Every
+row now draws the mark the project's own type names, and *not running* is said
+by dimming the row, which is the one device this system uses for it.
+
+**Archived routines came back into the list as rows nothing told apart.** A
+filter in the bottom bar returned them among the live ones, undimmed if they
+happened to be switched on, which made archiving and deleting look like the
+same word — the distinction §510 exists to keep. They are a place now: an
+`Archived` group at the foot of the tree, with its own count, drawn only while
+it holds something, the way an archived message is in a mailbox rather than
+behind a preference over the inbox. The filter and the preference it stored are
+gone.
+
+Measured rather than argued: the fixture the columns are rendered against now
+carries the root entry the engine really returns, which is what the first pass
+left out and why the tree shipped broken.
+
 ## 0.2.0
 
 Routines can be grouped, and managed from the list they are in.

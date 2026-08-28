@@ -11,7 +11,7 @@ import {
   type ReactNode,
 } from "react";
 
-import { Info } from "lucide-react";
+import { Info, type LucideIcon } from "lucide-react";
 
 import {
   Button,
@@ -27,6 +27,7 @@ import {
   describeMemoryFolder,
   explain,
   forgetRememberedConversation,
+  kindIcon,
   memoryFolderToll,
   moveMemoryDocument,
   rememberedConversations,
@@ -79,8 +80,20 @@ interface Ran {
 interface AreaState {
   readonly project: OpenProject;
   readonly corpus: Corpus;
-  /** The routines this column is listing: the corpus, less what is filtered. */
+  /** The routines in play: everything the project holds that is not archived. */
   readonly routines: readonly MemoryRecord[];
+  /**
+   * The archived ones, which are deliberately not among the above.
+   *
+   * `design-foundation.md` §510: archiving is the reversible half of removing
+   * something, and what makes it that is that **the record leaves the lists**.
+   * Mixed back in behind a filter they were rows nothing told apart from the
+   * live ones — so they are their own group, the way an archived message is its
+   * own mailbox rather than a preference over the inbox.
+   */
+  readonly archived: readonly MemoryRecord[];
+  /** The mark this project's own type declares for a routine. */
+  readonly kindIcon: LucideIcon;
   /** The same rows by key, for the commands that act on one. */
   readonly byKey: ReadonlyMap<string, MemoryRecord>;
   readonly folders: readonly MemoryFolder[];
@@ -114,9 +127,6 @@ interface AreaState {
   readonly folderNote: OpenDocument;
   readonly agents: readonly AgentDescriptor[];
   readonly agentName: (id: string) => string;
-  readonly showArchived: boolean;
-  readonly setShowArchived: (show: boolean) => void;
-  readonly archivedCount: number;
   readonly failure: string | null;
   readonly dismissFailure: () => void;
 
@@ -192,7 +202,6 @@ export function RoutinesProvider({
 
   const [selected, setSelected] = useState<string | null>(null);
   const [expanded, setExpanded] = useState<readonly string[]>([]);
-  const [showArchived, setShowArchived] = useState(() => held(project.path));
   const [failure, setFailure] = useState<string | null>(null);
 
   // The sheets this area opens. Each is the shell's own: a deletion has to say
@@ -228,23 +237,23 @@ export function RoutinesProvider({
   }, []);
 
   const mine = folders.byKind.get(KIND) ?? EMPTY_FOLDERS;
+  // The glyph the project's own type names for a routine, resolved once. A
+  // type invented on this machine is the project's to mark, so it is read from
+  // the corpus rather than chosen here.
+  const mark = kindIcon(
+    corpus.types.find((type) => type.kind === KIND)?.icon ?? "alarm-clock",
+  );
 
-  const { routines, byKey, archivedCount } = useMemo(() => {
+  const { routines, archived, byKey } = useMemo(() => {
     const byKey = new Map<string, MemoryRecord>();
-    let archivedCount = 0;
     const routines: MemoryRecord[] = [];
+    const archived: MemoryRecord[] = [];
     for (const record of corpus.records) {
       byKey.set(record.key, record);
-      if (record.archived) archivedCount += 1;
-      // Archiving means the record leaves the lists — that is the whole of what
-      // makes it the reversible half of removing something, and a list that
-      // went on showing an archived row would have made the two words mean the
-      // same thing. The control in the bottom bar is the way back.
-      if (record.archived && !showArchived) continue;
-      routines.push(record);
+      (record.archived ? archived : routines).push(record);
     }
-    return { routines, byKey, archivedCount };
-  }, [corpus.records, showArchived]);
+    return { routines, archived, byKey };
+  }, [corpus.records]);
 
   const selectedFolder =
     subject !== null && "folder" in subject
@@ -289,15 +298,10 @@ export function RoutinesProvider({
     // would not be drawing, so the ask opens the way to it rather than landing
     // on a selection nobody can see.
     const record = corpus.records.find((row) => row.key === key);
-    if (record?.archived === true) setShowArchived(true);
     const folder = record?.folder ?? null;
     if (folder !== null) setExpanded((was) => openTo(was, folder));
     select(routineRow(key));
   });
-
-  useEffect(() => {
-    remember(project.path, showArchived);
-  }, [project.path, showArchived]);
 
   /**
    * What a write the store refused says for itself.
@@ -485,6 +489,8 @@ export function RoutinesProvider({
       project,
       corpus,
       routines,
+      archived,
+      kindIcon: mark,
       byKey,
       folders: mine,
       selected,
@@ -502,9 +508,6 @@ export function RoutinesProvider({
       folderNote,
       agents,
       agentName: (id) => agents.find((one) => one.id === id)?.name ?? id,
-      showArchived,
-      setShowArchived,
-      archivedCount,
       failure,
       dismissFailure: done,
       createRoutine,
@@ -525,6 +528,8 @@ export function RoutinesProvider({
       project,
       corpus,
       routines,
+      archived,
+      mark,
       byKey,
       mine,
       selected,
@@ -539,8 +544,6 @@ export function RoutinesProvider({
       selectedFolder,
       folderNote,
       agents,
-      showArchived,
-      archivedCount,
       failure,
       done,
       createRoutine,
@@ -800,29 +803,6 @@ function useApplied(
     if (intent.show === "record" && intent.kind === KIND) apply.current(intent.key);
   }, [intent, active]);
 }
-
-/** Whether this machine last left the archived routines listed. */
-function held(project: string): boolean {
-  // On the machine rather than in the repository: what somebody is looking at
-  // is theirs, and a filter that travelled with the project would hide a
-  // colleague's rows because of how this window was left.
-  try {
-    return globalThis.localStorage?.getItem(slot(project)) === "yes";
-  } catch {
-    return false;
-  }
-}
-
-function remember(project: string, show: boolean): void {
-  try {
-    globalThis.localStorage?.setItem(slot(project), show ? "yes" : "no");
-  } catch {
-    // A preference that could not be stored is one that lasts until the window
-    // closes, which is not worth a message to anybody.
-  }
-}
-
-const slot = (project: string) => `routines.show-archived:${project}`;
 
 /**
  * Carrying a routine out now, without waiting for its interval.

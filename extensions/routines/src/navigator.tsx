@@ -2,15 +2,7 @@
 
 import { useMemo } from "react";
 
-import {
-  AlarmClock,
-  AlarmClockOff,
-  Archive,
-  Ellipsis,
-  Folder,
-  FolderPlus,
-  Plus,
-} from "lucide-react";
+import { Archive, Ellipsis, Folder, FolderPlus, Plus } from "lucide-react";
 
 import {
   Button,
@@ -35,6 +27,7 @@ import {
 } from "@sync-buzz/extension-api";
 
 import {
+  ARCHIVED,
   TREE_ROOT,
   agentOf,
   enabledOf,
@@ -44,6 +37,7 @@ import {
   nameOf,
   parentOf,
   routineRow,
+  rowSubject,
 } from "./model";
 import { useArea } from "./area";
 
@@ -128,16 +122,8 @@ export function RoutinesNavigator() {
                   down to nothing look identical, and only one of them is worth
                   writing a routine about. */}
               <PanelPlaceholder
-                headline={
-                  area.archivedCount > 0 && !area.showArchived
-                    ? "Nothing but archived routines"
-                    : "No routines yet"
-                }
-                detail={
-                  area.archivedCount > 0 && !area.showArchived
-                    ? `This project holds ${area.archivedCount}, all of them archived. The control in the bar below brings them back into the list.`
-                    : "A routine is one instruction an agent carries out on a clock."
-                }
+                headline="No routines yet"
+                detail="A routine is one instruction an agent carries out on a clock."
               />
             </div>
           ) : (
@@ -147,7 +133,9 @@ export function RoutinesNavigator() {
               rootId={TREE_ROOT}
               activeId={area.selected}
               expanded={area.expanded}
-              onSelect={area.select}
+              onSelect={(id) => {
+                if (rowSubject(id) !== null) area.select(id);
+              }}
               onExpandedChange={area.setExpanded}
             />
           )}
@@ -187,8 +175,6 @@ export function RoutinesNavigator() {
         <SelectionActions />
 
         <div className="min-w-0 flex-1" />
-
-        <ArchivedFilter />
       </PanelFooter>
     </PanelSurface>
   );
@@ -293,39 +279,6 @@ function SelectionActions() {
   );
 }
 
-/**
- * Whether the archived routines are listed.
- *
- * Archiving means the record leaves the lists, so it does — and the way back is
- * here, on the trailing edge of the bar that acts on this list, where a view
- * preference belongs. An icon that reports its own state rather than a menu of
- * one item: there is exactly one thing to decide, and a pop-up to decide it
- * would be a menu explaining itself.
- */
-function ArchivedFilter() {
-  const area = useArea();
-
-  return (
-    <Tooltip>
-      <TooltipTrigger asChild>
-        <Button
-          variant="ghost"
-          size="icon-sm"
-          aria-label={area.showArchived ? "Hide archived" : "Show archived"}
-          aria-pressed={area.showArchived}
-          onClick={() => area.setShowArchived(!area.showArchived)}
-          className="text-fg-tertiary hover:text-fg aria-pressed:bg-selected aria-pressed:text-fg"
-        >
-          <Archive />
-        </Button>
-      </TooltipTrigger>
-      <TooltipContent>
-        {area.showArchived ? "Hide archived" : "Show archived"}
-      </TooltipContent>
-    </Tooltip>
-  );
-}
-
 /** What a routine is listed as. A record with no title is still a record. */
 function label(record: MemoryRecord): string {
   return record.title.trim().length > 0 ? record.title : "Untitled routine";
@@ -348,6 +301,7 @@ function rows(area: ReturnType<typeof useArea>): {
   empty: boolean;
 } {
   const items = new Map<string, SourceTreeItem>();
+  const { archived } = area;
 
   // The routines of each folder, and of no folder. Gathered in one pass: the
   // records arrive flat and each names where it is filed.
@@ -362,7 +316,17 @@ function rows(area: ReturnType<typeof useArea>): {
   // Sorted once, and every pass below reads this order. A path already says who
   // its parent is, so a parent is always reached before its children — which is
   // what lets the tree be built without walking anything twice.
-  const sorted = [...area.folders].sort((a, b) => a.path.localeCompare(b.path));
+  //
+  // **The root is not among them.** Every answer the engine gives carries an
+  // entry for `""` — the records filed nowhere — and it is not a folder row:
+  // it is this tree's own root, and the routines in it are the ungrouped ones
+  // drawn at the end. Taken as an ordinary folder it became its own parent,
+  // because the folder above `""` is `""`, and every top-level folder was then
+  // hung under a row nothing reaches from the root. Folders were created, were
+  // returned by the engine, and were drawn nowhere.
+  const sorted = [...area.folders]
+    .filter((entry) => entry.path !== "")
+    .sort((a, b) => a.path.localeCompare(b.path));
   // The array each folder's row holds, filled after every row exists.
   const kids = new Map<string, string[]>();
   // The folders directly inside each folder, in the order they were read.
@@ -425,6 +389,32 @@ function rows(area: ReturnType<typeof useArea>): {
   }
 
   const top = [...topFolders, ...loose];
+
+  // **Archived routines are a place, not a filter.** They left the lists when
+  // somebody archived them — that is what `design-foundation.md` §510 makes
+  // archiving mean — and this is where they went, the way an archived message
+  // is in a mailbox rather than behind a preference over the inbox. Behind a
+  // toggle they came back into the live list as rows nothing told apart, which
+  // is the complaint that put this here.
+  //
+  // Last, and drawn only while it holds something: a standing heading over
+  // nothing names a state instead of showing one. It carries no folders — what
+  // is archived is out of play, and where it used to be filed is a fact about
+  // when it comes back rather than something to navigate.
+  if (archived.length > 0) {
+    for (const record of [...archived].sort(byName)) {
+      items.set(routineRow(record.key), routineItem(area, record));
+    }
+    items.set(ARCHIVED, {
+      id: ARCHIVED,
+      label: "Archived",
+      icon: Archive,
+      count: archived.length,
+      children: [...archived].sort(byName).map((record) => routineRow(record.key)),
+    });
+    top.push(ARCHIVED);
+  }
+
   items.set(TREE_ROOT, { id: TREE_ROOT, label: "Routines", children: top });
   return { items, empty: top.length === 0 };
 }
@@ -440,15 +430,17 @@ function routineItem(
   return {
     id: routineRow(record.key),
     label: label(record),
-    // The mark carries the state, which is what lets this column be read at a
-    // glance and in greyscale: a clock for one that runs, a clock struck
-    // through for one that does not. Colour is spent on neither — this window
-    // keeps it for status and for destruction, and *switched off* is a setting
-    // rather than something going wrong.
-    icon: on ? AlarmClock : AlarmClockOff,
-    // The quieter tier behind the mark, for the same claim said twice in two
-    // ways. A column of mostly grey rows is the honest picture of a project
-    // where nothing is switched on.
+    // **The kind's own glyph, always.** `design-foundation.md` §284 divides
+    // these: a kind is a glyph and a state is a mark of its own, and one thing
+    // saying both is what this row did — a clock struck through, which reads as
+    // *this alarm is silenced* rather than *this automation is not running*,
+    // and which quietly claimed a routine was a different kind of thing when
+    // somebody switched it off. The type names its mark; this draws it.
+    icon: area.kindIcon,
+    // Dimmed while it is not running, which is the one thing this row still
+    // says about state and the one device on this system that says it — the
+    // same reading Finder gives a file that is there and not in play. It means
+    // exactly one thing now: the archived are not in this list at all.
     muted: !on,
     tooltip: (
       <span>
