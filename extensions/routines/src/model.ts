@@ -73,81 +73,13 @@ export function everyLabel(every: string): string {
 }
 
 /**
- * The row every other row hangs from. Never drawn — a source list shows its
- * contents, not a row standing for the list itself.
- */
-export const TREE_ROOT = "/root";
-
-/**
- * Row ids, and why both halves are prefixed.
+ * What the switch on a row is called, for anybody not looking at it.
  *
- * A tree states selection and expansion in ids, so one namespace has to hold a
- * record key and a folder path without either being able to spell the other. A
- * key is the store's and a path is the project's, and neither promises to avoid
- * the shape of the other — so the prefix is what makes the answer to *what is
- * this row* a read rather than a guess.
+ * The control is a checkbox and the name has to say what ticking it does, not
+ * what it is: *Read the inbox* beside a tick is a label a screen reader reads
+ * as a routine's name twice.
  */
-export const routineRow = (key: string) => `routine:${key}`;
-/**
- * The whole list, which is the top of the hierarchy the folders are in.
- *
- * A row of its own rather than the tree's invisible root, and it earns that by
- * being **the only way back out of a folder by dragging**. A routine could be
- * dragged into a group and never out again: every folder took drops and nothing
- * stood for *no folder*, so the gesture worked in one direction only. It is the
- * same row `Records` gives each of its types and `Tasks` gives its register,
- * and it is spelled the way they spell it.
- */
-export const ROOT_ROW = "/all";
-/**
- * The heading the archived routines hang under. A row of the tree and the
- * subject of none: `rowSubject` answers `null` for it, which is what keeps a
- * heading from being selected as though it were a routine.
- */
-export const ARCHIVED = "group:archived";
-export const folderRow = (path: string) => `folder:${path}`;
-
-/** What a row is, read back from its id. */
-export function rowSubject(
-  id: string | null,
-): { routine: string } | { folder: string } | null {
-  if (id === null) return null;
-  // The top of the hierarchy is the root folder, said in the tree's vocabulary
-  // rather than in a third one: everything that acts on a folder — where a new
-  // routine is written, what a drop means — then works there without branching.
-  if (id === ROOT_ROW) return { folder: "" };
-  if (id.startsWith("routine:")) return { routine: id.slice("routine:".length) };
-  if (id.startsWith("folder:")) return { folder: id.slice("folder:".length) };
-  return null;
-}
-
-/** The folder above this one, or `""` for one at the top. */
-export function parentOf(folder: string): string {
-  const cut = folder.lastIndexOf("/");
-  return cut === -1 ? "" : folder.slice(0, cut);
-}
-
-/** The last segment of a path, which is what a row is labelled with. */
-export function nameOf(folder: string): string {
-  const cut = folder.lastIndexOf("/");
-  return cut === -1 ? folder : folder.slice(cut + 1);
-}
-
-/**
- * The branches that have to be open for one folder to be visible.
- *
- * A row inside a closed branch is a selection nobody can see, so anything that
- * moves the selection into a folder opens the folder *and everything above it*.
- * Opening only the immediate parent left a new folder two levels down invisible
- * and the column apparently unchanged.
- */
-export function openTo(expanded: readonly string[], folder: string): readonly string[] {
-  const wanted: string[] = [];
-  let path = folder;
-  while (path !== "") {
-    const row = folderRow(path);
-    if (!expanded.includes(row) && !wanted.includes(row)) wanted.push(row);
-    path = parentOf(path);
-  }
-  return wanted.length === 0 ? expanded : [...expanded, ...wanted];
+export function enabledLabel(record: { title: string; key: string }): string {
+  const named = record.title.trim() || record.key;
+  return `Run ${named} on its clock`;
 }
