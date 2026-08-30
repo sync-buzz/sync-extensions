@@ -3,6 +3,17 @@
   "id": "routines",
   "versions": [
     {
+      "version": "0.4.0",
+      "syncApi": "^3.0",
+      "description": "A routine is one instruction, written to an agent, that Sync hands over on an interval — check the tracker, read the inbox, look at what changed overnight. Sync raises the agent and the agent does the work with the tools it already has on this machine, so what a routine can reach is whatever its agent can reach, and nothing here needs to know what a mailbox or an issue is. A routine is a record like any other, so it is read, edited and searched where the rest of the project is, and it travels with the repository. Nothing runs until somebody switches it on: a routine spends an agent's tokens, and arriving at somebody else's clone already running is not something they agreed to.",
+      "changelog": "Asks for a Sync that has the surface it is built against.\n\nSync's extension surface reached `3.2.0` and refuses a range written against\n`2.x`. Nothing in this extension changed — the same handlers run on the same\nclock — but a manifest saying `^2.10` describes a Sync this archive would not\nbe loaded by.\n\nA minor rather than a patch: an older Sync can no longer install it, which is\na fact about the package and not about what it does.",
+      "artefact": {
+        "url": "https://github.com/sync-buzz/sync-extensions/releases/download/v1.4.0/routines-0.4.0.syncext",
+        "sha256": "f12a407a2d57dab7691c3cb5c182e93c3f48c008f7b69f5ff93616549013e2bb",
+        "bytes": 15367
+      }
+    },
+    {
       "version": "0.3.1",
       "syncApi": "^2.10",
       "description": "A routine is one instruction, written to an agent, that Sync hands over on an interval — check the tracker, read the inbox, look at what changed overnight. Sync raises the agent and the agent does the work with the tools it already has on this machine, so what a routine can reach is whatever its agent can reach, and nothing here needs to know what a mailbox or an issue is. A routine is a record like any other, so it is read, edited and searched where the rest of the project is, and it travels with the repository. Nothing runs until somebody switches it on: a routine spends an agent's tokens, and arriving at somebody else's clone already running is not something they agreed to.",

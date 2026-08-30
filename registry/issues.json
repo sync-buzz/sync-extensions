@@ -3,6 +3,17 @@
   "id": "issues",
   "versions": [
     {
+      "version": "0.2.0",
+      "syncApi": "^3.0",
+      "description": "Issues is named after what it holds rather than after where the issues live: GitHub is an address, not a subject. It reads one public repository over the network — the hosts it may reach are in its manifest, the request is made in Rust, and a host it did not declare never leaves this machine. It is read-only in the strongest sense available: nothing it fetches is written to the project's memory, and there is no command in it that changes anything on GitHub. An issue is somebody else's text about your work, so it is shown as what it is — a page you read, with its facts beside it — and it stays outside the corpus, where a claim has to be about this repository's own code to mean anything.",
+      "changelog": "",
+      "artefact": {
+        "url": "https://github.com/sync-buzz/sync-extensions/releases/download/v1.4.0/issues-0.2.0.syncext",
+        "sha256": "f636f5a63195e018b44af69fe7e707a9a23c19f8bd0b4e3615936a4dd4937d08",
+        "bytes": 10783
+      }
+    },
+    {
       "version": "0.1.0",
       "syncApi": "^2.13",
       "description": "Issues is named after what it holds rather than after where the issues live: GitHub is an address, not a subject. It reads one public repository over the network — the hosts it may reach are in its manifest, the request is made in Rust, and a host it did not declare never leaves this machine. It is read-only in the strongest sense available: nothing it fetches is written to the project's memory, and there is no command in it that changes anything on GitHub. An issue is somebody else's text about your work, so it is shown as what it is — a page you read, with its facts beside it — and it stays outside the corpus, where a claim has to be about this repository's own code to mean anything.",

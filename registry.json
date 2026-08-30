@@ -6,8 +6,8 @@
       "name": "Chat",
       "summary": "Talk to the coding agents installed on this machine, in this project's folder, without leaving the window.",
       "icon": "message-square",
-      "version": "1.2.2",
-      "syncApi": "^2.12",
+      "version": "1.3.0",
+      "syncApi": "^3.0",
       "capabilities": [
         "records",
         "agents.acp"
@@ -30,9 +30,9 @@
       "license": "MIT",
       "repository": null,
       "artefact": {
-        "url": "https://github.com/sync-buzz/sync-extensions/releases/download/v1.3.4/chat-1.2.2.syncext",
-        "sha256": "a8b62bdf346a679a3c2a54fa5de89be493b880dc3c782c112d63709298fb3500",
-        "bytes": 21322
+        "url": "https://github.com/sync-buzz/sync-extensions/releases/download/v1.4.0/chat-1.3.0.syncext",
+        "sha256": "a6690f94ee25b04aea18180db8f8f43643256b47e95ae8d3afc7871f65271770",
+        "bytes": 21793
       }
     },
     {
@@ -40,8 +40,8 @@
       "name": "Issues",
       "summary": "The issues of a public repository on GitHub, read in this window beside the project they are about.",
       "icon": "circle-dot",
-      "version": "0.1.0",
-      "syncApi": "^2.13",
+      "version": "0.2.0",
+      "syncApi": "^3.0",
       "capabilities": [
         "net"
       ],
@@ -59,9 +59,9 @@
       "license": "MIT",
       "repository": null,
       "artefact": {
-        "url": "https://github.com/sync-buzz/sync-extensions/releases/download/v1.3.4/issues-0.1.0.syncext",
-        "sha256": "0f315f5902e0375437e7f19339a0c3e12161a0dcd5e16e7bdc2848902116f4ce",
-        "bytes": 10755
+        "url": "https://github.com/sync-buzz/sync-extensions/releases/download/v1.4.0/issues-0.2.0.syncext",
+        "sha256": "f636f5a63195e018b44af69fe7e707a9a23c19f8bd0b4e3615936a4dd4937d08",
+        "bytes": 10783
       }
     },
     {
@@ -69,8 +69,8 @@
       "name": "Posts",
       "summary": "Drafts of what this project will say outside itself, and the text of everything already said. Delivery is your agent's, through a tool you connected to it.",
       "icon": "megaphone",
-      "version": "0.2.0",
-      "syncApi": "^2.13",
+      "version": "0.3.0",
+      "syncApi": "^3.0",
       "capabilities": [
         "records",
         "agents.acp"
@@ -92,9 +92,9 @@
       "license": "MIT",
       "repository": null,
       "artefact": {
-        "url": "https://github.com/sync-buzz/sync-extensions/releases/download/v1.3.4/posts-0.2.0.syncext",
-        "sha256": "026f3c9f7bb39bd2702e15dbab6efe39dbaf437731a71e4107f72ecfe77080d1",
-        "bytes": 18335
+        "url": "https://github.com/sync-buzz/sync-extensions/releases/download/v1.4.0/posts-0.3.0.syncext",
+        "sha256": "821c016248ba80e9b2df841fb2fc27c95793bb772a86f0b0bcc1932e0245fa19",
+        "bytes": 18352
       }
     },
     {
@@ -102,8 +102,8 @@
       "name": "Project memory",
       "summary": "A place for the answers your project has already worked out, so nobody works them out twice — and a section for the questions it has not.",
       "icon": "book-marked",
-      "version": "1.1.0",
-      "syncApi": "^2.10",
+      "version": "1.1.1",
+      "syncApi": "^3.0",
       "capabilities": [
         "records",
         "native-menu",
@@ -129,9 +129,9 @@
       "license": "MIT",
       "repository": null,
       "artefact": {
-        "url": "https://github.com/sync-buzz/sync-extensions/releases/download/v1.3.4/project-memory-1.1.0.syncext",
-        "sha256": "8b7ec58677aee7eafcdbe90b4d439209e7d961b3f9e9e6f31b65cbd37e9e529b",
-        "bytes": 21579
+        "url": "https://github.com/sync-buzz/sync-extensions/releases/download/v1.4.0/project-memory-1.1.1.syncext",
+        "sha256": "469248ffe7c7b515de90497faa6fe74191775759eb4bb6ac53408766f819d840",
+        "bytes": 21595
       }
     },
     {
@@ -139,8 +139,8 @@
       "name": "Records",
       "summary": "The project's types, and every record written as one — created, renamed and removed from this window or by an agent.",
       "icon": "shapes",
-      "version": "1.0.2",
-      "syncApi": "^2.0",
+      "version": "1.1.0",
+      "syncApi": "^3.0",
       "capabilities": [
         "records",
         "folders",
@@ -162,9 +162,9 @@
       "license": "MIT",
       "repository": null,
       "artefact": {
-        "url": "https://github.com/sync-buzz/sync-extensions/releases/download/v1.3.4/records-1.0.2.syncext",
-        "sha256": "27c9873eb0634c1b3aba8ecf3b5c2fe6a3d94a7b9199ff2e8fe633168a1ccd20",
-        "bytes": 13567
+        "url": "https://github.com/sync-buzz/sync-extensions/releases/download/v1.4.0/records-1.1.0.syncext",
+        "sha256": "6f134f4cce684b11836cee48fd0c9b3fdf9c149277054be22d572b4c0209f398",
+        "bytes": 13592
       }
     },
     {
@@ -172,8 +172,8 @@
       "name": "Routines",
       "summary": "Standing instructions an agent carries out on a clock, whether or not anybody has a window open.",
       "icon": "alarm-clock",
-      "version": "0.3.1",
-      "syncApi": "^2.10",
+      "version": "0.4.0",
+      "syncApi": "^3.0",
       "capabilities": [
         "records",
         "folders",
@@ -200,9 +200,9 @@
       "license": "MIT",
       "repository": null,
       "artefact": {
-        "url": "https://github.com/sync-buzz/sync-extensions/releases/download/v1.3.4/routines-0.3.1.syncext",
-        "sha256": "90e757f79b224841992dcd4b053bfe6e728d8cb85d99341158d054fe2a787d6c",
-        "bytes": 15338
+        "url": "https://github.com/sync-buzz/sync-extensions/releases/download/v1.4.0/routines-0.4.0.syncext",
+        "sha256": "f12a407a2d57dab7691c3cb5c182e93c3f48c008f7b69f5ff93616549013e2bb",
+        "bytes": 15367
       }
     },
     {
@@ -210,8 +210,8 @@
       "name": "Tasks",
       "summary": "The work this project has committed to, written so that finishing it can be checked — and handed to an agent from the record itself.",
       "icon": "list-checks",
-      "version": "0.2.1",
-      "syncApi": "^2.13",
+      "version": "0.2.2",
+      "syncApi": "^3.0",
       "capabilities": [
         "records",
         "agents.acp"
@@ -232,9 +232,9 @@
       "license": "MIT",
       "repository": null,
       "artefact": {
-        "url": "https://github.com/sync-buzz/sync-extensions/releases/download/v1.3.4/tasks-0.2.1.syncext",
-        "sha256": "5c00ebf5b46fffc4d7870e9dfd34ed9585b54d366d4547086c7d9dae0e468da7",
-        "bytes": 23346
+        "url": "https://github.com/sync-buzz/sync-extensions/releases/download/v1.4.0/tasks-0.2.2.syncext",
+        "sha256": "b5d42ffef57b3148c74c49cb44327747c147bd438791979d1488d66e928cfd20",
+        "bytes": 23463
       }
     }
   ]
