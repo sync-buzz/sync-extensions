@@ -1,5 +1,20 @@
 # Changelog
 
+## 1.1.0
+
+Asks for a Sync that has the surface it is built against.
+
+Sync's extension surface reached `3.2.0`: `net.read` was replaced by
+`net.fetch`, a package may hold its own secrets, and it may offer an agent
+tools. Nothing here uses any of it — this extension draws records — but its
+`engines.syncApi` said `^2.0`, and a build publishing `3.2.0` refuses that
+range outright. A package that will not open says less about itself than one
+that names the version it wants.
+
+A minor rather than a patch, because what changed is who may install it: an
+older Sync no longer can, and that is a fact about the package rather than
+about its bytes.
+
 ## 1.0.2
 
 Relinked against a newer contract. Nothing in the extension changed.

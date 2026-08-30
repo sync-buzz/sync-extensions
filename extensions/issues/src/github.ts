@@ -1,4 +1,4 @@
-import type { ExtensionNet, NetAnswer } from "@sync-buzz/extension-api";
+import type { ExtensionNet, NetResponse } from "@sync-buzz/extension-api";
 
 /**
  * What an issue is here, and what is deliberately not.
@@ -155,9 +155,9 @@ export async function read(
     `https://${HOST}/repos/${repository.owner}/${repository.name}/issues` +
     `?state=${slice}&per_page=${PAGE}&sort=updated&direction=desc`;
 
-  let answer: NetAnswer;
+  let answer: NetResponse;
   try {
-    answer = await net.read(url);
+    answer = await net.fetch({ url });
   } catch (refused) {
     // A rejection here is a request that never happened — a host this package
     // did not declare, no network, an answer too large. Rust's sentence is

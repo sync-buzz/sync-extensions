@@ -708,7 +708,19 @@ function useSend(
     setSent(null);
     void open
       .write()
-      .then(() => startSession({ agentId: "claude", cwd: project.path }))
+      .then(() =>
+        startSession({
+          agentId: "claude",
+          cwd: project.path,
+          // What the conversation is being held under, which is what Chat
+          // groups its list by. Only this side can answer it: somebody pressing
+          // this button is standing in the task, and nothing downstream can
+          // find that out afterwards. Without it the conversation goes into the
+          // heap of ones about nothing in particular, beside work somebody
+          // opened to ask an unrelated question.
+          about: { key: task, kind: "tasks.task", title: named },
+        }),
+      )
       .then(
         (opened: { key: string }) => {
           // Named before anything is said, because saying something is what

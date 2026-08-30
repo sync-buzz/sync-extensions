@@ -123,7 +123,13 @@ async function carryOut(every: string, project: string): Promise<Ordered[]> {
         title,
         // Which routine this run is of, and it is what makes the next line
         // mean anything: the slot a conversation replaces is named by a record.
-        about: key,
+        //
+        // Named in full rather than by key alone, because the key is an address
+        // and a heading is a name: Chat groups its list by this, and a group
+        // headed by a key is a group nobody can read or open. The title is what
+        // the routine is called at the moment it runs, which is what a heading
+        // should say.
+        about: { key, kind: "routines.routine", title },
         prompt: { text: instruct(text, project) },
         // The whole point of a routine is that it finishes without anybody
         // there. A routine that waited for a person to come back would be a

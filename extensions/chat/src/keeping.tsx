@@ -156,6 +156,12 @@ function block(entry: Entry): string {
       return `### Agent${at}\n\n${entry.text}`;
     case "thought":
       return `### Thinking${at}\n\n> ${entry.text.split("\n").join("\n> ")}`;
+    // The same sentence a pasted picture gets, for the same reason: the record
+    // travels with the repository, and the bytes are in a session that ends.
+    // Saying a picture was here is the true thing that survives; embedding it
+    // is the one thing this must not do.
+    case "picture":
+      return `### Picture${at}\n\n*a picture the agent made — not saved*`;
     case "tool":
       return `- \`${entry.title}\` — ${entry.status}`;
     case "plan":

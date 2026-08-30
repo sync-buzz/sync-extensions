@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useState, type ReactNode } from "react";
 
 import {
   Button,
@@ -10,6 +10,8 @@ import {
   TooltipContent,
   TooltipTrigger,
   cn,
+  imageFileName,
+  saveSessionImage,
   sessionImage,
   showNativeContextMenu,
   type AgentSession,
@@ -344,6 +346,8 @@ function Block({
       return <Said entry={entry} who="Agent" text={entry.text} />;
     case "thought":
       return <Said entry={entry} who="Thinking" text={entry.text} quiet />;
+    case "picture":
+      return <Picture entry={entry} sessionKey={sessionKey} />;
     case "tool":
       // Reached only for a lone call; a run of them is drawn by `ToolRun`.
       return <ToolRun entries={[entry]} />;
@@ -469,38 +473,101 @@ function Said({
 }
 
 /**
- * A picture that was pasted into a message.
+ * A picture the agent answered with.
+ *
+ * Labelled like everything else the agent said, and drawn at the measure of the
+ * column rather than as a thumbnail: this is the answer, not an attachment to
+ * one, and a person asked for a picture is going to look at it.
+ *
+ * The bytes come from the session, exactly as a pasted picture's do, and
+ * saving it is on the menu the picture carries — see {@link HeldPicture}.
+ */
+function Picture({
+  entry,
+  sessionKey,
+}: {
+  entry: Extract<Entry, { voice: "picture" }>;
+  sessionKey: string | null;
+}) {
+  return (
+    <Aside entry={entry} who="Picture">
+      {entry.imageId === null || sessionKey === null ? (
+        <span className="text-xs text-fg-tertiary">
+          {/* Two ways to be here and one sentence for them, because the
+              difference — the conversation was full, or there is no session to
+              ask — is not one anybody can act on differently. */}
+          {megabytes(entry.bytes)} — too large for this conversation to hold
+        </span>
+      ) : (
+        <HeldPicture
+          sessionKey={sessionKey}
+          id={entry.imageId}
+          alt="A picture the agent made"
+          name={imageFileName(entry.mimeType)}
+          className="max-h-96 w-auto max-w-full rounded-(--radius-control) border border-separator"
+          missing={
+            <span className="text-xs text-fg-tertiary">a picture was here, and is no longer held</span>
+          }
+        />
+      )}
+    </Aside>
+  );
+}
+
+/** A size in the units somebody reads a picture's size in. */
+function megabytes(bytes: number): string {
+  const mb = bytes / (1024 * 1024);
+  return mb < 0.1 ? `${Math.max(1, Math.round(bytes / 1024))} KB` : `${mb.toFixed(1)} MB`;
+}
+
+/**
+ * A picture the session holds, whichever direction it came from.
  *
  * The bytes are asked for when this is drawn rather than carried in the
  * transcript: the history is replayed whole to every screen that returns to the
- * conversation, and a picture in it would be paid for on each one.
+ * conversation, and a picture in it would be paid for on each one. That is true
+ * of a picture somebody pasted and of one the agent answered with alike, which
+ * is why one component fetches both.
  *
  * They live in the session and nowhere else, so this is also what a conversation
- * losing them looks like — the session is gone, the fetch fails, and the message
- * says a picture was here rather than showing a gap.
+ * losing them looks like — the session is gone, the fetch fails, and `missing`
+ * is drawn rather than a gap.
  */
-function PastedPicture({
+function HeldPicture({
   sessionKey,
-  image,
+  id,
+  alt,
+  name,
+  className,
+  missing,
+  waiting,
 }: {
   sessionKey: string;
-  image: PastedImage;
+  id: string;
+  alt: string;
+  /** What the save panel opens with in its field. */
+  name: string;
+  className: string;
+  /** What to say when the session no longer holds it. */
+  missing: ReactNode;
+  /** What stands in its place while it is being fetched. */
+  waiting?: ReactNode;
 }) {
   // The reading is held *with* what it is a reading of, so a picture from the
   // conversation this component was last drawn for cannot be shown under the
   // one it is drawn for now. React reuses a component whose key matches, and
-  // the ids here are the same in every session — `p0` is the first picture of
+  // the ids here are the same in every session — `i0` is the first picture of
   // whichever conversation it belongs to.
   const [read, setRead] = useState<{
     readonly of: string;
     readonly source: string | null;
   } | null>(null);
-  const of = `${sessionKey}/${image.id}`;
+  const of = `${sessionKey}/${id}`;
   const source = read?.of === of ? read.source : undefined;
 
   useEffect(() => {
     let current = true;
-    sessionImage(sessionKey, image.id)
+    sessionImage(sessionKey, id)
       .then((found) => {
         if (current) setRead({ of, source: `data:${found.mimeType};base64,${found.data}` });
       })
@@ -510,26 +577,66 @@ function PastedPicture({
     return () => {
       current = false;
     };
-  }, [sessionKey, image.id, of]);
+  }, [sessionKey, id, of]);
 
-  if (source === null) {
-    return (
-      <span className="flex items-center gap-1.5 text-xs text-fg-tertiary">
-        <Paperclip className="size-3 shrink-0" />
-        {image.name} — no longer held
-      </span>
-    );
-  }
+  if (source === null) return <>{missing}</>;
   if (source === undefined) {
-    return <span className="block h-20 w-28 rounded-(--radius-control) bg-raised" />;
+    return <>{waiting ?? <span className="block h-20 w-28 rounded-(--radius-control) bg-raised" />}</>;
   }
   return (
     /* eslint-disable-next-line @next/next/no-img-element -- the bytes are in
        hand, not at a URL a loader could optimise. */
     <img
       src={source}
+      alt={alt}
+      className={className}
+      onContextMenu={(event) =>
+        // WebKit draws its own menu on any `img` — Save Image, Open Image in
+        // New Window — and both are dead here: the source is a `data:` URL,
+        // saving one needs a download handler this shell does not install, and
+        // opening one is a navigation the content security policy refuses. A
+        // menu that offers two things and does neither is worse than none, so
+        // the gesture is answered with ours, which is native like every other
+        // menu in this window and whose one command works.
+        showNativeContextMenu(event, [
+          {
+            label: "Save Picture…",
+            onSelect: () => {
+              void saveSessionImage(sessionKey, id, name).catch(() => {
+                // The panel chose the path, so a failure here is the disk
+                // refusing it. Said out loud rather than left as a gesture
+                // that did nothing.
+                console.warn("That picture could not be saved.");
+              });
+            },
+          },
+        ])
+      }
+    />
+  );
+}
+
+/** A picture that was pasted into a message, at the size a thumbnail reads at. */
+function PastedPicture({
+  sessionKey,
+  image,
+}: {
+  sessionKey: string;
+  image: PastedImage;
+}) {
+  return (
+    <HeldPicture
+      sessionKey={sessionKey}
+      id={image.id}
       alt={image.name}
+      name={imageFileName(image.mimeType, image.name)}
       className="h-20 w-auto rounded-(--radius-control) border border-separator object-cover"
+      missing={
+        <span className="flex items-center gap-1.5 text-xs text-fg-tertiary">
+          <Paperclip className="size-3 shrink-0" />
+          {image.name} — no longer held
+        </span>
+      }
     />
   );
 }

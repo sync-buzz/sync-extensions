@@ -1,5 +1,19 @@
 # Changelog
 
+## 1.1.1
+
+A record is referred to by its name, and this stops showing the opposite.
+
+The line every session ends on — *say what you wrote, in one line* — was
+illustrated with a bare key, which is the one thing that line must not be. A key
+is an address: it says nothing about what it points at, and the person reading
+it cannot open it. The example now names the record and carries the address in
+the link, which is what the sentence was asking for all along.
+
+How that link is spelled is Sync's own rule and is stated in the instructions
+every session already reads, so this no longer restates it. Two copies of one
+spelling is one of them going out of date.
+
 ## 1.1.0
 
 Questions get a section, and answering one stops being an edit.

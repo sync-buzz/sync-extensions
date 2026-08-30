@@ -1,5 +1,17 @@
 # Changelog
 
+## 0.4.0
+
+Asks for a Sync that has the surface it is built against.
+
+Sync's extension surface reached `3.2.0` and refuses a range written against
+`2.x`. Nothing in this extension changed — the same handlers run on the same
+clock — but a manifest saying `^2.10` describes a Sync this archive would not
+be loaded by.
+
+A minor rather than a patch: an older Sync can no longer install it, which is
+a fact about the package and not about what it does.
+
 ## 0.3.1
 
 Opening a folder showed every routine in the project.

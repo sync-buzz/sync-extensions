@@ -1,8 +1,11 @@
 # Tasks
 
 The work this project has committed to. One task is one record of kind
-`tasks.task`, and its key — `task-3ad25f` — is its number: permanent, linkable,
-and what every conversation about it refers to.
+`tasks.task`. Its key is its number: permanent, and what every link resolves to
+— but it is an address, not a name. In a sentence a task is called by its
+title, carrying the address:
+`[Fix the login redirect loop](sync://tasks.task/task-3ad25f)`. A bare key
+tells whoever reads it nothing and opens nothing.
 
 A task asks for something to be done. It is not a claim about the project, and
 nothing here replaces the records that hold those: a settled choice is a
@@ -229,5 +232,7 @@ and what does not.
    is read before a task is written rather than after.
 4. Write with `sync_apply` the moment something is true — the state when it
    changes, the `Progress` line when it happens — not in one write at the end.
-5. **Say what you wrote, in one line.** "Moved `task-3ad25f` to in review;
-   recorded what settled each criterion." A silent write is the worst outcome.
+5. **Say what you wrote, in one line, naming the task rather than its key.**
+   "Moved [Fix the login redirect loop](sync://tasks.task/task-3ad25f) to in
+   review; recorded what settled each criterion." A silent write is the worst
+   outcome.

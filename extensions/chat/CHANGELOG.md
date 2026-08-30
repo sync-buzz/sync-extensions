@@ -1,5 +1,33 @@
 # Changelog
 
+## 1.3.0
+
+A picture the agent made is drawn in the conversation.
+
+An agent that generates an image had nowhere to put it: the content block
+carrying it was recognised, folded for its text, found to have none, and
+dropped — so a turn spent making a picture read as a turn in which the agent
+said nothing at all. It is now its own block in the transcript, labelled like
+everything else the agent said and drawn at the measure of the column, because
+it is the answer rather than an attachment to one.
+
+The bytes are asked for when the picture is drawn, exactly as a pasted one's
+are, and they live in the session and nowhere else. A conversation kept as a
+record says a picture was here and was not saved — the same sentence a pasted
+picture already gets, and for the same reason: the record travels with the
+repository and the session does not.
+
+A picture carries its own menu, with **Save Picture…** on it. WebKit draws
+`Save Image` and `Open Image in New Window` on any image, and both are dead in
+this window — the source is a `data:` URL, saving one needs a download handler
+the shell does not install, and opening one is a navigation the content
+security policy refuses. Two menu items that look like the system offering
+something and then do nothing are worse than no menu, so the gesture is
+answered with a native menu of ours whose one command works. It saves the
+pictures somebody pasted as well.
+
+Needs Sync's extension API 2.14.
+
 ## 1.2.2
 
 A conversation would not open at all.

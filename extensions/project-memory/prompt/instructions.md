@@ -147,17 +147,13 @@ context, and the person skimming the window.
 
 Two different things, and a good record carries both.
 
-**In the prose, a link is a readable name.** Write
-`[the title of the record](sync://<kind>/<key>)`. Never put a bare key in a
-sentence: it is unreadable and tells the reader nothing, while the title tells
-them whether to follow it. You already hold both — every search hit and every
-listing carries the title, the kind and the key.
-
-    Superseded by [Freshness is derived, never declared](sync://project-memory.decision/decision-3ad25f).
-
-For a document that is a file in an attached folder, link the file the way
-GitHub does: `[Setup](./setup.md)`, `[ADR 7](../adr/0007.md)`, or
-`[Index](/docs/index.md)` from the repository root.
+**In the prose, a link is a readable name** —
+`[the title of the record](sync://<kind>/<key>)`, as Sync's own instructions
+state it. Every hit and every listing hands you the title and the kind beside
+the key, so there is nothing to look up. For a document that is a file in an
+attached folder, link the file the way GitHub does instead:
+`[Setup](./setup.md)`, `[ADR 7](../adr/0007.md)`, or `[Index](/docs/index.md)`
+from the repository root.
 
 **In `links`, a link is typed**: `{"key": "…", "relation": "supersedes"}`. That
 is what the window's relations panel shows and what the engine validates against
@@ -201,6 +197,8 @@ work either way.
 4. Trust-check what you rely on, by freshness.
 5. Write with `sync_apply` the moment something is true, not at the end of the
    task. Correct what your change falsified in the same session.
-6. **Say what you wrote, in one line.** "Recorded `decision-3ad25f`; edited the
-   constraint it contradicted." The user can then push back before it becomes
+6. **Say what you wrote, in one line, naming what you wrote rather than its
+   key.** "Recorded [Freshness is derived, never declared](sync://project-memory.decision/decision-3ad25f);
+   edited the constraint it contradicted." The user reads that line in a window
+   where the link opens the record, and can push back before it becomes
    history. A silent write is the worst outcome.

@@ -54,8 +54,10 @@ import {
   type RememberedConversation,
   type SessionConfigOption,
   type SessionConfigValue,
+  type SessionAbout,
   type SessionRow,
   type SessionSource,
+  useOpenRecord,
 } from "@sync-buzz/extension-api";
 import { ChevronDown, ChevronLeft, Play, Plus } from "lucide-react";
 
@@ -121,63 +123,76 @@ function orderedBy(entry: ConversationEntry): SessionSource | undefined {
   return entry.at === "live" ? entry.row.source : entry.held.source;
 }
 
+/** The record a conversation is being held under, from either half. */
+function heldUnder(entry: ConversationEntry): SessionAbout | undefined {
+  return entry.at === "live" ? entry.row.about : entry.held.about;
+}
+
 /** One heading and the conversations under it. */
 interface Bucket {
-  /** `null` for the conversations nobody ordered — the ones somebody started. */
-  readonly extensionId: string | null;
+  /**
+   * The record the group is named after. `null` for the conversations that are
+   * about nothing in particular — the ones somebody opened from here.
+   */
+  readonly about: SessionAbout | null;
   readonly label: string;
   readonly entries: readonly ConversationEntry[];
 }
 
 /**
- * The list, split by who asked for it.
+ * The list, split by the record each conversation is being held under.
  *
- * **A group per extension, and the rest together.** Somebody who set an
- * extension working on five tickets is watching five conversations that belong
- * to one thing, and a caption on each row would make them read every row to
- * find out which. A heading answers it once, collapses when they are done with
- * it, and keeps saying how many there are while collapsed.
+ * **A group per record, and the rest together.** Somebody who set an extension
+ * working on five tickets is watching five conversations that belong to one
+ * thing, and a caption on each row would make them read every row to find out
+ * which. A heading answers it once, collapses when they are done with it, and
+ * keeps saying how many there are while collapsed.
+ *
+ * It was the *extension* that named the heading first, and the record is the
+ * better answer for a reason the extension could not give: a conversation
+ * somebody opened from a task has no orderer at all, so grouping by who asked
+ * left every one of those in the undifferentiated heap — which is most of what
+ * a section that hands work to an agent produces. "Support worktrees" also says
+ * more than "Tasks" to somebody scanning the column, and it is a heading that
+ * can be opened.
  *
  * **Groups are ordered by their newest conversation, and so are the rows inside
  * them.** That is what keeps "what happened last" at the top of the list rather
  * than somewhere inside the third group: splitting the list must not cost the
  * one order it always had.
  *
- * The conversations nobody ordered lead, whether or not anything else is there.
- * They are the ones somebody started themselves, and a person's own work does
+ * The conversations under no record lead, whether or not anything else is
+ * there. They are the ones somebody opened here, and a person's own work does
  * not move down the window because an extension has begun some.
  */
 function bucketed(entries: readonly ConversationEntry[]): readonly Bucket[] {
-  const mine: ConversationEntry[] = [];
-  const byExtension = new Map<string, { label: string; entries: ConversationEntry[] }>();
+  const loose: ConversationEntry[] = [];
+  const byRecord = new Map<string, { about: SessionAbout; entries: ConversationEntry[] }>();
 
   for (const entry of entries) {
-    const source = orderedBy(entry);
-    if (source === undefined) {
-      mine.push(entry);
+    const about = heldUnder(entry);
+    if (about === undefined) {
+      loose.push(entry);
       continue;
     }
-    const held = byExtension.get(source.extensionId);
+    const held = byRecord.get(about.key);
     if (held === undefined) {
-      // The name from the newest conversation, because the entries arrive
-      // newest first and a package that was renamed should be called what it
-      // is called now rather than what it was called the first time it asked.
-      byExtension.set(source.extensionId, {
-        label: source.extensionName,
-        entries: [entry],
-      });
+      // The title from the newest conversation, because the entries arrive
+      // newest first and a record that was renamed should be called what the
+      // most recent work called it rather than what the first did.
+      byRecord.set(about.key, { about, entries: [entry] });
     } else {
       held.entries.push(entry);
     }
   }
 
-  const ordered: Bucket[] = [...byExtension]
-    .map(([extensionId, held]) => ({ extensionId, label: held.label, entries: held.entries }))
+  const ordered: Bucket[] = [...byRecord.values()]
+    .map((held) => ({ about: held.about, label: held.about.title, entries: held.entries }))
     .sort((left, right) => (right.entries[0]?.at_ms ?? 0) - (left.entries[0]?.at_ms ?? 0));
 
-  return mine.length === 0
+  return loose.length === 0
     ? ordered
-    : [{ extensionId: null, label: "Conversations", entries: mine }, ...ordered];
+    : [{ about: null, label: "Conversations", entries: loose }, ...ordered];
 }
 
 interface ChatContext {
@@ -937,15 +952,16 @@ export function ChatNavigator() {
                   Whether an agent is up is a state of the row and belongs on
                   the row.
 
-                  Who *asked* for a conversation is the opposite kind of fact:
-                  it is set when the work is ordered and never edited, so a row
-                  cannot change group. That is what makes this split safe where
-                  that one was not. */}
+                  What a conversation is *about* is the opposite kind of fact:
+                  it is set when the conversation is opened and never edited, so
+                  a row cannot change group. That is what makes this split safe
+                  where that one was not. */}
               {buckets.map((bucket) => (
                 <Group
-                  key={bucket.extensionId ?? "mine"}
+                  key={bucket.about?.key ?? "loose"}
                   label={bucket.label}
                   count={bucket.entries.length}
+                  about={bucket.about}
                 >
                   {(shown) =>
                     bucket.entries.slice(0, shown).map((entry) =>
@@ -1009,22 +1025,46 @@ export function ChatNavigator() {
 function Group({
   label,
   count,
+  about,
   children,
 }: {
   label: string;
   /** How many rows there are in total, which is not how many are drawn. */
   count: number;
+  /**
+   * The record this heading names, when it names one. What the secondary click
+   * opens, and `null` for the group that is about nothing in particular.
+   */
+  about?: SessionAbout | null;
   children: (shown: number) => ReactNode;
 }) {
   const [collapsed, setCollapsed] = useState(false);
   const [all, setAll] = useState(false);
   const shown = all ? count : Math.min(count, AT_FIRST);
+  const openRecord = useOpenRecord();
 
   return (
     <section className="flex flex-col">
       <button
         type="button"
         onClick={() => setCollapsed((held) => !held)}
+        // The plain click is spent: it collapses the group, which is what a
+        // heading in a source list on this system does. Opening the record it
+        // names is the secondary click rather than a second job for the first —
+        // and it is left out entirely where there is no record to open or
+        // nothing that could show one, because a menu item that does nothing is
+        // worse than no menu.
+        onContextMenu={
+          about == null || openRecord === null
+            ? undefined
+            : (event) =>
+                showNativeContextMenu(event, [
+                  {
+                    label: "Open record",
+                    onSelect: () => openRecord({ key: about.key, kind: about.kind }),
+                  },
+                ])
+        }
         className={cn(
           "flex items-center gap-1 rounded-(--radius-control) px-2 pt-2 pb-1 text-left",
           "text-xs font-medium text-fg-tertiary hover:text-fg-secondary",
