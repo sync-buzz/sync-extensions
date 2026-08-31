@@ -3,6 +3,17 @@
   "id": "posts",
   "versions": [
     {
+      "version": "0.6.0",
+      "syncApi": "^3.2",
+      "description": "Posts holds three things. A channel is one account this project publishes as — which network, whose account, where inside it the posts go where the network needs telling, and a credential kept in this machine's vault under a name the record carries, never in the record itself. A draft is what the project is about to say, written for one channel, with the room left in it counted down as somebody writes. A publication is what it said, carrying the text exactly as it went out and the identifier the network issued, so editing a draft afterwards cannot rewrite the account of it. All three are ordinary records: they live in the project's memory, travel with the repository, and can be written or read by an agent as easily as by a person — while the credential stays on the machine and travels nowhere. Publishing is a person's act: they read the exact text and press the button, there is no clock in here, and nothing sends anything while nobody is looking. Four networks are reached from this window — LinkedIn, Bluesky, Threads and Telegram — and a Telegram channel says what it is: a bot posting into a chat, not a person speaking.",
+      "changelog": "",
+      "artefact": {
+        "url": "https://github.com/sync-buzz/sync-extensions/releases/download/v1.5.1/posts-0.6.0.syncext",
+        "sha256": "548c9ba9810ed94afda91c9b5f47a226fc4563548b989382ec7fdd20dc514c04",
+        "bytes": 30412
+      }
+    },
+    {
       "version": "0.3.0",
       "syncApi": "^3.0",
       "description": "Posts holds two things and reaches nothing. A draft is what the project is about to say, written for one named network — the section knows how long a post may be there and who may read one, and counts down while somebody writes. A publication is what it said, carrying the text exactly as it went out, so editing a draft afterwards cannot rewrite the account of it. Both are ordinary records: they live in the project's memory, travel with the repository, and can be written or read by an agent as easily as by a person. Sending is deliberately not here. Sync has no connection to any network and stores no account for one; pressing Publish hands the post to an agent, which delivers it with a tool somebody connected to that agent — an MCP server for that network. So this section is worth installing where an agent has hands, and where one has not, it is a good place to write and a place that will tell you plainly that nothing can go out. Publishing is a person's act either way: there is no clock in here, and nothing that sends anything while nobody is looking.",

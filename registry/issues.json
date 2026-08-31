@@ -3,6 +3,17 @@
   "id": "issues",
   "versions": [
     {
+      "version": "0.2.1",
+      "syncApi": "^3.0",
+      "description": "Issues is named after what it holds rather than after where the issues live: GitHub is an address, not a subject. It reads one public repository over the network — the hosts it may reach are in its manifest, the request is made in Rust, and a host it did not declare never leaves this machine. It is read-only in the strongest sense available: nothing it fetches is written to the project's memory, and there is no command in it that changes anything on GitHub. An issue is somebody else's text about your work, so it is shown as what it is — a page you read, with its facts beside it — and it stays outside the corpus, where a claim has to be about this repository's own code to mean anything.",
+      "changelog": "Rebuilt against a newer contract, and nothing else.\n\nThe module is built against the contract, and the contract moved to 3.4.0 — the\nsurface gained the working tree a conversation is held in. Nothing here uses it\nand nothing here changed, but the built module is not the same file, and a\nversion that has been published is immutable. So the number moves rather than\nthe bytes under it.",
+      "artefact": {
+        "url": "https://github.com/sync-buzz/sync-extensions/releases/download/v1.5.1/issues-0.2.1.syncext",
+        "sha256": "d89d9382571774452e33207a2e788f66b702dbaad99ae8488bbf86ab0921679b",
+        "bytes": 10820
+      }
+    },
+    {
       "version": "0.2.0",
       "syncApi": "^3.0",
       "description": "Issues is named after what it holds rather than after where the issues live: GitHub is an address, not a subject. It reads one public repository over the network — the hosts it may reach are in its manifest, the request is made in Rust, and a host it did not declare never leaves this machine. It is read-only in the strongest sense available: nothing it fetches is written to the project's memory, and there is no command in it that changes anything on GitHub. An issue is somebody else's text about your work, so it is shown as what it is — a page you read, with its facts beside it — and it stays outside the corpus, where a claim has to be about this repository's own code to mean anything.",
