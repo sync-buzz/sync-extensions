@@ -21,10 +21,13 @@ import {
 import { useArea } from "./context";
 import { sliceName } from "./filter";
 import {
-  channel,
-  channelLabel,
-  channelOf,
+  NETWORKS,
+  accountOf,
+  channelKeyOf,
   identifierOf,
+  network,
+  networkLabel,
+  networkOf,
   sentAtOf,
   visibilityLabel,
   visibilityOf,
@@ -32,7 +35,7 @@ import {
 } from "./model";
 
 /**
- * The list, and one post when one is open.
+ * The list, and one record when one is open.
  *
  * The dominant surface. A post's first words are the widest thing on a row and
  * are never truncated to a phrase: what is being decided here is whether a
@@ -52,7 +55,7 @@ export function PostsWorkspace() {
       />
       <Banner
         message={area.sent?.said ?? null}
-        lead={area.sent?.failed === true ? "It was not handed over." : "Handed over."}
+        lead={area.sent?.failed === true ? "No." : "Done."}
         failed={area.sent?.failed === true}
         onDismiss={area.dismissSent}
       />
@@ -64,8 +67,12 @@ export function PostsWorkspace() {
       ) : (
         <DocumentView
           open={area.open}
-          icon="square-pen"
-          note="What somebody outside this project will read. No headings, no record keys, no internal names — say what changed and why it matters to them. Which network it is for, and how much room is left in it, are beside this."
+          icon={area.openIsChannel ? "radio-tower" : "square-pen"}
+          note={
+            area.openIsChannel
+              ? "What an agent should know about this channel that its fields cannot say — the audience, the tone, which instance or chat it is. The account and the token are beside this."
+              : "What somebody outside this project will read. No headings, no record keys, no internal names — say what changed and why it matters to them. Which channel it goes to, and how much room is left, are beside this."
+          }
           onBack={area.closePost}
           backLabel={sliceName(area.slice)}
           onArchive={() => {
@@ -88,8 +95,7 @@ export function PostsWorkspace() {
  * whole point of it.** A publication is an account of something that happened
  * outside this window; an editor over it would offer to change a thing that
  * cannot be changed, and whoever used the offer would end up with a record
- * disagreeing with the post it is the record of. What is offered instead is
- * reading it, and the record's own controls for taking it out of the lists.
+ * disagreeing with the post it is the record of.
  */
 function Published() {
   const area = useArea();
@@ -102,17 +108,14 @@ function Published() {
           <PanelPlaceholder
             {...(area.open.error === null
               ? { headline: "Reading it…" }
-              : {
-                  headline: "This post could not be read.",
-                  detail: area.open.error,
-                })}
+              : { headline: "This post could not be read.", detail: area.open.error })}
           />
         </div>
       </section>
     );
   }
 
-  const within = channel(channelOf(document_.fields));
+  const within = network(networkOf(document_.fields));
   const identifier = identifierOf(document_.fields);
   const visibility = visibilityLabel(within, visibilityOf(document_.fields));
 
@@ -135,11 +138,11 @@ function Published() {
 
       <ScrollArea className="min-h-0 flex-1">
         <div className="prose-surface mx-auto w-full max-w-(--prose-measure) px-6 py-5">
-          {/* Said once, above the text: what follows is not this window's
-              copy of a post, it is the post. Without it a reader has no way to
-              tell this apart from a draft that happens not to be editable. */}
+          {/* Said once, above the text: what follows is not this window's copy
+              of a post, it is the post. Without it a reader has no way to tell
+              this apart from a draft that happens not to be editable. */}
           <p className="mb-4 text-xs text-fg-tertiary">
-            Sent to {channelLabel(channelOf(document_.fields))}{" "}
+            Sent to {networkLabel(networkOf(document_.fields))}{" "}
             {when(sentAtOf(document_.fields))}
             {visibility === "" ? null : ` · ${visibility}`}
             {identifier === "" ? null : (
@@ -158,12 +161,32 @@ function Published() {
 
 function List() {
   const area = useArea();
-  const drafts = area.slice === "drafts";
-
   const rows = useMemo(
     () => area.corpus.records.filter((record) => !record.isFolder),
     [area.corpus.records],
   );
+
+  /**
+   * A channel is made for a named network, so the command asks which.
+   *
+   * The system's own menu rather than a drawn one, which is the rule this shell
+   * keeps everywhere a choice is made from a control rather than from a page.
+   */
+  const addChannel = (event: MouseEvent) =>
+    showNativeContextMenu(
+      event,
+      NETWORKS.map((entry) => ({
+        label: entry.label,
+        onSelect: () => area.createChannel(entry.id),
+      })),
+    );
+
+  const command =
+    area.slice === "drafts"
+      ? { label: "New draft", act: area.createDraft }
+      : area.slice === "channels"
+        ? { label: "New channel", act: addChannel }
+        : null;
 
   return (
     <section className="flex h-full min-w-0 flex-col bg-workspace">
@@ -173,29 +196,29 @@ function List() {
         </h2>
         <div className="flex shrink-0 items-center gap-2">
           <span className="text-xs text-fg-tertiary tabular-nums">
-            {rows.length} {rows.length === 1 ? "post" : "posts"}
+            {rows.length} {noun(area.slice, rows.length)}
             {area.corpus.hasMore ? " of more than these" : null}
           </span>
           {/* Beside the list it joins, which is where macOS puts a command that
-              belongs to the content. Only over the drafts: a publication is
-              written by sending one, and a `+` here would offer to invent an
-              account of something that never happened. */}
-          {drafts ? (
+              belongs to the content. Nothing over the published list: a
+              publication is written by sending one, and a `+` there would offer
+              to invent an account of something that never happened. */}
+          {command === null ? null : (
             <Tooltip>
               <TooltipTrigger asChild>
                 <Button
                   variant="ghost"
                   size="icon-sm"
-                  aria-label="New draft"
-                  onClick={area.createDraft}
+                  aria-label={command.label}
+                  onClick={command.act}
                   className="text-fg-tertiary hover:text-fg"
                 >
                   <Plus />
                 </Button>
               </TooltipTrigger>
-              <TooltipContent>New draft</TooltipContent>
+              <TooltipContent>{command.label}</TooltipContent>
             </Tooltip>
-          ) : null}
+          )}
         </div>
       </div>
 
@@ -203,7 +226,7 @@ function List() {
         {rows.length === 0 ? (
           <div className="p-6">
             <PanelPlaceholder
-              {...silence(area.corpus.error, area.corpus.isLoading, drafts)}
+              {...silence(area.corpus.error, area.corpus.isLoading, area.slice)}
             />
           </div>
         ) : (
@@ -220,15 +243,14 @@ function List() {
   );
 }
 
-/**
- * One post, at the width of the window.
- *
- * A component rather than a branch of the loop above, so that what a row does
- * with hooks cannot depend on how many rows there are.
- */
+function noun(slice: string, count: number): string {
+  if (slice === "channels") return count === 1 ? "channel" : "channels";
+  return count === 1 ? "post" : "posts";
+}
+
+/** One record, at the width of the window. */
 function Row({ record }: { record: MemoryRecord }) {
   const area = useArea();
-  const published = area.slice === "published";
 
   const menu = (event: MouseEvent) =>
     showNativeContextMenu(event, [
@@ -244,15 +266,27 @@ function Row({ record }: { record: MemoryRecord }) {
   // What the row can say about itself, in the order it is worth reading. Built
   // as a list rather than as nested conditions, so the separators between them
   // cannot disagree with what is actually drawn.
-  const within = channel(channelOf(record.fields));
   const facts: string[] = [];
-  // The network leads, because it is the first thing that decides whether a
-  // row is the one somebody is looking for — and on a draft that has not got
-  // one, saying so is the most useful thing the line can carry.
-  facts.push(within === null ? "No channel" : within.label);
-  if (published) facts.push(when(sentAtOf(record.fields)));
-  const visibility = visibilityLabel(within, visibilityOf(record.fields));
-  if (visibility !== "") facts.push(visibility);
+  if (record.kind.endsWith(".channel")) {
+    facts.push(networkLabel(networkOf(record.fields)));
+    const account = accountOf(record.fields);
+    facts.push(account === "" ? "not connected" : account);
+  } else if (record.kind.endsWith(".publication")) {
+    const within = network(networkOf(record.fields));
+    facts.push(networkLabel(networkOf(record.fields)));
+    facts.push(when(sentAtOf(record.fields)));
+    const visibility = visibilityLabel(within, visibilityOf(record.fields));
+    if (visibility !== "") facts.push(visibility);
+  } else {
+    const channel = area.channels.records.find(
+      (entry) => entry.key === channelKeyOf(record.fields),
+    );
+    facts.push(
+      channel === undefined
+        ? "No channel"
+        : accountOf(channel.fields) || networkLabel(networkOf(channel.fields)),
+    );
+  }
   if (record.tags.length > 0) facts.push(record.tags.slice(0, 3).join(", "));
   if (record.archived) facts.push("archived");
 
@@ -263,13 +297,13 @@ function Row({ record }: { record: MemoryRecord }) {
       onContextMenu={menu}
       className="flex w-full items-start gap-3 px-4 py-3 text-left transition-colors duration-(--motion-duration-fast) ease-shell hover:bg-hover"
     >
-      <KindMark icon={published ? "megaphone" : "square-pen"} className="mt-px" />
+      <KindMark icon={mark(record.kind)} className="mt-px" />
       <span className="min-w-0 flex-1">
         <span className="block text-base text-fg">{title(record)}</span>
         {facts.length === 0 ? null : (
           <span className="mt-1 flex min-w-0 flex-wrap items-center gap-1.5 text-xs text-fg-tertiary">
             {facts.map((fact, at) => (
-              <span key={fact} className="flex min-w-0 items-center gap-1.5">
+              <span key={`${fact}-${at}`} className="flex min-w-0 items-center gap-1.5">
                 {at === 0 ? null : <span aria-hidden="true">·</span>}
                 <span className="truncate">{fact}</span>
               </span>
@@ -281,43 +315,57 @@ function Row({ record }: { record: MemoryRecord }) {
   );
 }
 
+function mark(kind: string): string {
+  if (kind.endsWith(".channel")) return "radio-tower";
+  if (kind.endsWith(".publication")) return "megaphone";
+  return "square-pen";
+}
+
 /**
- * A post with no title is shown by its key.
+ * A record with no title is shown by its key.
  *
  * A draft is written before it is named — somebody types the post and the title
  * comes last, or never — so this is the ordinary case here rather than the
- * broken one, and the key is a name rather than a blank.
+ * broken one, and a key is a name rather than a blank.
  */
 function title(record: MemoryRecord): string {
   return record.title.trim() || record.key;
 }
 
 /**
- * Three different silences, said differently.
+ * Different silences, said differently.
  *
- * A project that has never drafted anything and one that has said nothing yet
- * are not the same news, and neither is a store that would not answer.
+ * A project that has never drafted anything, one that has said nothing yet and
+ * one with nowhere to say it are three different pieces of news, and only one
+ * of them is something to act on right now.
  */
 function silence(
   error: string | null,
   loading: boolean,
-  drafts: boolean,
+  slice: string,
 ): { headline: string; detail?: string } {
   if (error !== null) {
     return { headline: "The project's memory could not be read.", detail: error };
   }
   if (loading) return { headline: "Reading the project's memory…" };
-  if (drafts) {
+  if (slice === "channels") {
+    return {
+      headline: "No channels yet",
+      detail:
+        "A channel is one account this project publishes as. Add one for a network, connect it with a token, and drafts can be sent to it. The token is kept in this machine's vault and never travels with the repository.",
+    };
+  }
+  if (slice === "drafts") {
     return {
       headline: "Nothing drafted",
       detail:
-        "A draft is something this project is about to say outside itself, written where the work is so it can be assembled from what the project already knows. Sync delivers none of them: publishing hands a post to an agent, which reaches the network with a tool you connected to it.",
+        "A draft is something this project is about to say outside itself, written where the work is so it can be assembled from what the project already knows.",
     };
   }
   return {
     headline: "Nothing has gone out from here",
     detail:
-      "What is sent is kept as its own record, carrying the text exactly as it went — so what was said stays readable however the draft changes afterwards. These are written by whoever delivered a post, which is an agent rather than Sync.",
+      "What is sent is kept as its own record, carrying the text exactly as it went and the identifier the network issued — so what was said stays readable however the draft changes afterwards.",
   };
 }
 
@@ -325,8 +373,8 @@ function silence(
  * What a command that did not happen says for itself, and what one that did.
  *
  * One component for both because they occupy the same strip and must not be
- * able to appear in two different shapes; `failed` is what decides the word and
- * the colour, so a success can never be drawn in the voice of a refusal.
+ * able to appear in two different shapes; `failed` decides the word and the
+ * colour, so a success can never be drawn in the voice of a refusal.
  */
 function Banner({
   message,

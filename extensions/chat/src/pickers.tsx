@@ -19,6 +19,8 @@ import {
   type SessionConfigOption,
   type SessionConfigValue,
   type SessionMode,
+  type Worktree,
+  type WorktreeChoice,
 } from "@sync-buzz/extension-api";
 import { ChevronDown } from "lucide-react";
 
@@ -215,6 +217,118 @@ function Note({ agent }: { agent: Agent }) {
   }
   return null;
 }
+
+/**
+ * Where the conversation works.
+ *
+ * The project's own working tree, or one made to be thrown away: an agent in a
+ * disposable tree edits files nobody else has open, and the whole of it can be
+ * undone in the morning with one command. What it does **not** buy is safety —
+ * an agent has a shell wherever it runs — so nothing here says protected, and
+ * the menu is about where the work lands rather than about what it may reach.
+ *
+ * Every entry is a state and not a command, which is what keeps this a pop-up
+ * button like the three beside it. *New working tree* included: it is not an
+ * action performed on the spot but an answer to *where should this work* — the
+ * tree is made when the conversation moves into it, the same way choosing
+ * another agent raises one.
+ *
+ * A choice, and then a fact, exactly as the agent is. The directory reaches the
+ * agent when the session opens and it reads files from there, so once anything
+ * has been said this is where the work *is*: the button becomes a word, without
+ * a chevron promising a choice that cannot come back.
+ */
+export function WorktreePicker({
+  trees,
+  /** The tree this conversation is in, or `null` for the project's own. */
+  current,
+  starting,
+  settled,
+  onChoose,
+}: {
+  trees: readonly Worktree[];
+  current: Worktree | null;
+  starting: boolean;
+  /** Whether anything has been said, which is what fixes where the work is. */
+  settled: boolean;
+  onChoose: (choice: WorktreeChoice | null) => void;
+}) {
+  const shown = current === null ? "Project" : worktreeName(current);
+
+  if (settled) {
+    // Said only where it is not the ordinary answer. Every conversation in this
+    // window is in the project unless somebody moved it, and a row of them each
+    // repeating "Project" would spend a line on the absence of news.
+    if (current === null) return null;
+    return (
+      <span className="max-w-44 truncate px-2 text-xs text-fg-tertiary">{shown}</span>
+    );
+  }
+
+  return (
+    <Popup of="Working tree" shown={shown} disabled={starting}>
+      <DropdownMenuRadioGroup
+        value={current?.path ?? PROJECT}
+        onValueChange={(value) => {
+          if (value === PROJECT) onChoose(null);
+          else if (value === NEW) onChoose("new");
+          else onChoose({ path: value });
+        }}
+      >
+        <DropdownMenuRadioItem value={PROJECT}>
+          <span className="flex min-w-0 flex-col items-start gap-0.5">
+            <span className="text-sm">Project</span>
+            <span className="text-xs text-fg-tertiary">
+              The files you have open
+            </span>
+          </span>
+        </DropdownMenuRadioItem>
+        <DropdownMenuRadioItem value={NEW}>
+          <span className="flex min-w-0 flex-col items-start gap-0.5">
+            <span className="text-sm">New working tree</span>
+            <span className="text-xs text-fg-tertiary">
+              A copy at the last commit, to keep or throw away
+            </span>
+          </span>
+        </DropdownMenuRadioItem>
+        {trees.length === 0 ? null : <DropdownMenuSeparator />}
+        {trees.map((tree) => (
+          <DropdownMenuRadioItem key={tree.path} value={tree.path}>
+            <span className="flex min-w-0 flex-col items-start gap-0.5">
+              <span className="text-sm">{worktreeName(tree)}</span>
+              <span className="text-xs text-fg-tertiary">
+                {tree.head === tree.baseCommit ? "Nothing done in it yet" : "Holds work"}
+              </span>
+            </span>
+          </DropdownMenuRadioItem>
+        ))}
+      </DropdownMenuRadioGroup>
+    </Popup>
+  );
+}
+
+/**
+ * What a tree is called here: the branch its work is aimed at, and the short
+ * commit where neither it nor the project was on one.
+ *
+ * Not the directory. Its name is a key this application minted — `s4` — which
+ * says nothing to anybody, and the path it sits in is a machine setting rather
+ * than something about this conversation.
+ */
+export function worktreeName(tree: Worktree): string {
+  return tree.base ?? tree.baseCommit.slice(0, 7);
+}
+
+/**
+ * The two answers that are not a tree.
+ *
+ * A radio group compares strings, and a tree is identified by its path — so
+ * these two have to be strings no path can be. A leading space is the cheapest
+ * thing that is true of neither: git will not hand back a path with one, and
+ * neither will the host, which answers canonically.
+ */
+const PROJECT = " project";
+const NEW = " new";
 
 /**
  * Choosing a model.

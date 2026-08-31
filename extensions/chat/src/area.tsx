@@ -2,6 +2,7 @@
 
 import {
   createContext,
+  useCallback,
   useContext,
   useEffect,
   useMemo,
@@ -22,8 +23,10 @@ import {
   ScrollArea,
   cn,
   conversationForRecord,
+  adoptWorktree,
   conversationKeptAs,
   deleteSession,
+  discardWorktree,
   forgetRememberedConversation,
   explain,
   foldTranscript,
@@ -45,6 +48,7 @@ import {
   useAppMenu,
   useBadge,
   useLiveSessions,
+  worktreesIn,
   type Agent,
   type AgentSession,
   type OpenProject,
@@ -57,12 +61,15 @@ import {
   type SessionAbout,
   type SessionRow,
   type SessionSource,
+  type Worktree,
+  type WorktreeChoice,
   useOpenRecord,
 } from "@sync-buzz/extension-api";
 import { ChevronDown, ChevronLeft, Play, Plus } from "lucide-react";
 
 import { Composer, EMPTY_DRAFT, type Draft } from "./composer";
 import { Conversation } from "./conversation";
+import { worktreeName } from "./pickers";
 import { CONVERSATION_KIND, asMarkdown, facts, suggestTitle } from "./keeping";
 
 /**
@@ -123,18 +130,14 @@ function orderedBy(entry: ConversationEntry): SessionSource | undefined {
   return entry.at === "live" ? entry.row.source : entry.held.source;
 }
 
-/** The record a conversation is being held under, from either half. */
-function heldUnder(entry: ConversationEntry): SessionAbout | undefined {
-  return entry.at === "live" ? entry.row.about : entry.held.about;
-}
-
 /** One heading and the conversations under it. */
 interface Bucket {
   /**
-   * The record the group is named after. `null` for the conversations that are
-   * about nothing in particular — the ones somebody opened from here.
+   * What the group is keyed by, which is not what it is named after: two
+   * headings can read the same and must still be two headings.
    */
-  readonly about: SessionAbout | null;
+  readonly key: string;
+
   readonly label: string;
   readonly entries: readonly ConversationEntry[];
 }
@@ -156,43 +159,74 @@ interface Bucket {
  * more than "Tasks" to somebody scanning the column, and it is a heading that
  * can be opened.
  *
+ * **The orderer is still the answer where there is no record.** Work ordered
+ * about nothing in particular — a routine that runs on a clock and reports —
+ * has a name for who asked and nothing else, and asking only about records
+ * dropped every one of those into the heap of conversations somebody opened
+ * themselves. That heap is the one they are least like: nobody typed them.
+ * Both facts are set when the conversation is opened and never edited, so
+ * neither can move a row out from under somebody reading it, which is the one
+ * property this split needs.
+ *
  * **Groups are ordered by their newest conversation, and so are the rows inside
  * them.** That is what keeps "what happened last" at the top of the list rather
  * than somewhere inside the third group: splitting the list must not cost the
  * one order it always had.
  *
- * The conversations under no record lead, whether or not anything else is
- * there. They are the ones somebody opened here, and a person's own work does
- * not move down the window because an extension has begun some.
+ * The conversations under no record and nobody's order lead, whether or not
+ * anything else is there. They are the ones somebody opened here, and a
+ * person's own work does not move down the window because an extension has
+ * begun some.
  */
 function bucketed(entries: readonly ConversationEntry[]): readonly Bucket[] {
   const loose: ConversationEntry[] = [];
-  const byRecord = new Map<string, { about: SessionAbout; entries: ConversationEntry[] }>();
+  const named = new Map<string, { label: string; entries: ConversationEntry[] }>();
 
   for (const entry of entries) {
-    const about = heldUnder(entry);
-    if (about === undefined) {
+    // **The orderer, never the record.** Grouping by the record was tried and
+    // it dissolved the list: a section hands work over one record at a time, so
+    // five tasks made five headings with one conversation under each — a list
+    // of headings is not a list of conversations, and every one of them had to
+    // be read to find anything.
+    //
+    // What the record answers is *which* work, and that is a fact about one
+    // conversation rather than about a group of them. It is on the row, where a
+    // person reads down a column of them, and the row's own menu opens it.
+    const source = orderedBy(entry);
+    const heading =
+      source !== undefined
+        ? { key: `orderer:${source.extensionId}`, label: source.extensionName }
+        : null;
+    if (heading === null) {
       loose.push(entry);
       continue;
     }
-    const held = byRecord.get(about.key);
+    const held = named.get(heading.key);
     if (held === undefined) {
-      // The title from the newest conversation, because the entries arrive
+      // The label from the newest conversation, because the entries arrive
       // newest first and a record that was renamed should be called what the
-      // most recent work called it rather than what the first did.
-      byRecord.set(about.key, { about, entries: [entry] });
+      // most recent work called it rather than what the first did. A package
+      // that was renamed goes stale in the same direction.
+      named.set(heading.key, {
+        label: heading.label,
+        entries: [entry],
+      });
     } else {
       held.entries.push(entry);
     }
   }
 
-  const ordered: Bucket[] = [...byRecord.values()]
-    .map((held) => ({ about: held.about, label: held.about.title, entries: held.entries }))
+  const ordered: Bucket[] = [...named]
+    .map(([key, held]) => ({
+      key,
+      label: held.label,
+      entries: held.entries,
+    }))
     .sort((left, right) => (right.entries[0]?.at_ms ?? 0) - (left.entries[0]?.at_ms ?? 0));
 
   return loose.length === 0
     ? ordered
-    : [{ about: null, label: "Conversations", entries: loose }, ...ordered];
+    : [{ key: "loose", label: "Conversations", entries: loose }, ...ordered];
 }
 
 interface ChatContext {
@@ -240,6 +274,28 @@ interface ChatContext {
    * it is about to be sent to whoever they have just chosen instead.
    */
   readonly switchAgent: (key: string, agentId: string) => Promise<void>;
+  /**
+   * Moves an unstarted conversation to another working tree, the way
+   * {@link ChatContext.switchAgent} moves it to another agent — and for the
+   * same reason it has to: where the work happens reaches the agent when the
+   * session opens, so changing it is raising another session, not editing this
+   * one. `null` is the project's own tree.
+   */
+  readonly switchWorktree: (key: string, choice: WorktreeChoice | null) => Promise<void>;
+  /** Every working tree this project has, for the choice before the first word. */
+  readonly worktrees: readonly Worktree[];
+  /**
+   * Whether this project can have trees at all.
+   *
+   * One read answers both this and the list: the host refuses to list them for
+   * a folder that is not a repository or has nothing committed, and a refusal
+   * is the answer rather than an error to show.
+   */
+  readonly worktreesOffered: boolean;
+  /** Keeps the work done in a tree, under the branch name somebody chose. */
+  readonly adopt: (path: string, branch: string) => Promise<void>;
+  /** Throws a tree away, and the commits in it with it. */
+  readonly discard: (path: string) => Promise<void>;
   readonly stop: (key: string) => Promise<void>;
   readonly forget: (key: string) => Promise<void>;
   /** Calls a conversation something. An empty name puts the derived one back. */
@@ -339,6 +395,13 @@ export function ChatAreaProvider({
   // Which conversations are being written, so the control that writes one says
   // so rather than looking as if the click missed.
   const [keeping, setKeeping] = useState<ReadonlySet<string>>(() => new Set());
+  // The project's working trees, and whether it can have any.
+  //
+  // `null` is *not asked yet*, which is neither of the two answers: a strip
+  // drawn before the read came back would offer a choice and then take it away,
+  // or hide one that was there all along.
+  const [trees, setTrees] = useState<readonly Worktree[] | null>(null);
+  const [offered, setOffered] = useState(true);
   const [resuming, setResuming] = useState<ReadonlySet<string>>(() => new Set());
   // The conversation this person opened and has not spoken in yet, or `null`.
   //
@@ -505,6 +568,27 @@ export function ChatAreaProvider({
   // number cannot say and a dot says exactly.
   useBadge(answered.size > 0 ? "some" : null);
 
+  /**
+   * Reads the project's working trees.
+   *
+   * A refusal is an answer and not a fault to report: the host declines to list
+   * trees for a folder that is not a repository or has nothing committed, which
+   * is the same as saying this project cannot have them. Either way the read is
+   * over, and an empty list with the choice withdrawn is what the strip draws.
+   */
+  const readTrees = useCallback(async () => {
+    try {
+      setTrees(await worktreesIn(project.path));
+    } catch {
+      setTrees(null);
+      setOffered(false);
+    }
+  }, [project.path]);
+
+  useEffect(() => {
+    void readTrees();
+  }, [readTrees]);
+
   // Opening anything is this person answering whatever was asked.
   const open = (next: Chosen | null) => {
     setSettled(intent ?? null);
@@ -570,12 +654,100 @@ export function ChatAreaProvider({
     }
   };
 
+  /**
+   * The same conversation, in another tree.
+   *
+   * Written as `switchAgent` is, and for a reason that is not style: the tree
+   * reaches the agent in `session/new`, so this raises a new session and ends
+   * the old one. The new one comes up before the old one goes, so a tree that
+   * cannot be made leaves the person where they were.
+   *
+   * What is left behind is a tree, when the one being moved out of was made a
+   * moment ago and nothing was said in it. It is not removed here: this column
+   * cannot tell a tree it caused from one somebody made yesterday and chose,
+   * and throwing away the second would be deleting work on a guess. It stays in
+   * the menu, and *Discard working tree* is how it goes.
+   */
+  const switchWorktree = async (target: string, choice: WorktreeChoice | null) => {
+    const replacing = mine.find((candidate) => candidate.key === target);
+    const held = replacing?.worktree?.path ?? null;
+    const wanted = choice === null ? null : choice === "new" ? "new" : choice.path;
+    if (wanted === held || (wanted === null && held === null)) return;
+
+    setStarting(replacing?.agentId ?? null);
+    setTrouble(null);
+    try {
+      const opened = await startSession({
+        agentId: replacing?.agentId ?? preferredAgent ?? "",
+        cwd: project.path,
+        about: replacing?.about ?? null,
+        worktree: choice,
+      });
+      // Everything that travels when the agent changes travels here too: the
+      // sentence, the marker that says nothing has been said yet, and what the
+      // conversation is about.
+      setDrafts((drafts) => {
+        const carried = drafts[target];
+        if (carried === undefined) return drafts;
+        const rest = { ...drafts, [opened.key]: carried };
+        delete rest[target];
+        return rest;
+      });
+      open({ at: "live", key: opened.key });
+      setDraft((current) => (current === target ? opened.key : current));
+      await deleteSession(target).catch(() => {});
+      await readTrees();
+    } catch (error) {
+      setTrouble(error instanceof Error ? error.message : String(error));
+    } finally {
+      setStarting(null);
+      reload();
+    }
+  };
+
+  /** Keeps what was done in a tree, under the name this person chose for it. */
+  const adopt = async (path: string, branch: string) => {
+    setTrouble(null);
+    try {
+      await adoptWorktree({ project: project.path, path, branch });
+    } catch (error) {
+      setTrouble(error instanceof Error ? error.message : String(error));
+    }
+  };
+
+  /**
+   * Throws a tree away.
+   *
+   * The commits in it go too unless somebody kept them first, which is why the
+   * row asks before calling this rather than after.
+   */
+  const discard = async (path: string) => {
+    setTrouble(null);
+    try {
+      await discardWorktree({ project: project.path, path });
+      await readTrees();
+    } catch (error) {
+      setTrouble(error instanceof Error ? error.message : String(error));
+    }
+  };
+
   const switchAgent = async (target: string, agentId: string) => {
-    if (agentId === mine.find((candidate) => candidate.key === target)?.agentId) return;
+    const replacing = mine.find((candidate) => candidate.key === target);
+    if (agentId === replacing?.agentId) return;
     setStarting(agentId);
     setTrouble(null);
     try {
-      const opened = await startSession({ agentId, cwd: project.path });
+      // What the conversation is about moves with it, like the sentence below.
+      // Switching agents raises a new session and ends the old one, so a
+      // conversation handed over from a task would come back under no record at
+      // all — a row changing group because somebody changed their mind about
+      // which agent should read it, which is the one thing this split promises
+      // cannot happen.
+      const opened = await startSession({
+        agentId,
+        cwd: project.path,
+        about: replacing?.about ?? null,
+      });
       // The sentence moves with the person. It was written to be sent, and
       // which process ends up reading it is not something they had said yet.
       setDrafts((held) => {
@@ -882,6 +1054,14 @@ export function ChatAreaProvider({
         begin,
         preferredAgent,
         switchAgent,
+        switchWorktree,
+        worktrees: trees ?? [],
+        // Withdrawn while the read is out as well as after a refusal: a choice
+        // that appeared a second late is one somebody has already decided
+        // without.
+        worktreesOffered: offered && trees !== null,
+        adopt,
+        discard,
         stop,
         forget,
         rename,
@@ -952,17 +1132,13 @@ export function ChatNavigator() {
                   Whether an agent is up is a state of the row and belongs on
                   the row.
 
-                  What a conversation is *about* is the opposite kind of fact:
-                  it is set when the conversation is opened and never edited, so
-                  a row cannot change group. That is what makes this split safe
+                  What a conversation is *about* — and, where it is about
+                  nothing, who ordered it — is the opposite kind of fact: both
+                  are set when the conversation is opened and never edited, so a
+                  row cannot change group. That is what makes this split safe
                   where that one was not. */}
               {buckets.map((bucket) => (
-                <Group
-                  key={bucket.about?.key ?? "loose"}
-                  label={bucket.label}
-                  count={bucket.entries.length}
-                  about={bucket.about}
-                >
+                <Group key={bucket.key} label={bucket.label} count={bucket.entries.length}>
                   {(shown) =>
                     bucket.entries.slice(0, shown).map((entry) =>
                       entry.at === "live" ? (
@@ -1025,23 +1201,16 @@ export function ChatNavigator() {
 function Group({
   label,
   count,
-  about,
   children,
 }: {
   label: string;
   /** How many rows there are in total, which is not how many are drawn. */
   count: number;
-  /**
-   * The record this heading names, when it names one. What the secondary click
-   * opens, and `null` for the group that is about nothing in particular.
-   */
-  about?: SessionAbout | null;
   children: (shown: number) => ReactNode;
 }) {
   const [collapsed, setCollapsed] = useState(false);
   const [all, setAll] = useState(false);
   const shown = all ? count : Math.min(count, AT_FIRST);
-  const openRecord = useOpenRecord();
 
   return (
     <section className="flex flex-col">
@@ -1054,17 +1223,6 @@ function Group({
         // and it is left out entirely where there is no record to open or
         // nothing that could show one, because a menu item that does nothing is
         // worse than no menu.
-        onContextMenu={
-          about == null || openRecord === null
-            ? undefined
-            : (event) =>
-                showNativeContextMenu(event, [
-                  {
-                    label: "Open record",
-                    onSelect: () => openRecord({ key: about.key, kind: about.kind }),
-                  },
-                ])
-        }
         className={cn(
           "flex items-center gap-1 rounded-(--radius-control) px-2 pt-2 pb-1 text-left",
           "text-xs font-medium text-fg-tertiary hover:text-fg-secondary",
@@ -1126,6 +1284,11 @@ function DormantRow({ held }: { held: RememberedConversation }) {
   const selected =
     chat.chosen?.at === "dormant" && chat.chosen.key === held.acpSession;
   const busy = chat.resuming.has(held.acpSession);
+  // The same two things a live row says about the work it belongs to, said the
+  // same way: a conversation from yesterday is in the same group as one from a
+  // minute ago, and telling them apart is what the record is for.
+  const openRecord = useOpenRecord();
+  const about = held.about ?? null;
 
   // One control, both lines of it, as in every other row of this list.
   return (
@@ -1138,6 +1301,15 @@ function DormantRow({ held }: { held: RememberedConversation }) {
           // pointer is invisible to the keyboard, so nothing may be reachable
           // only from one.
           showNativeContextMenu(event, [
+            ...(about === null || openRecord === null
+              ? []
+              : ([
+                  {
+                    label: "Open record",
+                    onSelect: () => openRecord({ key: about.key, kind: about.kind }),
+                  },
+                  "separator",
+                ] as const)),
             {
               label: "Reopen",
               onSelect: () => void chat.resume(held.acpSession),
@@ -1164,6 +1336,12 @@ function DormantRow({ held }: { held: RememberedConversation }) {
           {held.title ?? held.agentName}
         </span>
         <span className="flex min-w-0 items-baseline gap-1.5 text-xs text-fg-tertiary">
+          {about === null ? null : (
+            <>
+              <span className="min-w-0 shrink truncate">{about.title}</span>
+              <span aria-hidden="true">·</span>
+            </>
+          )}
           {held.title === null ? null : (
             <>
               <span className="min-w-0 shrink truncate">{held.agentName}</span>
@@ -1252,6 +1430,30 @@ function LiveRow({ row }: { row: SessionRow }) {
   // Renaming is a state of this row and of no other, so it is held here. Two
   // rows cannot be in it at once, because leaving the field settles it.
   const [renaming, setRenaming] = useState(false);
+  // What this row is asking, when it is asking something about its tree.
+  // `naming` takes a branch; `discarding` takes a yes. Both are asked in the
+  // row rather than over it: the two decisions are about this conversation, and
+  // this window has no dialog to put them in.
+  const [asking, setAsking] = useState<"naming" | "discarding" | "deleting" | null>(
+    null,
+  );
+
+  // The tree as it is now, rather than as it was when the session opened. The
+  // row's copy was made before the agent had done anything, so its `head` is
+  // the commit it started from for ever — and whether there is work in the tree
+  // is the whole of what the two gestures below depend on.
+  // What this conversation is about, now that the heading says who ordered it
+  // rather than what about. A row in a column of them has to say which task it
+  // is, and it is the only place left that can.
+  const openRecord = useOpenRecord();
+  const about = row.about ?? null;
+
+  const tree =
+    row.worktree === undefined
+      ? null
+      : (chat.worktrees.find((candidate) => candidate.path === row.worktree?.path) ??
+        row.worktree);
+  const hasWork = tree !== null && tree.head !== tree.baseCommit;
 
   // Every conversation with one agent is otherwise called the same thing, which
   // is the whole reason a name exists — so the name leads, and the agent moves
@@ -1265,6 +1467,103 @@ function LiveRow({ row }: { row: SessionRow }) {
   // what looks like one row did nothing when clicked — and it is the lower half,
   // which is where a pointer lands when somebody is aiming at a row rather than
   // at a word.
+  if (asking === "naming" && tree !== null) {
+    return (
+      <li>
+        <div className="flex w-full min-w-0 flex-col gap-0.5 rounded-(--radius-control) px-2 py-1.5">
+          {/* Empty, with no name suggested. What a branch is called is this
+              repository's convention and not this window's, and a value already
+              in the field is a suggestion whether or not it was meant as one. */}
+          <RenameField
+            name=""
+            placeholder="Branch name"
+            onSettle={(branch) => {
+              setAsking(null);
+              if (branch.trim() !== "") void chat.adopt(tree.path, branch.trim());
+            }}
+            onAbandon={() => setAsking(null)}
+          />
+          <span className="text-xs text-fg-tertiary">
+            Names the work done in this tree. The tree stays where it is.
+          </span>
+        </div>
+      </li>
+    );
+  }
+
+  if (asking === "deleting" && tree !== null) {
+    // Deleting the conversation and deleting the place it worked are two
+    // decisions, and the second is not implied by the first: somebody may be
+    // finished with the conversation and not with what it wrote. Both are
+    // offered here rather than one being taken silently.
+    return (
+      <li>
+        <div className="flex w-full min-w-0 flex-col gap-1 rounded-(--radius-control) px-2 py-1.5">
+          <span className="text-xs text-fg-secondary">
+            {hasWork
+              ? "This conversation worked in a tree that holds commits."
+              : "This conversation has a working tree with nothing committed in it."}
+          </span>
+          <span className="flex flex-wrap gap-1">
+            <Button
+              variant="outline"
+              size="xs"
+              onClick={() => {
+                setAsking(null);
+                void chat.forget(row.key);
+              }}
+            >
+              Delete, keep the tree
+            </Button>
+            <Button
+              variant="outline"
+              size="xs"
+              onClick={() => {
+                setAsking(null);
+                void chat.discard(tree.path);
+                void chat.forget(row.key);
+              }}
+            >
+              Delete both
+            </Button>
+            <Button variant="ghost" size="xs" onClick={() => setAsking(null)}>
+              Cancel
+            </Button>
+          </span>
+        </div>
+      </li>
+    );
+  }
+
+  if (asking === "discarding" && tree !== null) {
+    return (
+      <li>
+        <div className="flex w-full min-w-0 flex-col gap-1 rounded-(--radius-control) px-2 py-1.5">
+          <span className="text-xs text-fg-secondary">
+            {hasWork
+              ? "Throw this tree away? The commits in it go too."
+              : "Throw this tree away? Nothing was committed in it."}
+          </span>
+          <span className="flex gap-1">
+            <Button
+              variant="outline"
+              size="xs"
+              onClick={() => {
+                setAsking(null);
+                void chat.discard(tree.path);
+              }}
+            >
+              Discard
+            </Button>
+            <Button variant="ghost" size="xs" onClick={() => setAsking(null)}>
+              Cancel
+            </Button>
+          </span>
+        </div>
+      </li>
+    );
+  }
+
   return (
     <li>
       {renaming ? (
@@ -1299,6 +1598,18 @@ function LiveRow({ row }: { row: SessionRow }) {
             // conversation's own header, stopping is in the composer, and
             // renaming happens in this row.
             showNativeContextMenu(event, [
+              // First, because it is the one thing here that leaves this
+              // section: what the work is about is a record, and reading it is
+              // what somebody scanning these rows is about to want.
+              ...(about === null || openRecord === null
+                ? []
+                : ([
+                    {
+                      label: "Open record",
+                      onSelect: () => openRecord({ key: about.key, kind: about.kind }),
+                    },
+                    "separator",
+                  ] as const)),
               {
                 label: "Rename",
                 onSelect: () => setRenaming(true),
@@ -1307,6 +1618,25 @@ function LiveRow({ row }: { row: SessionRow }) {
                 label: "Add to Memory",
                 onSelect: () => void chat.keep(row.key),
               },
+              // Only for a conversation that is in one. The two decisions a
+              // tree ends in are the whole of what is offered about it, and
+              // keeping is disabled rather than hidden while there is nothing
+              // committed: the gesture exists, and *why not yet* is worth
+              // saying by the state of the item.
+              ...(tree === null
+                ? []
+                : ([
+                    "separator",
+                    {
+                      label: "Keep work as branch…",
+                      enabled: hasWork,
+                      onSelect: () => setAsking("naming"),
+                    },
+                    {
+                      label: "Discard working tree…",
+                      onSelect: () => setAsking("discarding"),
+                    },
+                  ] as const)),
               "separator",
               {
                 label: "Stop agent",
@@ -1314,8 +1644,9 @@ function LiveRow({ row }: { row: SessionRow }) {
               },
               "separator",
               {
-                label: "Delete conversation",
-                onSelect: () => void chat.forget(row.key),
+                label: tree === null ? "Delete conversation" : "Delete conversation…",
+                onSelect: () =>
+                  tree === null ? void chat.forget(row.key) : setAsking("deleting"),
               },
             ])
           }
@@ -1335,6 +1666,12 @@ function LiveRow({ row }: { row: SessionRow }) {
             {row.title ?? row.agentName}
           </span>
           <span className="flex min-w-0 items-baseline gap-1.5 text-xs text-fg-tertiary">
+            {about === null ? null : (
+              <>
+                <span className="min-w-0 shrink truncate">{about.title}</span>
+                <span aria-hidden="true">·</span>
+              </>
+            )}
             {named ? (
               <>
                 <span className="min-w-0 shrink truncate">{row.agentName}</span>
@@ -1342,6 +1679,15 @@ function LiveRow({ row }: { row: SessionRow }) {
               </>
             ) : null}
             <StatusLine status={row.status} />
+            {/* Said only where it is news. A conversation is in the project's
+                own tree unless somebody moved it, so every row repeating
+                "Project" would spend the line on the absence of one. */}
+            {tree === null ? null : (
+              <>
+                <span aria-hidden="true">·</span>
+                <span className="min-w-0 shrink truncate">{worktreeName(tree)}</span>
+              </>
+            )}
           </span>
         </button>
       )}
@@ -1626,6 +1972,10 @@ export function ChatWorkspace() {
           settled: chat.session.transcript.entries.length > 0,
           onAgent: (agentId) => void chat.switchAgent(open, agentId),
           model: chat.model,
+          worktrees: chat.worktrees,
+          worktree: chat.row?.worktree ?? null,
+          worktreesOffered: chat.worktreesOffered,
+          onWorktree: (choice) => void chat.switchWorktree(open, choice),
         }}
         // Not yet answered while the session is being raised — it arrives with
         // `initialize`, a moment later — and taken as yes until it is, because

@@ -661,7 +661,18 @@ function useRunNow(
     // somebody who presses this is asking to see *this* run — not to find the
     // one before it still sitting there while they wait.
     void clearSlot(project.path, order.key, rows.current)
-      .then(() => startSession({ agentId, cwd: project.path }))
+      .then(() =>
+        startSession({
+          agentId,
+          cwd: project.path,
+          // The routine this run is of, which is what Chat groups its list by.
+          // The clock's own path names it and this one has to name the same
+          // thing: a routine whose trial runs sat in the heap while its
+          // scheduled runs sat under its name would be one routine appearing as
+          // two, and which of the two depended on who pressed what.
+          about: { key: order.key, kind: KIND, title },
+        }),
+      )
       .then(
         // Named before anything is said, because saying something is what
         // writes the pointer and the pointer records the title. Named after, it

@@ -5,11 +5,15 @@
   "icon": "megaphone",
   "guidance": "Written when a post has actually gone out, and not before. Its body is the text exactly as it left — that is the whole reason it is a record of its own rather than a field on the draft: a draft edited afterwards would otherwise rewrite what was said. Write one as soon as the post is delivered, archive the draft it came from, and link the two with `sent_from`. Do not edit one. If what went out was wrong, that is a new post saying so — a correction is a thing that happened, not a thing that unhappens.",
   "fields": {
-    "channel": {
+    "network": {
       "type": "enum",
-      "values": ["linkedin", "x", "bluesky", "mastodon", "threads", "telegram"],
+      "values": ["linkedin", "bluesky", "threads", "telegram"],
       "required": true,
-      "description": "Which network it went to. Required here where it is optional on a draft, and the difference is the point: a draft may not have been decided yet, and something that has already gone out went somewhere."
+      "description": "Which service it went to. Required, and held here rather than only on the channel: a channel can be deleted or reconnected to another account, and this record has to keep saying where the post is — it is an account of an event, and an event does not change because a setting did."
+    },
+    "channel": {
+      "type": "string",
+      "description": "The key of the `posts.channel` record it went out through, when that is known. Provenance rather than the fact itself: what matters is in `network` and in the body, and this only says which of several accounts was used."
     },
     "sent": {
       "type": "string",
@@ -18,11 +22,11 @@
     },
     "identifier": {
       "type": "string",
-      "description": "What the network calls this post — a URN, a numeric id, an AT URI. The only handle anybody has on it afterwards. Not required, deliberately: where it cannot be got, a record of what was said and when is still worth far more than no record at all."
+      "description": "What the network calls this post — a URN, a numeric id, an AT URI — read from its own answer. The only handle anybody has on it afterwards. Not required, deliberately: where it cannot be got, a record of what was said and when is still worth far more than no record at all."
     },
     "visibility": {
       "type": "string",
-      "description": "Who could read it, as it was actually sent, in its channel's own vocabulary. Kept beside the text for the same reason the text is kept: what a draft says now is not evidence of what was agreed to then."
+      "description": "Who could read it, as it was actually sent, in its network's own vocabulary. Kept beside the text for the same reason the text is kept: what a draft says now is not evidence of what was agreed to then."
     }
   },
   "relationships": {

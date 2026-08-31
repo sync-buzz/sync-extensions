@@ -2,9 +2,16 @@
  * What a post is, apart from how it is drawn.
  *
  * Pure functions over a record, so the columns beside them decide only where
- * things go. The vocabulary is the type's own — a value outside it is a write
- * the engine refuses — and it is stated once here rather than in each column
- * that draws a pop-up over it.
+ * things go.
+ *
+ * **Two words that are easy to confuse, and the whole shape rests on the
+ * difference.** A *network* is a fact about the world — LinkedIn allows three
+ * thousand characters, Bluesky three hundred — so it lives in this file, in
+ * code, and is the same in every project. A *channel* is a fact about this
+ * project — which account it publishes as, which chat it posts into, and what
+ * to sign with — so it lives in the project's memory as a record. Two projects
+ * on one machine publish to one network under different accounts, and nothing
+ * in the code has to know.
  */
 
 /** A post somebody is still writing. */
@@ -13,30 +20,39 @@ export const DRAFT = "posts.draft";
 /** A post that went out, with the text as it went. */
 export const PUBLICATION = "posts.publication";
 
+/** One account this project publishes to. */
+export const CHANNEL = "posts.channel";
+
 /**
  * The fields a row is drawn from, per kind.
  *
  * A listing brings what it was asked for and nothing else, so a column that
- * says which network a post is for has to ask for the field by name. Two lists
- * because the two kinds carry different fields, and asking for a field a kind
- * has not got is asking a question with no answer.
+ * says which account a post is for has to ask for the field by name.
  */
 export const DRAFT_FIELDS = ["channel", "visibility"] as const;
 export const PUBLICATION_FIELDS = [
   "channel",
+  "network",
   "identifier",
   "sent",
   "visibility",
+] as const;
+export const CHANNEL_FIELDS = [
+  "network",
+  "account",
+  "author",
+  "chat",
+  "secret",
 ] as const;
 
 /**
  * One way a post can be read: who may see it, in that network's own words.
  *
- * Not shared between channels, and that is the point of holding it here rather
- * than in one enum on the type. *Public* and *connections* are LinkedIn's pair;
- * Mastodon has four and one of them is a direct message; X has none at all for
- * an ordinary account. A single vocabulary covering all of them would offer
- * somebody a value the network they chose has never heard of.
+ * Not shared between networks, and that is why it is held here rather than in
+ * one enum on the type. *Public* and *connections* are LinkedIn's pair; the
+ * other three here give an ordinary account nothing to choose at all. A single
+ * vocabulary covering every network would offer somebody a value the one they
+ * chose has never heard of.
  */
 export interface Visibility {
   readonly id: string;
@@ -46,41 +62,77 @@ export interface Visibility {
 }
 
 /**
+ * What somebody types to connect a channel, as the panel asks for it.
+ *
+ * Two networks need a second value beside the credential — Bluesky signs in
+ * with a handle, Telegram posts into a chat it has to be told about — and the
+ * panel cannot know which without asking the network. Held as data rather than
+ * as a condition in the panel, so a network that needs a second value is a
+ * member here and not a branch there.
+ */
+export interface Asked {
+  /** What the field is called above the box. */
+  readonly label: string;
+  /** What goes in it, where the shape is not obvious from the name. */
+  readonly placeholder: string;
+}
+
+/**
+ * The second value, and where the channel remembers it.
+ *
+ * A handle *is* the account, so it comes back from the network and is kept as
+ * `account`. A chat is nothing a network can answer for — it is where this
+ * project decided to post — so it is kept as `chat`. Naming the field here is
+ * what lets the panel fill the box in again the next time it is opened without
+ * asking which network this is.
+ */
+export interface Identity extends Asked {
+  readonly kept: "account" | "chat";
+}
+
+/**
  * One network a post can be written for.
  *
- * **A channel is a description, not an integration.** Nothing here connects to
- * anything: the fields are what a person needs while writing — what it is
- * called, how long a post may be, who may read one — and one sentence for the
- * agent that will actually deliver it. Adding a network is a row in the list
- * below and a paragraph in the prompt, which is the whole reason the section
- * can carry six of them without carrying six API clients.
+ * **A network is a fact about the world, and every member here is one.** What
+ * it is called, how long a post may be, who may read one, and what has to be
+ * typed to publish as an account on it. Nothing about a particular account is
+ * here; that is the channel record's, and the difference is the whole reason
+ * the two are separate.
  *
  * **The limit is checked, not guessed.** It is the number the network states
- * for one post, and it is the only figure here a person will act on — they
- * shorten a sentence because of it. A guessed limit is worse than none: it is
- * advice that looks measured.
+ * for one post, and it is the only figure here somebody acts on — they shorten
+ * a sentence because of it. A guessed limit is worse than none: it is advice
+ * that looks measured.
  */
-export interface Channel {
+export interface Network {
   readonly id: string;
   readonly label: string;
   /** The longest one post may be, in characters as a reader counts them. */
   readonly longest: number;
   /** Empty where the network gives an ordinary account no choice. */
   readonly visibilities: readonly Visibility[];
-  /** What the agent is told about getting a post to this network. */
-  readonly delivery: string;
+  /** What somebody is told about getting the credential this asks for. */
+  readonly connecting: string;
+  /** The value kept in this machine's vault, as the panel names it. */
+  readonly secret: Asked;
+  /** What is typed beside it and checked with it, or `null` for most of them. */
+  readonly identity: Identity | null;
 }
 
 /**
  * The networks this version knows about.
  *
- * A closed list, and closed deliberately: a channel decides a limit and a
- * vocabulary, and free text would give somebody a network with no limit to
- * count against and no visibility to choose — a counter about nothing. Adding
- * one is a row here and a release of this package, which is the same bargain
- * Sync makes for the agents it will write itself into.
+ * A closed list, and closed deliberately: a network decides a limit and a
+ * vocabulary, and free text would leave somebody with a network that has no
+ * limit to count against — a counter about nothing.
+ *
+ * **Every network in the list can be published to from here.** A name that
+ * could only be written down and not reached was worse than no name at all: it
+ * offered a channel, a counter and a Publish button that refused, which reads
+ * as a fault in the window rather than as a limit of it. So a network arrives
+ * in this list with the file that reaches it, or does not arrive.
  */
-export const CHANNELS: readonly Channel[] = [
+export const NETWORKS: readonly Network[] = [
   {
     id: "linkedin",
     label: "LinkedIn",
@@ -97,76 +149,57 @@ export const CHANNELS: readonly Channel[] = [
         note: "Readable by the people this account is connected to",
       },
     ],
-    delivery: "LinkedIn calls a post's identifier a URN, like `urn:li:share:…`.",
-  },
-  {
-    id: "x",
-    label: "X",
-    longest: 280,
-    // An ordinary account posts publicly and has nothing to choose, so the
-    // control is not drawn rather than drawn with one option in it.
-    visibilities: [],
-    delivery: "X calls a post's identifier a tweet id, which is a number.",
+    connecting:
+      "A token from the LinkedIn developer portal, with the scopes openid, profile and w_member_social. It lasts sixty days.",
+    secret: { label: "Token", placeholder: "Paste it here" },
+    identity: null,
   },
   {
     id: "bluesky",
     label: "Bluesky",
     longest: 300,
+    // An ordinary account posts publicly and has nothing to choose, so the
+    // control is not drawn rather than drawn with one option in it.
     visibilities: [],
-    delivery: "Bluesky identifies a post by an AT URI, like `at://…/app.bsky.feed.post/…`.",
-  },
-  {
-    id: "mastodon",
-    label: "Mastodon",
-    longest: 500,
-    visibilities: [
-      { id: "public", label: "Public", note: "On the public timelines" },
-      {
-        id: "unlisted",
-        label: "Unlisted",
-        note: "Readable by anybody, but off the public timelines",
-      },
-      { id: "followers", label: "Followers", note: "Followers of this account only" },
-      {
-        id: "direct",
-        label: "Direct",
-        note: "Only the people named in it — a message rather than a post",
-      },
-    ],
-    delivery:
-      "Mastodon is many servers: which instance this account is on is part of what the agent needs to know, and it is not stored here.",
+    connecting:
+      "An app password from Settings ▸ Privacy and security ▸ App passwords, and the handle it belongs to. It is not the account's own password, it works with two-factor sign-in on, and it can be revoked on its own.",
+    secret: { label: "App password", placeholder: "xxxx-xxxx-xxxx-xxxx" },
+    identity: { label: "Handle", placeholder: "name.bsky.social", kept: "account" },
   },
   {
     id: "threads",
     label: "Threads",
     longest: 500,
     visibilities: [],
-    delivery: "Threads identifies a post by a numeric media id.",
+    connecting:
+      "A long-lived token from a Meta app with threads_basic and threads_content_publish. Publishing to the account that authorised the app needs no review. It lasts sixty days.",
+    secret: { label: "Token", placeholder: "Paste it here" },
+    identity: null,
   },
   {
     id: "telegram",
     label: "Telegram",
     longest: 4096,
     visibilities: [],
-    delivery:
-      "Telegram posts into a chat or a channel, and which one is part of what the agent needs to know rather than something stored here.",
+    connecting:
+      "A bot token from BotFather, and the chat it posts into. The bot has to be in that chat, and an administrator of a channel it posts to — what goes out is said by the bot, not by a person.",
+    secret: { label: "Bot token", placeholder: "123456:ABC-DEF…" },
+    identity: { label: "Chat", placeholder: "@channel or -1001234567890", kept: "chat" },
   },
 ];
 
-export type ChannelId = (typeof CHANNELS)[number]["id"];
-
-/** One channel by id, or `null` for a draft nobody has chosen one for. */
-export function channel(id: string | null): Channel | null {
-  if (id === null || id === "") return null;
-  return CHANNELS.find((entry) => entry.id === id) ?? null;
+/** One network by id, or `null` for a channel nobody has chosen one for. */
+export function network(id: string | null | undefined): Network | null {
+  if (id === null || id === undefined || id === "") return null;
+  return NETWORKS.find((entry) => entry.id === id) ?? null;
 }
 
-/** What a channel is called where somebody reads one, and its id when it is unknown. */
-export function channelLabel(id: string): string {
-  return channel(id)?.label ?? id;
+/** What a network is called where somebody reads one, and its id when unknown. */
+export function networkLabel(id: string): string {
+  return network(id)?.label ?? id;
 }
 
-/** One field of a record, as a string, or the default the type declares. */
+/** One field of a record, as a string, or the fallback. */
 export function field(
   fields: Readonly<Record<string, unknown>> | undefined,
   name: string,
@@ -176,27 +209,64 @@ export function field(
   return typeof held === "string" && held.length > 0 ? held : fallback;
 }
 
-/** Which network a record is for, or `""` where nobody has said. */
-export const channelOf = (fields?: Readonly<Record<string, unknown>>) =>
+/** Which channel a draft or a publication is for, by the channel record's key. */
+export const channelKeyOf = (fields?: Readonly<Record<string, unknown>>) =>
   field(fields, "channel", "");
 
+export const networkOf = (fields?: Readonly<Record<string, unknown>>) =>
+  field(fields, "network", "");
+export const accountOf = (fields?: Readonly<Record<string, unknown>>) =>
+  field(fields, "account", "");
+export const authorOf = (fields?: Readonly<Record<string, unknown>>) =>
+  field(fields, "author", "");
+export const secretOf = (fields?: Readonly<Record<string, unknown>>) =>
+  field(fields, "secret", "");
+
+/** Which chat a channel posts into, for the network that posts into one. */
+export const chatOf = (fields?: Readonly<Record<string, unknown>>) =>
+  field(fields, "chat", "");
+
+/**
+ * What a channel already knows about the second value its network asks for.
+ *
+ * So that somebody replacing a token is not asked to type their handle again,
+ * and so that the box says what is in use rather than starting blank beside a
+ * connected account.
+ */
+export function identityOf(
+  within: Network | null,
+  fields?: Readonly<Record<string, unknown>>,
+): string {
+  return within?.identity === undefined || within.identity === null
+    ? ""
+    : field(fields, within.identity.kept, "");
+}
 export const visibilityOf = (fields?: Readonly<Record<string, unknown>>) =>
   field(fields, "visibility", "");
-
 export const identifierOf = (fields?: Readonly<Record<string, unknown>>) =>
   field(fields, "identifier", "");
-
 export const sentAtOf = (fields?: Readonly<Record<string, unknown>>) =>
   field(fields, "sent", "");
 
 /**
- * What a visibility is called, in the vocabulary of the channel it belongs to.
+ * The name a channel's token is kept under in the vault.
  *
- * The channel is required rather than searched for across all of them: `public`
+ * Derived from the record's key rather than typed, and that is what makes two
+ * accounts on one network possible: the key is permanent and unique, so two
+ * channels can never name one secret and a renamed channel cannot lose its own.
+ * It is written into the record as well, so the section can say what a channel
+ * expects on a machine that has not got it.
+ */
+export const secretName = (channelKey: string) => `channel/${channelKey}`;
+
+/**
+ * What a visibility is called, in the vocabulary of the network it belongs to.
+ *
+ * The network is required rather than searched for across all of them: `public`
  * means something slightly different on two networks, and a lookup that found
  * the first match would put one network's sentence under another's name.
  */
-export function visibilityLabel(within: Channel | null, id: string): string {
+export function visibilityLabel(within: Network | null, id: string): string {
   if (id === "") return "";
   return within?.visibilities.find((entry) => entry.id === id)?.label ?? id;
 }
@@ -216,46 +286,22 @@ export function length(text: string): number {
 }
 
 /**
- * How much room is left in this channel, which may be negative.
+ * How much room is left, which may be negative.
  *
  * Negative rather than clamped at zero: *over by 40* is what somebody needs to
  * know, and *0 left* said while they keep typing is a counter that has stopped
- * describing anything. `null` where no channel has been chosen — there is no
- * limit to be within, and a number invented for that case would be a limit of
- * ours.
+ * describing anything. `null` where no network is known — there is no limit to
+ * be within, and a number invented for that case would be a limit of ours.
  */
-export function remaining(within: Channel | null, text: string): number | null {
+export function remaining(within: Network | null, text: string): number | null {
   return within === null ? null : within.longest - length(text);
-}
-
-/**
- * Why this draft cannot go out, or `null` when nothing is in the way.
- *
- * One function rather than a condition in each of the three places that ask —
- * the button, the sentence under it, and the brief — so that a draft the window
- * offers to send is a draft the brief will accept.
- */
-export function unsendable(
-  within: Channel | null,
-  text: string,
-): string | null {
-  if (text.trim().length === 0) return "There is nothing in this draft to send.";
-  if (within === null) {
-    return "No channel is chosen, so there is nowhere for this to go.";
-  }
-  const left = remaining(within, text);
-  if (left !== null && left < 0) {
-    return `Longer than ${within.label} accepts, by ${-left} characters.`;
-  }
-  return null;
 }
 
 /**
  * A date as this window says one, and the raw string when it is not a date.
  *
  * The locale is the reader's. What is stored is when the post went out, which
- * is a fact about an event rather than anything compared against a record, so
- * there is nothing here that has to sort next to something else.
+ * is a fact about an event rather than anything compared against a record.
  */
 export function when(iso: string): string {
   if (iso.length === 0) return "—";
@@ -277,7 +323,6 @@ export function when(iso: string): string {
  * Empty, and that is the decision rather than an omission. A task starts with
  * its three headings because the shape is what makes it checkable; a post has
  * no shape to fill in — it is prose somebody writes to strangers, and a
- * template would be this package putting words in their mouth. The prompt is
- * the sentence above the editor instead, which says nothing once typing starts.
+ * template would be this package putting words in their mouth.
  */
 export const EMPTY = "";

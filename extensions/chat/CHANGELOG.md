@@ -1,5 +1,61 @@
 # Changelog
 
+## 1.4.0
+
+A conversation can be held in a working tree of its own.
+
+An agent is ordinarily raised in the project's own working tree, with whatever
+is half-finished in it. That is right for a conversation somebody is watching
+and wrong for one nobody is: the work lands in the files you have open, and
+there is no gesture that takes it back. **Working tree** is a fourth pop-up
+button in the strip above the field, beside the agent, and it answers where the
+work happens — the project, a tree made now, or one that is already there.
+
+It is a choice and then a fact, exactly as the agent is. The directory reaches
+the agent when the session opens and it reads files from there, so once
+anything has been said the button becomes a word: moving a running conversation
+would be an agent answering about files it never saw. Choosing another tree
+before the first word raises a new session and carries the sentence over, which
+is what choosing another agent has always done.
+
+A tree carries no branch. It is made detached, so nothing appears in your
+`git branch` that you did not name — branch conventions are the repository
+owner's, and a name this package invented would turn up in everybody's output
+as something nobody chose. **Keep work as branch…** is where a name is asked
+for, in the row itself, with the field left empty. It is disabled while nothing
+has been committed in the tree, because a branch at the commit the work started
+from is a name for work that was never done.
+
+**Discard working tree…** throws it away, and the commits in it go too. The row
+says which of the two cases it is before it does anything. Deleting a
+conversation that has a tree asks the second question rather than assuming it:
+being finished with a conversation is not the same as being finished with what
+it wrote.
+
+What this buys is reversibility and not safety. An agent working in a tree has
+a shell like an agent anywhere else, and nothing here claims otherwise.
+
+Where trees are made is a setting of the application rather than of this
+package: Settings ▸ Working trees. A project that is not a repository, or one
+with nothing committed yet, has nowhere to put a tree — the choice is not drawn
+at all there rather than drawn and then refused.
+
+Conversations are grouped by who ordered them, and each row says which record
+its work is about.
+
+1.3.0 grouped them by the record instead, and a week of it showed what the
+reasoning had missed: a section hands work over one record at a time, so five
+tasks made five headings with one conversation under each. A list of headings is
+not a list of conversations — every heading had to be read to find anything, and
+the grouping that was meant to sort the list dissolved it.
+
+What the record answers is *which* work, which is a fact about one conversation
+rather than about a group of them. It is on the row now, ahead of the agent and
+the state, and **Open record** moved from the heading's menu to the row's. The
+heading is the package that ordered the work, as it was before 1.3.0 — a
+routine reporting on a clock and a task somebody sent over are told apart by
+what is written on their rows.
+
 ## 1.3.0
 
 A picture the agent made is drawn in the conversation.

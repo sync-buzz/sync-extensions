@@ -1,0 +1,31 @@
+{
+  "kind": "posts.channel",
+  "title": "Channel",
+  "description": "One account this project publishes to: which network, whose account, and what to sign the request with.",
+  "icon": "radio-tower",
+  "guidance": "A channel is this project's own — two projects on one machine may publish to the same network under different accounts, which is the whole reason this is a record rather than a setting. Connect it in the section: paste the credential the network asks for — a token, or an app password beside a handle — and the account name and author are read back from the network rather than typed. **The token itself is never here.** `secret` is the name it is kept under in Sync's vault; the value lives in the machine's keychain and does not travel with the repository. The body is what an agent should know about this channel that the fields cannot say — the tone, the audience, who reads it.",
+  "fields": {
+    "network": {
+      "type": "enum",
+      "values": ["linkedin", "bluesky", "threads", "telegram"],
+      "required": true,
+      "description": "Which network it reaches. Required: a channel is an account somewhere, and one with no network is not a channel yet. The set is closed because a network decides a length limit and a vocabulary of visibility, and a name outside it is a limit nobody can count against. Every name in it can be published to from the window."
+    },
+    "account": {
+      "type": "string",
+      "description": "Whose account it is, as the network itself names it. Read back when the channel is connected rather than typed, so it cannot disagree with the token beside it."
+    },
+    "author": {
+      "type": "string",
+      "description": "What the network calls the author when it is asked to publish — a person URN on LinkedIn, a DID on Bluesky, a numeric id on Threads and Telegram. Read back on connecting for the same reason `account` is: it is the network's answer, not somebody's recollection."
+    },
+    "chat": {
+      "type": "string",
+      "description": "Where inside the network the posts go, for a network that does not decide it from the account. Telegram is the one that does: a bot says nothing anywhere until it is told which chat, and the bot has to be in that chat — an administrator, where it is a channel. Written as it is addressed: `@name` for a channel, a numeric id beginning `-100` for a group. Empty everywhere else, because an account is the whole address there."
+    },
+    "secret": {
+      "type": "string",
+      "description": "The name the token is kept under in Sync's vault — never the token. A name is safe to write down and travels usefully: a colleague opening this project sees which secret the channel expects and that their machine has not got it."
+    }
+  }
+}

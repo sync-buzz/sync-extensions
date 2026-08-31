@@ -3,16 +3,15 @@
   "title": "Draft",
   "description": "Something this project is about to say outside itself, while it can still be changed.",
   "icon": "square-pen",
-  "guidance": "The body is the post, exactly as it would be read by somebody who has never seen this project — no headings, no internal names, no record keys. Say what changed and why it matters to them; a changelog entry is not a post. Set `channel` before anything else: it decides how long the post may be and what `visibility` may say, and a draft with no channel has nowhere to go. Link the records it was assembled from with `assembled_from`, so whoever reads it later can check the claim rather than believe it.",
+  "guidance": "The body is the post, exactly as it would be read by somebody who has never seen this project — no headings, no internal names, no record keys. Say what changed and why it matters to them; a changelog entry is not a post. Set `channel` before anything else: it is the key of a `posts.channel` record, and through it comes the account this goes out as, how long the post may be and what `visibility` may say. A draft with no channel has nowhere to go. Link the records it was assembled from with `assembled_from`, so whoever reads it later can check the claim rather than believe it.",
   "fields": {
     "channel": {
-      "type": "enum",
-      "values": ["linkedin", "x", "bluesky", "mastodon", "threads", "telegram"],
-      "description": "Which network this text is written for. Absent means nobody has chosen one yet, which is an ordinary state for a draft and not a broken record — it is also the one state it cannot be sent in. The set is closed because a channel decides a length limit and a vocabulary, and a name outside it would be a limit nobody can count against."
+      "type": "string",
+      "description": "The key of the `posts.channel` record this is written for — an account, not a network. A key rather than the name of a service, because two projects on one machine publish to one network under different accounts, and because a draft has to keep pointing at the right one when a second is added. Absent means nobody has decided yet, which is an ordinary state for a draft and the one state it cannot be sent in."
     },
     "visibility": {
       "type": "string",
-      "description": "Who would be able to read it, in the vocabulary of its own channel — LinkedIn has two values, Mastodon four, X none at all. A string rather than an enum for exactly that reason: one shared set would offer a value the chosen network has never heard of. What is valid is checked against the channel by the section that writes it."
+      "description": "Who would be able to read it, in the vocabulary of its channel's own network — LinkedIn has two values, and the other three give an ordinary account none. A string rather than an enum for exactly that reason: one shared set would offer a value the chosen network has never heard of. What is valid is checked against the network by the section that writes it."
     }
   },
   "relationships": {

@@ -22,10 +22,12 @@ import {
   type AgentSession,
   type PastedContent,
   type SessionConfigOption,
+  type Worktree,
+  type WorktreeChoice,
 } from "@sync-buzz/extension-api";
 import { ArrowUp, FileText, Paperclip, Square, X } from "lucide-react";
 
-import { AgentPicker, ModePicker, ModelPicker } from "./pickers";
+import { AgentPicker, ModePicker, ModelPicker, WorktreePicker } from "./pickers";
 
 /**
  * What is half-written in one conversation.
@@ -80,6 +82,19 @@ export interface Settings {
   readonly onAgent: (agentId: string) => void;
   /** The model option the agent stated, or `null` where it stated none. */
   readonly model: SessionConfigOption | null;
+  /**
+   * The working trees this project has, for the choice before the first word.
+   *
+   * Empty where the project is not a repository or has no commit yet — the host
+   * refuses to list any, and a choice nothing can honour is one this strip does
+   * not draw.
+   */
+  readonly worktrees: readonly Worktree[];
+  /** The tree this conversation is being held in, `null` for the project's. */
+  readonly worktree: Worktree | null;
+  /** Whether trees are possible here at all, which is one read, made once. */
+  readonly worktreesOffered: boolean;
+  readonly onWorktree: (choice: WorktreeChoice | null) => void;
 }
 
 /**
@@ -371,6 +386,20 @@ export function Composer({
             settled={settings.settled}
             onChoose={settings.onAgent}
           />
+          {/* Where the work lands, beside who does it: both are answered before
+              the first word and neither can be changed after it. Left out
+              entirely where the host will not list trees — a project that is
+              not a repository has nowhere to put one, and a control that could
+              only refuse is worse than no control. */}
+          {settings.worktreesOffered ? (
+            <WorktreePicker
+              trees={settings.worktrees}
+              current={settings.worktree}
+              starting={settings.starting}
+              settled={settings.settled}
+              onChoose={settings.onWorktree}
+            />
+          ) : null}
           {/* Absent rather than empty, in both cases. An agent that states no
               models and one that states no modes are saying they have none to
               offer, and a pop-up button over nothing is a promise this build

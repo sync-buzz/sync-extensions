@@ -1,34 +1,80 @@
 {
   "manifestVersion": 1,
   "id": "posts",
-  "version": "0.3.0",
+  "version": "0.6.0",
   "name": "Posts",
-  "summary": "Drafts of what this project will say outside itself, and the text of everything already said. Delivery is your agent's, through a tool you connected to it.",
-  "description": "Posts holds two things and reaches nothing. A draft is what the project is about to say, written for one named network — the section knows how long a post may be there and who may read one, and counts down while somebody writes. A publication is what it said, carrying the text exactly as it went out, so editing a draft afterwards cannot rewrite the account of it. Both are ordinary records: they live in the project's memory, travel with the repository, and can be written or read by an agent as easily as by a person. Sending is deliberately not here. Sync has no connection to any network and stores no account for one; pressing Publish hands the post to an agent, which delivers it with a tool somebody connected to that agent — an MCP server for that network. So this section is worth installing where an agent has hands, and where one has not, it is a good place to write and a place that will tell you plainly that nothing can go out. Publishing is a person's act either way: there is no clock in here, and nothing that sends anything while nobody is looking.",
+  "summary": "Drafts of what this project will say outside itself, the accounts it says them as, and the text of everything already said.",
+  "description": "Posts holds three things. A channel is one account this project publishes as — which network, whose account, where inside it the posts go where the network needs telling, and a credential kept in this machine's vault under a name the record carries, never in the record itself. A draft is what the project is about to say, written for one channel, with the room left in it counted down as somebody writes. A publication is what it said, carrying the text exactly as it went out and the identifier the network issued, so editing a draft afterwards cannot rewrite the account of it. All three are ordinary records: they live in the project's memory, travel with the repository, and can be written or read by an agent as easily as by a person — while the credential stays on the machine and travels nowhere. Publishing is a person's act: they read the exact text and press the button, there is no clock in here, and nothing sends anything while nobody is looking. Four networks are reached from this window — LinkedIn, Bluesky, Threads and Telegram — and a Telegram channel says what it is: a bot posting into a chat, not a person speaking.",
   "icon": "megaphone",
   "engines": {
-    "syncApi": "^3.0"
+    "syncApi": "^3.2"
   },
-  "capabilities": ["records", "agents.acp"],
+  "capabilities": [
+    "records",
+    "vault",
+    "net",
+    "net.write",
+    "background",
+    "agent.tools"
+  ],
+  "net": {
+    "hosts": [
+      "api.linkedin.com",
+      "bsky.social",
+      "graph.threads.net",
+      "api.telegram.org"
+    ]
+  },
   "areas": [
     {
       "id": "posts",
       "label": "Posts",
-      "description": "Drafts waiting to be said, and the text of what has already gone out.",
+      "description": "Drafts waiting to be said, the accounts they go out as, and what has already gone.",
       "frame": "browse",
       "icon": "megaphone",
       "badge": {
-        "kinds": ["posts.draft"]
+        "kinds": [
+          "posts.draft"
+        ]
       }
     }
   ],
-  "types": ["types/draft.json", "types/publication.json"],
+  "types": [
+    "types/channel.json",
+    "types/draft.json",
+    "types/publication.json"
+  ],
   "opens": {
-    "kinds": ["posts.draft", "posts.publication"],
+    "kinds": [
+      "posts.draft",
+      "posts.publication",
+      "posts.channel"
+    ],
     "projectTypes": false
   },
   "prompt": "prompt/instructions.md",
   "ui": "ui/index.js",
   "styles": "ui/index.css",
-  "license": "MIT"
+  "license": "MIT",
+  "service": "service/index.js",
+  "tools": [
+    {
+      "handler": "posts.publish",
+      "name": "publish",
+      "description": "Publish one draft to the channel it names, and answer with what the network called the post. Sync makes the request; you never see the credential and cannot choose the account. Afterwards write a posts.publication from the answer and archive the draft — nothing else records it.",
+      "input": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "draft"
+        ],
+        "properties": {
+          "draft": {
+            "type": "string",
+            "description": "The key of the posts.draft record to publish. It must already name a channel that somebody has connected."
+          }
+        }
+      }
+    }
+  ]
 }

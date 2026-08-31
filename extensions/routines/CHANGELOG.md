@@ -12,6 +12,12 @@ be loaded by.
 A minor rather than a patch: an older Sync can no longer install it, which is
 a fact about the package and not about what it does.
 
+A trial run says which routine it is of. **Run now** raised a conversation that
+named nothing, while the same routine on the clock named itself — so a list of
+conversations could say which routine it was reporting on for one of the two
+and not for the other, depending on whether a person or the clock had started
+it. The window's path now names the routine exactly as the clock's path does.
+
 ## 0.3.1
 
 Opening a folder showed every routine in the project.

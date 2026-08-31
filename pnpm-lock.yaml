@@ -9,8 +9,8 @@ importers:
   .:
     devDependencies:
       '@sync-buzz/extension-api':
-        specifier: ^3.2.0
-        version: 3.2.0(@types/react@19.2.18)(class-variance-authority@0.7.1)(clsx@2.1.1)(lucide-react@1.33.0(react@19.2.8))(radix-ui@1.6.7(@types/react@19.2.18)(react-dom@19.2.8(react@19.2.8))(react@19.2.8))(react@19.2.8)
+        specifier: ^3.4.0
+        version: 3.4.0(@types/react@19.2.18)(class-variance-authority@0.7.1)(clsx@2.1.1)(lucide-react@1.33.0(react@19.2.8))(radix-ui@1.6.7(@types/react@19.2.18)(react-dom@19.2.8(react@19.2.8))(react@19.2.8))(react@19.2.8)
       '@types/react':
         specifier: ^19.2.18
         version: 19.2.18
@@ -1003,8 +1003,8 @@ packages:
   '@radix-ui/rect@1.1.3':
     resolution: {integrity: sha512-JtyZR+mqgBibTo8xea3B6ZRmzZiM/YeVBtUkas6zMuXjAlfIFIW2FgqeM9eLyvEaYX66vr6DJMK+4U6LV0KhNw==}
 
-  '@sync-buzz/extension-api@3.2.0':
-    resolution: {integrity: sha512-cZkZRIcvY9WzjUC2lOQ2qIiumtValle/tMk/8TLIIdMjbEg4IK0an+TCQJwVP5lLAXc+CXoVqqVg1CvCuN/giQ==}
+  '@sync-buzz/extension-api@3.4.0':
+    resolution: {integrity: sha512-gsIkd64UYtXgzotRYVIbFlLLltc5toktTgc0rAM9IyaSnfcgP8eJIvPeDB1g5eeV9RvWCseP6wqil8gXZ/qDSg==}
     engines: {node: '>=20'}
     hasBin: true
     peerDependencies:
@@ -2280,7 +2280,7 @@ snapshots:
 
   '@radix-ui/rect@1.1.3': {}
 
-  '@sync-buzz/extension-api@3.2.0(@types/react@19.2.18)(class-variance-authority@0.7.1)(clsx@2.1.1)(lucide-react@1.33.0(react@19.2.8))(radix-ui@1.6.7(@types/react@19.2.18)(react-dom@19.2.8(react@19.2.8))(react@19.2.8))(react@19.2.8)':
+  '@sync-buzz/extension-api@3.4.0(@types/react@19.2.18)(class-variance-authority@0.7.1)(clsx@2.1.1)(lucide-react@1.33.0(react@19.2.8))(radix-ui@1.6.7(@types/react@19.2.18)(react-dom@19.2.8(react@19.2.8))(react@19.2.8))(react@19.2.8)':
     dependencies:
       '@tailwindcss/cli': 4.3.3
       ajv: 8.20.0
