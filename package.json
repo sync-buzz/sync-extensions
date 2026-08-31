@@ -12,7 +12,7 @@
     "contract": "cd ../sync && pnpm api:publish"
   },
   "devDependencies": {
-    "@sync-buzz/extension-api": "^3.4.0",
+    "@sync-buzz/extension-api": "^3.5.0",
     "@types/react": "^19.2.18",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",

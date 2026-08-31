@@ -303,6 +303,24 @@ export function WorktreePicker({
           </DropdownMenuRadioItem>
         ))}
       </DropdownMenuRadioGroup>
+      {trees.length === 0 ? null : (
+        <>
+          <DropdownMenuSeparator />
+          {/* Text under the list rather than a command in it, as the agent's
+              menu does with the agents this machine has not installed. Every
+              entry above is a state; a row that deleted something would be a
+              command wearing the same clothes, one keystroke from the tree a
+              person meant to choose.
+
+              A conversation throws its own tree away from its row in the list.
+              This is for the trees whose conversation is gone, which is the
+              case that had nowhere to be done. */}
+          <p className="px-2 py-1.5 text-xs text-fg-tertiary">
+            A conversation discards its own tree from its row. Settings ▸ Working
+            trees lists every one on this machine.
+          </p>
+        </>
+      )}
     </Popup>
   );
 }

@@ -1,5 +1,25 @@
 # Changelog
 
+## 1.4.1
+
+Choosing a working tree works.
+
+Every conversation held in one vanished from the list the moment it was made.
+This column picked out its own conversations by the directory the agent runs
+in, which is the tree — so the conversation was filed under a directory this
+project does not have, the column emptied, and the menu could not be used at
+all. Sync 3.5 says which project a conversation belongs to as well as where its
+agent works, and the list matches on the first.
+
+The menu sits at the trailing end of the strip, apart from the three that are
+about the agent. Where the work lands is a different question from who does it
+and how freely, and three controls side by side read as one group this is not
+part of.
+
+It also says where trees go when their conversation is gone: a conversation
+discards its own from its row, and Settings ▸ Working trees lists every one on
+this machine.
+
 ## 1.4.0
 
 A conversation can be held in a working tree of its own.

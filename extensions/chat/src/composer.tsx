@@ -386,20 +386,6 @@ export function Composer({
             settled={settings.settled}
             onChoose={settings.onAgent}
           />
-          {/* Where the work lands, beside who does it: both are answered before
-              the first word and neither can be changed after it. Left out
-              entirely where the host will not list trees — a project that is
-              not a repository has nowhere to put one, and a control that could
-              only refuse is worse than no control. */}
-          {settings.worktreesOffered ? (
-            <WorktreePicker
-              trees={settings.worktrees}
-              current={settings.worktree}
-              starting={settings.starting}
-              settled={settings.settled}
-              onChoose={settings.onWorktree}
-            />
-          ) : null}
           {/* Absent rather than empty, in both cases. An agent that states no
               models and one that states no modes are saying they have none to
               offer, and a pop-up button over nothing is a promise this build
@@ -423,6 +409,26 @@ export function Composer({
               onChoose={(modeId) => void settle(session.setMode(modeId))}
             />
           )}
+          {/* Last in the strip and against the trailing edge, away from the
+              three that are about the agent. Where the work lands is a
+              different question from who does it and how freely — and the three
+              beside each other are read as one group, which this is not part
+              of.
+
+              Left out entirely where the host will not list trees: a project
+              that is not a repository has nowhere to put one, and a control
+              that could only refuse is worse than no control. */}
+          {settings.worktreesOffered ? (
+            <span className="ml-auto flex min-w-0">
+              <WorktreePicker
+                trees={settings.worktrees}
+                current={settings.worktree}
+                starting={settings.starting}
+                settled={settings.settled}
+                onChoose={settings.onWorktree}
+              />
+            </span>
+          ) : null}
         </div>
 
         <div className="flex w-full items-end gap-2">

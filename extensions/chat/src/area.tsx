@@ -427,8 +427,12 @@ export function ChatAreaProvider({
   // record of every kind to get them would be a page load for a menu.
   const corpus = useCorpus(project.path, { kind: CONVERSATION_KIND }, [], active);
   // A conversation this project did not open is not this project's to show.
+  // **By the project, not by the directory.** A conversation held in a working
+  // tree runs in that tree, so `cwd` is the tree and matching on it dropped the
+  // conversation out of this list the moment it was made — the column emptied
+  // and there was nothing left to choose from.
   const mine = useMemo(
-    () => running.filter((row) => row.cwd === project.path),
+    () => running.filter((row) => row.project === project.path),
     [running, project.path],
   );
 
