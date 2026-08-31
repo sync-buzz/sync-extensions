@@ -3,6 +3,17 @@
   "id": "chat",
   "versions": [
     {
+      "version": "1.4.1",
+      "syncApi": "^3.5",
+      "description": "Chat runs an agent as a process and speaks the Agent Client Protocol to it, so the conversation happens here rather than in a terminal beside here. A conversation opens straight away, with the agent this project was last held with, and which agent, which model and how freely it may act are chosen in a strip above the field — beside the sentence they apply to. Which agents it can raise is a fact about this machine rather than about this build: the ones installed are offered, and Codex — which does not speak the protocol at all — is reached through a bridge that ships inside the application. Models and modes are listed as the agent itself stated them, never from a table in the build. A conversation belongs to the project rather than to the screen: switching sections leaves the agent working, and coming back finds everything it said meanwhile.",
+      "changelog": "Choosing a working tree works.\n\nEvery conversation held in one vanished from the list the moment it was made.\nThis column picked out its own conversations by the directory the agent runs\nin, which is the tree — so the conversation was filed under a directory this\nproject does not have, the column emptied, and the menu could not be used at\nall. Sync 3.5 says which project a conversation belongs to as well as where its\nagent works, and the list matches on the first.\n\nThe menu sits at the trailing end of the strip, apart from the three that are\nabout the agent. Where the work lands is a different question from who does it\nand how freely, and three controls side by side read as one group this is not\npart of.\n\nIt also says where trees go when their conversation is gone: a conversation\ndiscards its own from its row, and Settings ▸ Working trees lists every one on\nthis machine.",
+      "artefact": {
+        "url": "https://github.com/sync-buzz/sync-extensions/releases/download/v1.5.2/chat-1.4.1.syncext",
+        "sha256": "a51911612751b21fdab9f808a35eebbb69316ed801b02803250635f4335ac8a0",
+        "bytes": 23068
+      }
+    },
+    {
       "version": "1.4.0",
       "syncApi": "^3.4",
       "description": "Chat runs an agent as a process and speaks the Agent Client Protocol to it, so the conversation happens here rather than in a terminal beside here. A conversation opens straight away, with the agent this project was last held with, and which agent, which model and how freely it may act are chosen in a strip above the field — beside the sentence they apply to. Which agents it can raise is a fact about this machine rather than about this build: the ones installed are offered, and Codex — which does not speak the protocol at all — is reached through a bridge that ships inside the application. Models and modes are listed as the agent itself stated them, never from a table in the build. A conversation belongs to the project rather than to the screen: switching sections leaves the agent working, and coming back finds everything it said meanwhile.",

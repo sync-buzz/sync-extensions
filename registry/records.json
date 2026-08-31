@@ -8,7 +8,7 @@
       "description": "Records brings no vocabulary of its own, and is named after what it holds rather than after anything it knows. It is the section a project's types are made and read in: what a decision is in this project is this project's answer, not ours, and a type another extension published is read here beside the ones somebody typed. What is written lives in the repository's own refs, so it travels with the code and is as shared as it is, and memory-hub reconciles it against code history — a claim whose files moved is marked stale rather than quietly believed.",
       "changelog": "Rebuilt against a newer contract, and nothing else.\n\nThe module is built against the contract, and the contract moved to 3.4.0 — the\nsurface gained the working tree a conversation is held in. Nothing here uses it\nand nothing here changed, but the built module is not the same file, and a\nversion that has been published is immutable. So the number moves rather than\nthe bytes under it.",
       "artefact": {
-        "url": "https://github.com/sync-buzz/sync-extensions/releases/download/v1.5.1/records-1.1.1.syncext",
+        "url": "https://github.com/sync-buzz/sync-extensions/releases/download/v1.5.2/records-1.1.1.syncext",
         "sha256": "4cf4b18c5b59c1d112e435e40e317fefb4cae28c4e8cd6610b08a4b4b330cbfa",
         "bytes": 13627
       }
