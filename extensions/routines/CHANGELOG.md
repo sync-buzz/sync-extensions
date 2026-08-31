@@ -1,5 +1,19 @@
 # Changelog
 
+## 0.4.1
+
+A trial run says which routine it is of.
+
+**Run now** raised a conversation that named nothing, while the same routine on
+the clock named itself — so a list of conversations could say which routine it
+was reporting on for one of the two and not for the other, depending on whether
+a person or the clock had started it. The window's path now names the routine
+exactly as the clock's path does.
+
+Rebuilt against contract 3.4.0 along with it, which is the other reason the
+number had to move: a published version is immutable, and the built module is
+not the same file even where the source is.
+
 ## 0.4.0
 
 Asks for a Sync that has the surface it is built against.
@@ -11,12 +25,6 @@ be loaded by.
 
 A minor rather than a patch: an older Sync can no longer install it, which is
 a fact about the package and not about what it does.
-
-A trial run says which routine it is of. **Run now** raised a conversation that
-named nothing, while the same routine on the clock named itself — so a list of
-conversations could say which routine it was reporting on for one of the two
-and not for the other, depending on whether a person or the clock had started
-it. The window's path now names the routine exactly as the clock's path does.
 
 ## 0.3.1
 

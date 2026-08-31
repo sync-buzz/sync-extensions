@@ -7,7 +7,8 @@
     "check": "sync-ext check extensions/*",
     "pack": "sync-ext pack extensions/* --out dist",
     "typecheck": "tsc --noEmit",
-    "verify": "pnpm typecheck && pnpm build && pnpm check",
+    "immutability": "node scripts/immutability.mjs",
+    "verify": "pnpm typecheck && pnpm build && pnpm check && pnpm run pack && pnpm immutability",
     "contract": "cd ../sync && pnpm api:publish"
   },
   "devDependencies": {
