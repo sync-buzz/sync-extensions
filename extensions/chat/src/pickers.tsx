@@ -1,6 +1,6 @@
 "use client";
 
-import type { ReactNode } from "react";
+import { useState, type ReactNode } from "react";
 
 import {
   Button,
@@ -22,7 +22,7 @@ import {
   type Worktree,
   type WorktreeChoice,
 } from "@sync-buzz/extension-api";
-import { ChevronDown } from "lucide-react";
+import { ChevronDown, Trash2 } from "lucide-react";
 
 /**
  * The three choices a person makes about a conversation, drawn the one way
@@ -56,15 +56,22 @@ function Popup({
   /** The current selection, which is what a pop-up button shows. */
   shown,
   disabled,
+  /**
+   * Told when the menu opens and closes, for a menu holding a question of its
+   * own: a question left standing would be what somebody sees when they open
+   * the button next, having asked for the list.
+   */
+  onOpenChange,
   children,
 }: {
   of: string;
   shown: string;
   disabled?: boolean;
+  onOpenChange?: (open: boolean) => void;
   children: ReactNode;
 }) {
   return (
-    <DropdownMenu>
+    <DropdownMenu onOpenChange={onOpenChange}>
       <Tooltip>
         <TooltipTrigger asChild>
           <DropdownMenuTrigger asChild disabled={disabled}>
@@ -233,6 +240,16 @@ function Note({ agent }: { agent: Agent }) {
  * tree is made when the conversation moves into it, the same way choosing
  * another agent raises one.
  *
+ * # Throwing one away, without a row that deletes
+ *
+ * A tree whose conversation is gone is reachable from nowhere else, and the
+ * disk fills with copies of a repository nobody can name. So it goes from here
+ * — but not as an entry. A row that deleted would be a command dressed as a
+ * state, one keystroke from the tree somebody meant to choose. It is a mark at
+ * the end of the row instead, and pressing it replaces the whole list with the
+ * question: while that stands there is no row under the pointer to hit by
+ * accident, and the answer says what discarding costs before it is given.
+ *
  * A choice, and then a fact, exactly as the agent is. The directory reaches the
  * agent when the session opens and it reads files from there, so once anything
  * has been said this is where the work *is*: the button becomes a word, without
@@ -242,18 +259,33 @@ export function WorktreePicker({
   trees,
   /** The tree this conversation is in, or `null` for the project's own. */
   current,
+  /**
+   * What is in each tree, by its path: the name of the conversation held there.
+   *
+   * A tree nothing names is one whose conversation is gone — the case the list
+   * used to have no answer for, and the only case this menu throws anything
+   * away in.
+   */
+  heldBy,
   starting,
   settled,
   onChoose,
+  onDiscard,
 }: {
   trees: readonly Worktree[];
   current: Worktree | null;
+  heldBy: ReadonlyMap<string, string>;
   starting: boolean;
   /** Whether anything has been said, which is what fixes where the work is. */
   settled: boolean;
   onChoose: (choice: WorktreeChoice | null) => void;
+  onDiscard: (path: string) => void;
 }) {
   const shown = current === null ? "Project" : worktreeName(current);
+  // The tree this menu is asking about, when it is asking. One at a time,
+  // because the question replaces the list: while it stands there is nothing to
+  // mis-click, which is the whole reason a deletion is not a row here.
+  const [asking, setAsking] = useState<Worktree | null>(null);
 
   if (settled) {
     // Said only where it is not the ordinary answer. Every conversation in this
@@ -266,58 +298,119 @@ export function WorktreePicker({
   }
 
   return (
-    <Popup of="Working tree" shown={shown} disabled={starting}>
-      <DropdownMenuRadioGroup
-        value={current?.path ?? PROJECT}
-        onValueChange={(value) => {
-          if (value === PROJECT) onChoose(null);
-          else if (value === NEW) onChoose("new");
-          else onChoose({ path: value });
-        }}
-      >
-        <DropdownMenuRadioItem value={PROJECT}>
-          <span className="flex min-w-0 flex-col items-start gap-0.5">
-            <span className="text-sm">Project</span>
-            <span className="text-xs text-fg-tertiary">
-              The files you have open
-            </span>
+    <Popup
+      of="Working tree"
+      shown={shown}
+      disabled={starting}
+      onOpenChange={(open) => {
+        if (!open) setAsking(null);
+      }}
+    >
+      {asking !== null ? (
+        <div className="flex flex-col gap-1 px-2 py-1.5">
+          <span className="text-xs text-fg-secondary">
+            Throw {worktreeName(asking)} away?{" "}
+            {asking.head === asking.baseCommit
+              ? "Nothing was committed in it."
+              : "The commits in it go too."}
           </span>
-        </DropdownMenuRadioItem>
-        <DropdownMenuRadioItem value={NEW}>
-          <span className="flex min-w-0 flex-col items-start gap-0.5">
-            <span className="text-sm">New working tree</span>
-            <span className="text-xs text-fg-tertiary">
-              A copy at the last commit, to keep or throw away
-            </span>
+          <span className="flex gap-1">
+            <Button
+              variant="outline"
+              size="xs"
+              onClick={() => {
+                onDiscard(asking.path);
+                setAsking(null);
+              }}
+            >
+              Discard
+            </Button>
+            <Button variant="ghost" size="xs" onClick={() => setAsking(null)}>
+              Cancel
+            </Button>
           </span>
-        </DropdownMenuRadioItem>
-        {trees.length === 0 ? null : <DropdownMenuSeparator />}
-        {trees.map((tree) => (
-          <DropdownMenuRadioItem key={tree.path} value={tree.path}>
+        </div>
+      ) : (
+        <DropdownMenuRadioGroup
+          value={current?.path ?? PROJECT}
+          onValueChange={(value) => {
+            if (value === PROJECT) onChoose(null);
+            else if (value === NEW) onChoose("new");
+            else onChoose({ path: value });
+          }}
+        >
+          <DropdownMenuRadioItem value={PROJECT}>
             <span className="flex min-w-0 flex-col items-start gap-0.5">
-              <span className="text-sm">{worktreeName(tree)}</span>
+              <span className="text-sm">Project</span>
               <span className="text-xs text-fg-tertiary">
-                {tree.head === tree.baseCommit ? "Nothing done in it yet" : "Holds work"}
+                The files you have open
               </span>
             </span>
           </DropdownMenuRadioItem>
-        ))}
-      </DropdownMenuRadioGroup>
-      {trees.length === 0 ? null : (
+          <DropdownMenuRadioItem value={NEW}>
+            <span className="flex min-w-0 flex-col items-start gap-0.5">
+              <span className="text-sm">New working tree</span>
+              <span className="text-xs text-fg-tertiary">
+                A copy at the last commit, to keep or throw away
+              </span>
+            </span>
+          </DropdownMenuRadioItem>
+          {trees.length === 0 ? null : <DropdownMenuSeparator />}
+          {trees.map((tree) => {
+            const holder = heldBy.get(tree.path) ?? null;
+            // Thrown away from here only when nothing is in it. A tree with a
+            // conversation in it is that conversation's to end — from its own
+            // row, where what is being ended is one thing and not two — and the
+            // one this menu is pointed at is where the work is about to happen.
+            const loose = holder === null && tree.path !== current?.path;
+            return (
+              <DropdownMenuRadioItem
+                key={tree.path}
+                value={tree.path}
+                className={cn(loose && "pr-14")}
+              >
+                <span className="flex min-w-0 flex-col items-start gap-0.5">
+                  <span className="text-sm">{worktreeName(tree)}</span>
+                  <span className="text-xs text-fg-tertiary">
+                    <Says tree={tree} holder={holder} />
+                  </span>
+                </span>
+                {loose ? (
+                  <button
+                    type="button"
+                    aria-label={`Throw ${worktreeName(tree)} away`}
+                    // Every one of the three, and none is spare. A menu item
+                    // is chosen on the pointer coming *up* rather than on the
+                    // click — that is how a menu opened by a held button works
+                    // — so stopping the click alone would ask the question and
+                    // choose the tree it was asked about.
+                    onPointerDown={(event) => event.stopPropagation()}
+                    onPointerUp={(event) => event.stopPropagation()}
+                    onClick={(event) => {
+                      event.preventDefault();
+                      event.stopPropagation();
+                      setAsking(tree);
+                    }}
+                    className={cn(
+                      "absolute right-7 flex items-center justify-center rounded-(--radius-control)",
+                      "p-1 text-fg-tertiary hover:text-danger",
+                      "transition-colors duration-(--motion-duration-fast) ease-shell",
+                    )}
+                  >
+                    <Trash2 className="size-3.5" />
+                  </button>
+                ) : null}
+              </DropdownMenuRadioItem>
+            );
+          })}
+        </DropdownMenuRadioGroup>
+      )}
+      {trees.length === 0 || asking !== null ? null : (
         <>
           <DropdownMenuSeparator />
-          {/* Text under the list rather than a command in it, as the agent's
-              menu does with the agents this machine has not installed. Every
-              entry above is a state; a row that deleted something would be a
-              command wearing the same clothes, one keystroke from the tree a
-              person meant to choose.
-
-              A conversation throws its own tree away from its row in the list.
-              This is for the trees whose conversation is gone, which is the
-              case that had nowhere to be done. */}
           <p className="px-2 py-1.5 text-xs text-fg-tertiary">
-            A conversation discards its own tree from its row. Settings ▸ Working
-            trees lists every one on this machine.
+            A conversation discards the tree it is in from its own row. Settings ▸
+            Working trees lists every one on this machine.
           </p>
         </>
       )}
@@ -326,15 +419,41 @@ export function WorktreePicker({
 }
 
 /**
- * What a tree is called here: the branch its work is aimed at, and the short
- * commit where neither it nor the project was on one.
+ * The one fact worth knowing about a tree before choosing it.
  *
- * Not the directory. Its name is a key this application minted — `s4` — which
- * says nothing to anybody, and the path it sits in is a machine setting rather
- * than something about this conversation.
+ * Which conversation is in it, when one is: two trees made from `main` this
+ * afternoon differ in nothing else a person can act on, and *who is already
+ * working here* is what makes the second one a place to carry on rather than a
+ * place to collide. Where nobody is, what it holds is the next most useful
+ * thing, because it is what discarding would cost.
+ */
+function Says({ tree, holder }: { tree: Worktree; holder: string | null }) {
+  const from = tree.base === undefined ? null : `From ${tree.base}`;
+  const state =
+    holder !== null
+      ? `in ${holder}`
+      : tree.head === tree.baseCommit
+        ? "nothing done in it yet"
+        : "holds work, nobody in it";
+  return <>{from === null ? state : `${from} · ${state}`}</>;
+}
+
+/**
+ * What a tree is called: the name it was made under, which is its directory.
+ *
+ * Not the branch it came from. Two trees made from `main` an hour apart are
+ * both "main", and a menu offering them twice is a menu that cannot be used —
+ * the whole reason a tree is given words of its own when it is made. The branch
+ * is still worth saying and is said underneath, where it is a fact about the
+ * tree rather than its name.
+ *
+ * A tree somebody made themselves is called whatever they called its directory,
+ * which is the right answer for the same reason: it is the word they will
+ * recognise.
  */
 export function worktreeName(tree: Worktree): string {
-  return tree.base ?? tree.baseCommit.slice(0, 7);
+  const name = tree.path.split("/").filter(Boolean).at(-1);
+  return name ?? tree.base ?? tree.baseCommit.slice(0, 7);
 }
 
 /**

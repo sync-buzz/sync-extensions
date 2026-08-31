@@ -1,5 +1,33 @@
 # Changelog
 
+## 1.5.0
+
+Two working trees no longer look like one.
+
+A tree was named after the branch it came from, so two made from `main` on the
+same afternoon were both called `main` and both said "nothing done in it yet" —
+which is every fact the menu had about them. Sync now makes a tree in words
+rather than in a key, and the menu calls it what its directory is called:
+`sharply-amber-aardvark`, the same word `git worktree list` prints and the same
+one the agent's shell is standing in. The branch moves to the line underneath,
+where it says what the tree was made from rather than which tree it is.
+
+That line now says who is in it. A tree with a conversation in it names the
+conversation, and one nothing is in says so — which is the tree somebody is
+about to want gone.
+
+So it can go, from here. A tree nothing is in carries a mark at the end of its
+row; pressing it replaces the list with the question, saying whether commits go
+with it, and the list comes back either way. It is not an entry in the list:
+every entry is a state, and a row that deleted would be one keystroke from the
+tree somebody meant to choose. A tree a conversation is in is still that
+conversation's to end, from its own row, and Settings ▸ Working trees still
+lists every tree on this machine.
+
+Against an older Sync the trees it already made keep the keys they were made
+with, and the menu shows those: the name is the directory, so there is nothing
+to rename and nothing that stops working.
+
 ## 1.4.1
 
 Choosing a working tree works.

@@ -285,6 +285,14 @@ interface ChatContext {
   /** Every working tree this project has, for the choice before the first word. */
   readonly worktrees: readonly Worktree[];
   /**
+   * The conversation in each tree, by the tree's path.
+   *
+   * What a menu needs to say which tree is which — two made from `main` this
+   * afternoon are otherwise identical — and what tells it which trees nothing
+   * is in, those being the only ones it offers to throw away.
+   */
+  readonly worktreeHolders: ReadonlyMap<string, string>;
+  /**
    * Whether this project can have trees at all.
    *
    * One read answers both this and the list: the host refuses to list them for
@@ -473,6 +481,34 @@ export function ChatAreaProvider({
     ];
     return rows.sort((left, right) => right.at_ms - left.at_ms);
   }, [mine, pointers, project.path]);
+
+  /**
+   * Which conversation is in which tree, by the tree's path.
+   *
+   * Both halves of the list, because a dormant conversation is in its tree as
+   * much as a running one: resuming it lands in those files, and a tree thrown
+   * away underneath it takes the pointer's answer with it.
+   *
+   * A tree no conversation names is the case this exists for. It is the tree
+   * left behind when somebody moved a conversation elsewhere or deleted it, and
+   * without a name against it the menu could neither say what was in it nor
+   * safely offer to throw it away.
+   */
+  const worktreeHolders = useMemo(() => {
+    const held = new Map<string, string>();
+    for (const entry of conversations) {
+      const tree = entry.at === "live" ? entry.row.worktree : entry.held.worktree;
+      if (tree === undefined) continue;
+      const name =
+        entry.at === "live"
+          ? (entry.row.title ?? entry.row.agentName)
+          : (entry.held.title ?? entry.held.agentName);
+      // Newest first, and the first one wins: two conversations may share a
+      // tree, and the one somebody is most likely to mean is the recent one.
+      if (!held.has(tree.path)) held.set(tree.path, name);
+    }
+    return held;
+  }, [conversations]);
 
   // Search asking for a kept conversation outranks whatever was selected, until
   // somebody selects something else — which is what stops the ask being applied
@@ -1060,6 +1096,7 @@ export function ChatAreaProvider({
         switchAgent,
         switchWorktree,
         worktrees: trees ?? [],
+        worktreeHolders,
         // Withdrawn while the read is out as well as after a refusal: a choice
         // that appeared a second late is one somebody has already decided
         // without.
@@ -1978,8 +2015,12 @@ export function ChatWorkspace() {
           model: chat.model,
           worktrees: chat.worktrees,
           worktree: chat.row?.worktree ?? null,
+          worktreesHeldBy: chat.worktreeHolders,
           worktreesOffered: chat.worktreesOffered,
           onWorktree: (choice) => void chat.switchWorktree(open, choice),
+          // Asked in the menu before it gets here, and only ever about a tree
+          // no conversation is in — the menu is the one place that knows both.
+          onDiscardWorktree: (path) => void chat.discard(path),
         }}
         // Not yet answered while the session is being raised — it arrives with
         // `initialize`, a moment later — and taken as yes until it is, because

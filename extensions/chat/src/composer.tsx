@@ -92,9 +92,19 @@ export interface Settings {
   readonly worktrees: readonly Worktree[];
   /** The tree this conversation is being held in, `null` for the project's. */
   readonly worktree: Worktree | null;
+  /**
+   * Which conversation is in which tree, by the tree's path.
+   *
+   * The strip does not hold the list of conversations and must not start: this
+   * arrives already answered, so that the menu can say what is in a tree and
+   * offer to throw away only the trees nothing is in.
+   */
+  readonly worktreesHeldBy: ReadonlyMap<string, string>;
   /** Whether trees are possible here at all, which is one read, made once. */
   readonly worktreesOffered: boolean;
   readonly onWorktree: (choice: WorktreeChoice | null) => void;
+  /** Throws a tree away, having asked. Only ever one nothing is in. */
+  readonly onDiscardWorktree: (path: string) => void;
 }
 
 /**
@@ -423,9 +433,11 @@ export function Composer({
               <WorktreePicker
                 trees={settings.worktrees}
                 current={settings.worktree}
+                heldBy={settings.worktreesHeldBy}
                 starting={settings.starting}
                 settled={settings.settled}
                 onChoose={settings.onWorktree}
+                onDiscard={settings.onDiscardWorktree}
               />
             </span>
           ) : null}
