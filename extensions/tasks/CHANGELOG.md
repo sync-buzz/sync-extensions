@@ -1,5 +1,22 @@
 # Changelog
 
+## 0.2.4
+
+Filing a task, archiving one, and what the word *task* means.
+
+Three things the instructions got wrong about the surface they describe. The
+section on folders named five calls that do not exist — filing is `folder` on
+the write itself, and the record describing a folder is `is_folder: true` on
+one. Archiving a closed task is `archived: true` in the same write that closes
+it, which is now sayable and now said. And *set a task* meant, to an agent
+carrying its own harness, a sub-agent or a private checklist: the record is
+what was asked for, and this says so.
+
+The brief a task is handed to an agent with now names the project. Every call
+to Sync's memory names one and there is no default, so the agent was spending a
+call to find out which of the machine's projects it was standing in — or
+guessing, and writing its report into somebody else's memory.
+
 ## 0.2.3
 
 Rebuilt against a newer contract, and nothing else.

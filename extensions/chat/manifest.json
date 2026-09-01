@@ -1,7 +1,7 @@
 {
   "manifestVersion": 1,
   "id": "chat",
-  "version": "1.5.0",
+  "version": "1.6.0",
   "name": "Chat",
   "summary": "Talk to the coding agents installed on this machine, in this project's folder, without leaving the window.",
   "description": "Chat runs an agent as a process and speaks the Agent Client Protocol to it, so the conversation happens here rather than in a terminal beside here. A conversation opens straight away, with the agent this project was last held with, and which agent, which model and how freely it may act are chosen in a strip above the field \u2014 beside the sentence they apply to. Which agents it can raise is a fact about this machine rather than about this build: the ones installed are offered, and Codex \u2014 which does not speak the protocol at all \u2014 is reached through a bridge that ships inside the application. Models and modes are listed as the agent itself stated them, never from a table in the build. A conversation belongs to the project rather than to the screen: switching sections leaves the agent working, and coming back finds everything it said meanwhile.",
@@ -30,6 +30,7 @@
   "types": [
     "types/conversation.json"
   ],
+  "prompt": "prompt/instructions.md",
   "opens": {
     "kinds": [
       "chat.conversation"

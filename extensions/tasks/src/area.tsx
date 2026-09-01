@@ -692,6 +692,7 @@ function useSend(
     const title = (document_.title ?? "").trim();
     const text = brief({
       key: task,
+      project: project.identifier,
       title,
       body,
       status: "in_progress",

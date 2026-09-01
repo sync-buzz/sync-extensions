@@ -93,7 +93,8 @@ it down with `sync_apply`:
    the chat and message together on Telegram. It comes back in the tool's
    answer. If there is none there, leave it out; do not invent it.
 2. Link it to the draft with the relation `sent_from`.
-3. Archive the draft. It has been said; it is not waiting to be said any more.
+3. Archive the draft — `archived: true` on it. It has been said; it is not
+   waiting to be said any more.
 
 **If it did not go out, write nothing.** A publication record for a post that
 never appeared is worse than no record: it is an account of something that did

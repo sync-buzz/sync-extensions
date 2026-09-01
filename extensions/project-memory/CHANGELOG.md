@@ -1,5 +1,17 @@
 # Changelog
 
+## 1.2.0
+
+A claim you checked can now say so.
+
+The instructions said freshness was nobody's to state, which was true of the
+surface as it was: every state was derived, and a record read against the code
+and found standing went back into the corpus indistinguishable from one nobody
+had opened in a year. Sync's write now takes `verified`, so the three answers to
+a flagged record — it holds, it needs editing, it is obsolete — are three writes
+rather than two writes and a shrug. Said here in the section that asks for the
+answer.
+
 ## 1.1.2
 
 Rebuilt against a newer contract, and nothing else.

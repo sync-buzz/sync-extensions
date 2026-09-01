@@ -85,8 +85,9 @@ settled: a decision record, with `answered_by` on the question pointing at it.
 ## The schema
 
 Every record is an envelope: `key`, `kind`, `title`, `content` (Markdown),
-`tags`, `links`, `paths_observed`, `scope_paths`. Freshness and the archive flag
-are on it too and are not yours to state. Each kind adds this, and the engine
+`tags`, `links`, `paths_observed`, `scope_paths`. The archive flag is on it too,
+and so is freshness — three of its four states are derived and the fourth is
+yours to state: see *Freshness* below. Each kind adds this, and the engine
 refuses a field or a relation the type does not declare:
 
 - **decision** — no fields. Relations: `supersedes` → decision, `references` → any.
@@ -164,14 +165,23 @@ link wherever a reader would otherwise have to go looking.
 
 ## Freshness
 
-Every record carries a state the engine derives rather than anybody declaring:
-it reconciles code history against the record's scope paths.
+Every record carries a state, and three of the four are the engine's: it
+reconciles code history against the record's scope paths.
 
-- `fresh`, `unverified` — usable.
+- `unverified` — nobody has said either way. Every record starts here, and every
+  edit returns it here.
 - `stale`, `invalid` — the code moved under the claim. **A flag, never a fact.**
   Do not quote the body as true. Read the paths it covers, then say which of
   three it is: the claim still holds, it needs editing, or it is obsolete. Say
   it in one line before you act on it.
+- `fresh` — the one anybody states. You read the code the record covers and
+  found the claim standing, so you write the record again with `verified: true`.
+  It holds until a commit touches those paths again.
+
+Those three answers are three writes, and each is one call: `verified: true` for
+the claim that held, an edited body for the one that needed it, `archived: true`
+for the one that is obsolete. Leaving a flagged record flagged is the fourth
+option and the only one that costs the next session the same reading.
 
 Live code is the final arbiter. A record that disagrees with what the code does
 is a record to fix, not evidence — and fixing it is part of shipping the change,

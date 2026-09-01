@@ -1,5 +1,18 @@
 # Changelog
 
+## 0.5.0
+
+An agent handed a routine is told what a routine is.
+
+This package published a kind and said nothing further about it, so the topic
+an agent reads before writing one answered with a sentence saying there was
+nothing to read. The body of a routine is the one text here that is executed
+rather than filed — it is handed to an agent, alone, every time the clock comes
+round — and nothing said so. Now it does: how to write a body somebody who has
+never seen the project can act on, why *say nothing when there is nothing* has
+to be written down, and the three things a routine must never do with nobody
+watching — publish, delete, or exist because an agent decided it should.
+
 ## 0.4.1
 
 A trial run says which routine it is of.

@@ -1,4 +1,4 @@
-# Every push proves the same three things `pnpm verify` proves on a desk, and it
+# Every push proves what `pnpm verify` proves on a desk, and it
 # proves them against the *published* contract rather than against a checkout
 # beside it. That is the difference worth paying for: an author outside this
 # organisation installs `@sync-buzz/extension-api` from npm, and a green build

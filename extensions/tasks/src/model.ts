@@ -271,6 +271,15 @@ export function template(language: string): string {
  */
 export function brief(task: {
   key: string;
+  /**
+   * What the project is called on the wire.
+   *
+   * Every call to Sync's memory names a project and there is no default, so a
+   * brief that left it out would cost the agent a call to find out which of the
+   * machine's projects it is standing in — and a wrong guess writes the report
+   * of this work into somebody else's memory.
+   */
+  project: string;
   title: string;
   body: string;
   status: string;
@@ -304,7 +313,7 @@ export function brief(task: {
       : []),
     "Before you touch anything, say in one line: what kind of change this really is and whether it agrees with the type above, which files it touches, and which skills you loaded for it — loading none is an answer, and worth stating as one.",
     "",
-    `Then work on it, and keep the record itself current: write that line and everything you find into the task's own \`Progress\` section, using \`sync_apply\` on \`${task.key}\`. Its status has already been set to \`in_progress\`.`,
+    `Then work on it, and keep the record itself current: write that line and everything you find into the task's own \`Progress\` section, using \`sync_apply\` on \`${task.key}\` in the project \`${task.project}\` — every call to Sync names it, and there is no default. Its status has already been set to \`in_progress\`.`,
     "",
     "Stay inside what the task puts out of bounds. If the work cannot be done inside them, set the status to `blocked`, write the one question that would unblock it, and stop rather than widening them.",
     "",

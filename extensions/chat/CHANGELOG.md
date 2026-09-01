@@ -1,5 +1,16 @@
 # Changelog
 
+## 1.6.0
+
+The package carries the topic an agent reads before it writes.
+
+Asked to *save this conversation* an agent had nothing saying that Chat writes
+the record itself and that the fields are the session's own, so the obliging
+answer was to assemble one by hand — an account of a conversation that never
+happened in the shape it claims. The package now says both halves: do not write
+one, and do not quote one as settled. What a conversation settled belongs in the
+kind of record that settles things, with the conversation linked from it.
+
 ## 1.5.0
 
 Two working trees no longer look like one.
@@ -27,6 +38,21 @@ lists every tree on this machine.
 Against an older Sync the trees it already made keep the keys they were made
 with, and the menu shows those: the name is the directory, so there is nothing
 to rename and nothing that stops working.
+
+The composer is one thing rather than three. What a message is sent with — the
+agent, the model, how freely it may act, which tree the work lands in — now sits
+inside the field's own frame, above a hairline, the way a compose window carries
+the account a letter goes out under. Held in a band of its own it had nothing to
+line up with: the field's text begins past a button, so three stacked rows
+started at three different left edges. There is one edge now.
+
+Each of those four is a pop-up button and now carries a pop-up button's mark,
+the two chevrons rather than the one that means a list of commands. The working
+tree is parted from the other three by a rule instead of by everything going
+spare, which had left it alone against the far margin with a third of the band
+empty beside it. It also has room for the names Sync makes: `sharply-amber-aardvark`
+fits whole, and a longer one loses its middle rather than its end, so two trees
+whose names begin alike are still told apart.
 
 ## 1.4.1
 

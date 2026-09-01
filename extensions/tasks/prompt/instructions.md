@@ -17,6 +17,14 @@ Do not write a task for work you are about to do in this same conversation. A
 task is a note to somebody who is not here — the next session, the next person,
 an agent nobody has raised yet. Work you are doing now is done, not filed.
 
+**Being asked to set a task is being asked for this record.** Somebody saying
+*set a task*, *file a task* or *put that in the tasks* means one written here,
+with `sync_apply`, where it will still be tomorrow. Whatever your own harness
+calls a task — a sub-agent, a checklist of your own, a plan you keep in the
+conversation — is not one: those end when the turn does, and nobody but you can
+open one. Where the request could be read either way, the one that leaves a
+record is the one that was asked for.
+
 ## The shape of one
 
 Three sections, in this order, and nothing else. Write them in the project's
@@ -108,6 +116,11 @@ the code — it asks for a change to it. Scoped, every task would be marked stal
 by the very commit that closed it. `paths_observed` is fine and useful: it is
 what you actually read.
 
+It follows that a task is always `unverified` and that `verified: true` on one
+is refused. Nothing is wrong: verification is for claims, and this is a
+request. What the work *found out* goes in the records that hold claims, and
+those are the ones worth verifying.
+
 ## Status, and who moves it
 
 ```
@@ -133,9 +146,14 @@ Move it as it happens, not at the end:
   Not for *not now*: that is a task left in `todo`.
 
 **A closed task is archived.** Setting `done` or `canceled` and archiving are
-one act: the register lists what is open, and the count on the section's row is
-what remains. Nothing is lost — an archived record keeps every link, is found by
-search, and comes back.
+one act — `status` and `archived: true` in the same write. The register lists
+what is open, and the count on the section's row is what remains. Nothing is
+lost: an archived record keeps every link, is found by search, and comes back
+with `archived: false`.
+
+Every other write should say nothing about `archived`, and then nothing happens
+to it. A task put away last month stays away while you add a `Progress` line to
+it.
 
 ## Reporting back into the task
 
@@ -201,15 +219,18 @@ A folder is a name until somebody says what it is for, and what it says is an
 ordinary document filed in it. **Read that before filing anything into it** — it
 is the whole of how a folder means the same thing to you as to whoever made it.
 
-- `folders.list` with `kind: "tasks.task"` — how this project already groups its
-  work, and how many tasks are in each group.
-- `documents.create` with `folder` — write the task where it belongs, in one
-  call, rather than writing it loose and moving it afterwards.
-- `documents.move` — file an existing one somewhere else.
-- `folders.create` with `kind: "tasks.task"` — a group nobody has made yet.
-- `folders.describe` — say what belongs in it, in a sentence or two. A folder
-  you made and did not describe is a word the next agent has to guess at, and it
-  will guess differently.
+- `memory_list_folders` with `kind: "tasks.task"` — how this project already
+  groups its work, how many tasks sit in each group, and which of those groups
+  has a record describing itself. Read that record before filing into it.
+- `sync_apply` with `folder` on the task — write it where it belongs in the one
+  call that writes it, rather than loose and moved afterwards. The same member
+  on a task that already exists is how one is refiled; there is nothing else to
+  call.
+- A group nobody has made yet is made by filing something into it: the folder is
+  the name in `folder`, and it exists because a record says so.
+- `sync_apply` with `is_folder: true` — the record that *is* that folder, saying
+  what belongs in it in a sentence or two. A folder made and left undescribed is
+  a word the next agent has to guess at, and it will guess differently.
 
 **Make a folder only when the work does not fit one that exists.** Three tasks
 with something in common are a group; one task in a folder of its own is a task

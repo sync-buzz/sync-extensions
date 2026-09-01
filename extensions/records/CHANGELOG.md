@@ -1,5 +1,16 @@
 # Changelog
 
+## 1.2.0
+
+The section says where its edges are.
+
+Two of them are met constantly and neither was written down. A type cannot be
+created by an agent — the surface has no such call — so an agent that needs a
+kind the project lacks was quietly filing the record under the nearest kind
+that would accept it, which is wrong in the one place nobody checks. And a
+folder that has a record describing it is describing what belongs there, which
+is worth reading before filing rather than after.
+
 ## 1.1.1
 
 Rebuilt against a newer contract, and nothing else.

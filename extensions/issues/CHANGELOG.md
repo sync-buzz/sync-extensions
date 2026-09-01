@@ -1,5 +1,17 @@
 # Changelog
 
+## 0.3.0
+
+An issue is not a record, said out loud.
+
+The package publishes no kinds and offers nothing to call, so the topic an
+agent reads about it answered with a sentence saying there was nothing to read
+— and an agent that had just looked at the section went on to write the
+tracker's contents into the project's memory as though the project had recorded
+them. Nothing here is reconciled against anything and an issue closes without
+this memory hearing about it, so what belongs in a record is the project's own
+claim with the issue's URL inside it, never a copy of somebody else's tracker.
+
 ## 0.2.1
 
 Rebuilt against a newer contract, and nothing else.
