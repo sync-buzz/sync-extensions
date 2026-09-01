@@ -22,7 +22,7 @@ import {
   type Worktree,
   type WorktreeChoice,
 } from "@sync-buzz/extension-api";
-import { ChevronDown, Trash2 } from "lucide-react";
+import { ChevronsUpDown, Trash2 } from "lucide-react";
 
 /**
  * The three choices a person makes about a conversation, drawn the one way
@@ -47,6 +47,15 @@ import { ChevronDown, Trash2 } from "lucide-react";
  *
  * That word is the whole of the label, and it is why `Plan` alone is legible
  * here: on its own it is a word, and under a pointer it is a mode.
+ *
+ * # The mark that says which kind of button this is
+ *
+ * A pop-up carries the two chevrons, up over down, and a pull-down carries the
+ * single one pointing down. That is not decoration: it is the one thing on the
+ * face of a closed button that says whether opening it shows *states this could
+ * be in* or *things it will do*. Every button in this file is the first kind,
+ * so every one of them takes the double mark — a single chevron here would
+ * promise a list of commands and then produce a list of states.
  */
 
 /** One pop-up button, at the size and tone the composer's strip is set in. */
@@ -56,6 +65,16 @@ function Popup({
   /** The current selection, which is what a pop-up button shows. */
   shown,
   disabled,
+  /**
+   * Whether this button's values are longer than a word.
+   *
+   * The guidelines ask that a pop-up button be wide enough for what it has to
+   * show, and the four here do not have the same answer: a model and a mode are
+   * named in a word or two, and a working tree is named in three joined by
+   * hyphens. One width for all four either truncates the trees or leaves a
+   * trough of empty button beside the modes.
+   */
+  roomy,
   /**
    * Told when the menu opens and closes, for a menu holding a question of its
    * own: a question left standing would be what somebody sees when they open
@@ -67,6 +86,7 @@ function Popup({
   of: string;
   shown: string;
   disabled?: boolean;
+  roomy?: boolean;
   onOpenChange?: (open: boolean) => void;
   children: ReactNode;
 }) {
@@ -78,11 +98,11 @@ function Popup({
             <Button
               variant="ghost"
               size="xs"
-              className="max-w-44 text-fg-secondary"
+              className={cn("text-fg-secondary", roomy ? "max-w-56" : "max-w-44")}
               aria-label={`${of}: ${shown}`}
             >
               <span className="min-w-0 truncate">{shown}</span>
-              <ChevronDown />
+              <ChevronsUpDown />
             </Button>
           </DropdownMenuTrigger>
         </TooltipTrigger>
@@ -281,7 +301,7 @@ export function WorktreePicker({
   onChoose: (choice: WorktreeChoice | null) => void;
   onDiscard: (path: string) => void;
 }) {
-  const shown = current === null ? "Project" : worktreeName(current);
+  const shown = current === null ? "Project" : elide(worktreeName(current));
   // The tree this menu is asking about, when it is asking. One at a time,
   // because the question replaces the list: while it stands there is nothing to
   // mis-click, which is the whole reason a deletion is not a row here.
@@ -292,15 +312,14 @@ export function WorktreePicker({
     // window is in the project unless somebody moved it, and a row of them each
     // repeating "Project" would spend a line on the absence of news.
     if (current === null) return null;
-    return (
-      <span className="max-w-44 truncate px-2 text-xs text-fg-tertiary">{shown}</span>
-    );
+    return <span className="px-2 text-xs text-fg-tertiary">{shown}</span>;
   }
 
   return (
     <Popup
       of="Working tree"
       shown={shown}
+      roomy
       disabled={starting}
       onOpenChange={(open) => {
         if (!open) setAsking(null);
@@ -364,11 +383,7 @@ export function WorktreePicker({
             // one this menu is pointed at is where the work is about to happen.
             const loose = holder === null && tree.path !== current?.path;
             return (
-              <DropdownMenuRadioItem
-                key={tree.path}
-                value={tree.path}
-                className={cn(loose && "pr-14")}
-              >
+              <DropdownMenuRadioItem key={tree.path} value={tree.path}>
                 <span className="flex min-w-0 flex-col items-start gap-0.5">
                   <span className="text-sm">{worktreeName(tree)}</span>
                   <span className="text-xs text-fg-tertiary">
@@ -391,13 +406,20 @@ export function WorktreePicker({
                       event.stopPropagation();
                       setAsking(tree);
                     }}
+                    // In the column the tick is drawn in, at the size the
+                    // tick is drawn at. The column is free on every row that
+                    // has this button: a tree that can be thrown away is by
+                    // definition not the one chosen, so the two never meet, and
+                    // a second column beside the first would set the one
+                    // control a row can carry a few pixels off from every other
+                    // mark in the menu.
                     className={cn(
-                      "absolute right-7 flex items-center justify-center rounded-(--radius-control)",
+                      "absolute right-1 flex items-center justify-center rounded-(--radius-control)",
                       "p-1 text-fg-tertiary hover:text-danger",
                       "transition-colors duration-(--motion-duration-fast) ease-shell",
                     )}
                   >
-                    <Trash2 className="size-3.5" />
+                    <Trash2 className="size-4" />
                   </button>
                 ) : null}
               </DropdownMenuRadioItem>
@@ -454,6 +476,30 @@ function Says({ tree, holder }: { tree: Worktree; holder: string | null }) {
 export function worktreeName(tree: Worktree): string {
   const name = tree.path.split("/").filter(Boolean).at(-1);
   return name ?? tree.base ?? tree.baseCommit.slice(0, 7);
+}
+
+/**
+ * A name too long for the button, shortened from the middle.
+ *
+ * The end of a tree's name is not the throwaway part. The names these are made
+ * under are several words joined by hyphens, and two made minutes apart share
+ * their opening — so a name cut at the end can leave two buttons reading the
+ * same thing, which is the one failure a control naming a choice may not have.
+ * Cutting the middle is what this system does to a path for the same reason,
+ * and it keeps both ends, which is where the difference is.
+ *
+ * A count of characters rather than a measurement of the drawn text: the button
+ * has `truncate` under this as the real backstop, and a name near the limit
+ * losing one more character than it strictly had to is not worth a layout read
+ * on every keystroke of the conversation list.
+ */
+function elide(name: string, longest = 30): string {
+  if (name.length <= longest) return name;
+  // One ellipsis stands in the middle, so the two halves together are one
+  // character shorter than the room there is.
+  const keep = longest - 1;
+  const head = Math.ceil(keep / 2);
+  return `${name.slice(0, head)}…${name.slice(name.length - (keep - head))}`;
 }
 
 /**

@@ -376,93 +376,12 @@ export function Composer({
           <p className="text-xs text-fg-tertiary">{refused ?? said}</p>
         )}
 
-        {/* Above the field rather than below it, which is the order the two are
-            read in: what this is being sent with, then what is being sent. It
-            is the arrangement Mail uses for the account a message goes out
-            under, and the one thing the alternative had going for it — nearness
-            to the send button — is bought at the price of putting controls at
-            the very bottom edge of the window, where this system keeps state
-            rather than choices.
-
-            Leading edge, sharing it with the row beneath, so the strip and the
-            field read as one block rather than two. */}
-        <div className="flex w-full min-w-0 items-center gap-1">
-          <AgentPicker
-            agents={settings.agents}
-            loading={settings.agentsLoading}
-            currentId={settings.agentId}
-            currentName={settings.agentName}
-            starting={settings.starting}
-            settled={settings.settled}
-            onChoose={settings.onAgent}
-          />
-          {/* Absent rather than empty, in both cases. An agent that states no
-              models and one that states no modes are saying they have none to
-              offer, and a pop-up button over nothing is a promise this build
-              cannot keep. What the agent does offer is the whole of what is
-              drawn — no table in this build decides it. */}
-          {/* Nothing is offered on a conversation whose agent has gone. Both
-              calls go to the process, and the host refuses one that is not up —
-              so a picker still drawn here would not be a control that quietly
-              did nothing, it would be a rejected promise nobody is holding. The
-              agent's name stays, because that is a fact and it stays true. */}
-          {closed || settings.model === null ? null : (
-            <ModelPicker
-              option={settings.model}
-              onChoose={(valueId) => void settle(session.choose(settings.model!.id, valueId))}
-            />
-          )}
-          {closed || session.modes.length === 0 ? null : (
-            <ModePicker
-              modes={session.modes}
-              current={session.transcript.mode}
-              onChoose={(modeId) => void settle(session.setMode(modeId))}
-            />
-          )}
-          {/* Last in the strip and against the trailing edge, away from the
-              three that are about the agent. Where the work lands is a
-              different question from who does it and how freely — and the three
-              beside each other are read as one group, which this is not part
-              of.
-
-              Left out entirely where the host will not list trees: a project
-              that is not a repository has nowhere to put one, and a control
-              that could only refuse is worse than no control. */}
-          {settings.worktreesOffered ? (
-            <span className="ml-auto flex min-w-0">
-              <WorktreePicker
-                trees={settings.worktrees}
-                current={settings.worktree}
-                heldBy={settings.worktreesHeldBy}
-                starting={settings.starting}
-                settled={settings.settled}
-                onChoose={settings.onWorktree}
-                onDiscard={settings.onDiscardWorktree}
-              />
-            </span>
-          ) : null}
-        </div>
-
         <div className="flex w-full items-end gap-2">
-          <Tooltip>
-            <TooltipTrigger asChild>
-              <Button
-                variant="ghost"
-                size="icon-sm"
-                onClick={() => void attach()}
-                disabled={closed}
-                aria-label="Attach files"
-              >
-                <Paperclip />
-              </Button>
-            </TooltipTrigger>
-            <TooltipContent>Attach files</TooltipContent>
-          </Tooltip>
-
-          {/* One surface holds the message and everything going with it. The
-              focus ring is drawn here rather than on the field, because the
-              well is what a person is writing in — a ring around the text alone
-              would cut the shelf above it out of the thing being focused. */}
+          {/* One surface holds the message, everything going with it, and every
+              answer to how it travels. The focus ring is drawn here rather than
+              on the field, because the well is what a person is writing in — a
+              ring around the text alone would cut the shelf and the header out
+              of the thing being focused. */}
           <div
             ref={frame}
             className={cn(
@@ -472,6 +391,105 @@ export function Composer({
               "has-[textarea:focus-visible]:outline-focus",
             )}
           >
+            {/* Inside the well and above the line, which is the arrangement a
+                compose window uses for the account a message goes out under:
+                first what it is being sent with, then what is being sent.
+
+                Inside rather than floating above, and that is the whole of this
+                block's argument — the same one the shelf below already makes.
+                Held out in a band of its own it read as a row of words that had
+                landed near the composer, and it had nothing to line up with:
+                the field's own text begins past a button, so a strip starting
+                at the band's margin put three different left edges in three
+                stacked rows. Sharing the well, there is one edge and one
+                object. */}
+            <div className="flex w-full min-w-0 items-center gap-0.5 border-b border-separator px-0.5 py-1">
+              <AgentPicker
+                agents={settings.agents}
+                loading={settings.agentsLoading}
+                currentId={settings.agentId}
+                currentName={settings.agentName}
+                starting={settings.starting}
+                settled={settings.settled}
+                onChoose={settings.onAgent}
+              />
+              {/* Absent rather than empty, in both cases. An agent that states no
+                  models and one that states no modes are saying they have none to
+                  offer, and a pop-up button over nothing is a promise this build
+                  cannot keep. What the agent does offer is the whole of what is
+                  drawn — no table in this build decides it. */}
+              {/* Nothing is offered on a conversation whose agent has gone. Both
+                  calls go to the process, and the host refuses one that is not up —
+                  so a picker still drawn here would not be a control that quietly
+                  did nothing, it would be a rejected promise nobody is holding. The
+                  agent's name stays, because that is a fact and it stays true. */}
+              {closed || settings.model === null ? null : (
+                <ModelPicker
+                  option={settings.model}
+                  onChoose={(valueId) => void settle(session.choose(settings.model!.id, valueId))}
+                />
+              )}
+              {closed || session.modes.length === 0 ? null : (
+                <ModePicker
+                  modes={session.modes}
+                  current={session.transcript.mode}
+                  onChoose={(modeId) => void settle(session.setMode(modeId))}
+                />
+              )}
+              {/* Last, and behind a rule. Where the work lands is a different
+                  question from who does it and how freely, so it is not read as one
+                  of the three — and a rule is how this system says that in a row
+                  this narrow, the same mark a toolbar uses to part one group of
+                  controls from the next.
+
+                  A rule rather than the trailing edge, which is where this sat
+                  while the row was the width of the prose. Held apart by everything
+                  going spare, one control ended up alone against the far margin
+                  with a third of the band empty beside it: not a group of its own,
+                  which is what was meant, but a thing that had come loose.
+
+                  Left out entirely where the host will not list trees: a project
+                  that is not a repository has nowhere to put one, and a control
+                  that could only refuse is worse than no control. The rule goes
+                  with it, and goes on the same condition: a settled conversation
+                  in the project's own tree says nothing here, and a mark parting
+                  a group from an empty space is a hairline the eye has to
+                  account for and cannot. */}
+              {settings.worktreesOffered && !(settings.settled && settings.worktree === null) ? (
+                <>
+                  <Rule />
+                  <WorktreePicker
+                    trees={settings.worktrees}
+                    current={settings.worktree}
+                    heldBy={settings.worktreesHeldBy}
+                    starting={settings.starting}
+                    settled={settings.settled}
+                    onChoose={settings.onWorktree}
+                    onDiscard={settings.onDiscardWorktree}
+                  />
+                </>
+              ) : null}
+
+              {/* Against the trailing edge, because attaching is the one thing in
+                  this row that adds to the message rather than describing how it
+                  travels — and it belongs beside the button that sends it rather
+                  than among the four that answer *with what*. */}
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Button
+                    variant="ghost"
+                    size="icon-xs"
+                    onClick={() => void attach()}
+                    disabled={closed}
+                    aria-label="Attach files"
+                    className="ml-auto text-fg-secondary"
+                  >
+                    <Paperclip />
+                  </Button>
+                </TooltipTrigger>
+                <TooltipContent>Attach files</TooltipContent>
+              </Tooltip>
+            </div>
             {attached.length === 0 && pasted.length === 0 ? null : (
               <Shelf
                 paths={attached}
@@ -544,6 +562,19 @@ export function Composer({
       </div>
     </div>
   );
+}
+
+/**
+ * The mark between two groups of controls in one row.
+ *
+ * A hairline, at the height of the words rather than the height of the row, so
+ * it parts the controls without drawing a second border across a well that has
+ * one. Announced to nobody: a rule says *these are not those*, which the reader
+ * of a screen gets from the order and the labels already, and a decoration in
+ * the accessibility tree is one more thing to arrow past for no gain.
+ */
+function Rule() {
+  return <span aria-hidden className="mx-1 h-3.5 w-px shrink-0 bg-separator" />;
 }
 
 /**
