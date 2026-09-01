@@ -8,7 +8,7 @@
       "description": "A routine is one instruction, written to an agent, that Sync hands over on an interval — check the tracker, read the inbox, look at what changed overnight. Sync raises the agent and the agent does the work with the tools it already has on this machine, so what a routine can reach is whatever its agent can reach, and nothing here needs to know what a mailbox or an issue is. A routine is a record like any other, so it is read, edited and searched where the rest of the project is, and it travels with the repository. Nothing runs until somebody switches it on: a routine spends an agent's tokens, and arriving at somebody else's clone already running is not something they agreed to.",
       "changelog": "A trial run says which routine it is of.\n\n**Run now** raised a conversation that named nothing, while the same routine on\nthe clock named itself — so a list of conversations could say which routine it\nwas reporting on for one of the two and not for the other, depending on whether\na person or the clock had started it. The window's path now names the routine\nexactly as the clock's path does.\n\nRebuilt against contract 3.4.0 along with it, which is the other reason the\nnumber had to move: a published version is immutable, and the built module is\nnot the same file even where the source is.",
       "artefact": {
-        "url": "https://github.com/sync-buzz/sync-extensions/releases/download/v1.5.2/routines-0.4.1.syncext",
+        "url": "https://github.com/sync-buzz/sync-extensions/releases/download/v1.5.3/routines-0.4.1.syncext",
         "sha256": "bbe68b87228298646c0b051c4c3164df5aa24eb030916deee13b5a246487a3fa",
         "bytes": 15415
       }

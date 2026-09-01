@@ -6,7 +6,7 @@
       "name": "Chat",
       "summary": "Talk to the coding agents installed on this machine, in this project's folder, without leaving the window.",
       "icon": "message-square",
-      "version": "1.4.1",
+      "version": "1.5.0",
       "syncApi": "^3.5",
       "capabilities": [
         "records",
@@ -30,9 +30,9 @@
       "license": "MIT",
       "repository": null,
       "artefact": {
-        "url": "https://github.com/sync-buzz/sync-extensions/releases/download/v1.5.2/chat-1.4.1.syncext",
-        "sha256": "a51911612751b21fdab9f808a35eebbb69316ed801b02803250635f4335ac8a0",
-        "bytes": 23068
+        "url": "https://github.com/sync-buzz/sync-extensions/releases/download/v1.5.3/chat-1.5.0.syncext",
+        "sha256": "0e7aa33470521a7f66c700e94ab2605fd1d9e3b0ceebb2e5794fd07aa31d3ef4",
+        "bytes": 24001
       }
     },
     {
@@ -59,7 +59,7 @@
       "license": "MIT",
       "repository": null,
       "artefact": {
-        "url": "https://github.com/sync-buzz/sync-extensions/releases/download/v1.5.2/issues-0.2.1.syncext",
+        "url": "https://github.com/sync-buzz/sync-extensions/releases/download/v1.5.3/issues-0.2.1.syncext",
         "sha256": "d89d9382571774452e33207a2e788f66b702dbaad99ae8488bbf86ab0921679b",
         "bytes": 10820
       }
@@ -97,7 +97,7 @@
       "license": "MIT",
       "repository": null,
       "artefact": {
-        "url": "https://github.com/sync-buzz/sync-extensions/releases/download/v1.5.2/posts-0.6.0.syncext",
+        "url": "https://github.com/sync-buzz/sync-extensions/releases/download/v1.5.3/posts-0.6.0.syncext",
         "sha256": "548c9ba9810ed94afda91c9b5f47a226fc4563548b989382ec7fdd20dc514c04",
         "bytes": 30412
       }
@@ -134,7 +134,7 @@
       "license": "MIT",
       "repository": null,
       "artefact": {
-        "url": "https://github.com/sync-buzz/sync-extensions/releases/download/v1.5.2/project-memory-1.1.2.syncext",
+        "url": "https://github.com/sync-buzz/sync-extensions/releases/download/v1.5.3/project-memory-1.1.2.syncext",
         "sha256": "9d91dab38619843009b9d5872acb5aba74e2db7708dd3c73b5bd31fec701a869",
         "bytes": 21634
       }
@@ -167,7 +167,7 @@
       "license": "MIT",
       "repository": null,
       "artefact": {
-        "url": "https://github.com/sync-buzz/sync-extensions/releases/download/v1.5.2/records-1.1.1.syncext",
+        "url": "https://github.com/sync-buzz/sync-extensions/releases/download/v1.5.3/records-1.1.1.syncext",
         "sha256": "4cf4b18c5b59c1d112e435e40e317fefb4cae28c4e8cd6610b08a4b4b330cbfa",
         "bytes": 13627
       }
@@ -205,7 +205,7 @@
       "license": "MIT",
       "repository": null,
       "artefact": {
-        "url": "https://github.com/sync-buzz/sync-extensions/releases/download/v1.5.2/routines-0.4.1.syncext",
+        "url": "https://github.com/sync-buzz/sync-extensions/releases/download/v1.5.3/routines-0.4.1.syncext",
         "sha256": "bbe68b87228298646c0b051c4c3164df5aa24eb030916deee13b5a246487a3fa",
         "bytes": 15415
       }
@@ -237,7 +237,7 @@
       "license": "MIT",
       "repository": null,
       "artefact": {
-        "url": "https://github.com/sync-buzz/sync-extensions/releases/download/v1.5.2/tasks-0.2.3.syncext",
+        "url": "https://github.com/sync-buzz/sync-extensions/releases/download/v1.5.3/tasks-0.2.3.syncext",
         "sha256": "a94c0437160f2c04b41a39b265fc6d31847cebe2448e323cee929c0653e3f8ea",
         "bytes": 23492
       }
