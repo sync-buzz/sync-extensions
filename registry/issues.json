@@ -3,6 +3,17 @@
   "id": "issues",
   "versions": [
     {
+      "version": "0.3.0",
+      "syncApi": "^3.0",
+      "description": "Issues is named after what it holds rather than after where the issues live: GitHub is an address, not a subject. It reads one public repository over the network — the hosts it may reach are in its manifest, the request is made in Rust, and a host it did not declare never leaves this machine. It is read-only in the strongest sense available: nothing it fetches is written to the project's memory, and there is no command in it that changes anything on GitHub. An issue is somebody else's text about your work, so it is shown as what it is — a page you read, with its facts beside it — and it stays outside the corpus, where a claim has to be about this repository's own code to mean anything.",
+      "changelog": "An issue is not a record, said out loud.\n\nThe package publishes no kinds and offers nothing to call, so the topic an\nagent reads about it answered with a sentence saying there was nothing to read\n— and an agent that had just looked at the section went on to write the\ntracker's contents into the project's memory as though the project had recorded\nthem. Nothing here is reconciled against anything and an issue closes without\nthis memory hearing about it, so what belongs in a record is the project's own\nclaim with the issue's URL inside it, never a copy of somebody else's tracker.",
+      "artefact": {
+        "url": "https://github.com/sync-buzz/sync-extensions/releases/download/v1.5.4/issues-0.3.0.syncext",
+        "sha256": "7c15a886fb57055203f3e6861775b099ed9b027dc0213ea06495553fb5ba57ab",
+        "bytes": 11574
+      }
+    },
+    {
       "version": "0.2.1",
       "syncApi": "^3.0",
       "description": "Issues is named after what it holds rather than after where the issues live: GitHub is an address, not a subject. It reads one public repository over the network — the hosts it may reach are in its manifest, the request is made in Rust, and a host it did not declare never leaves this machine. It is read-only in the strongest sense available: nothing it fetches is written to the project's memory, and there is no command in it that changes anything on GitHub. An issue is somebody else's text about your work, so it is shown as what it is — a page you read, with its facts beside it — and it stays outside the corpus, where a claim has to be about this repository's own code to mean anything.",

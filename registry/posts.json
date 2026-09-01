@@ -3,6 +3,17 @@
   "id": "posts",
   "versions": [
     {
+      "version": "0.6.1",
+      "syncApi": "^3.2",
+      "description": "Posts holds three things. A channel is one account this project publishes as — which network, whose account, where inside it the posts go where the network needs telling, and a credential kept in this machine's vault under a name the record carries, never in the record itself. A draft is what the project is about to say, written for one channel, with the room left in it counted down as somebody writes. A publication is what it said, carrying the text exactly as it went out and the identifier the network issued, so editing a draft afterwards cannot rewrite the account of it. All three are ordinary records: they live in the project's memory, travel with the repository, and can be written or read by an agent as easily as by a person — while the credential stays on the machine and travels nowhere. Publishing is a person's act: they read the exact text and press the button, there is no clock in here, and nothing sends anything while nobody is looking. Four networks are reached from this window — LinkedIn, Bluesky, Threads and Telegram — and a Telegram channel says what it is: a bot posting into a chat, not a person speaking.",
+      "changelog": "Archiving the draft says how.\n\nThe step after a post goes out is *archive the draft*, and nothing said what\nthat is: the flag was not on Sync's write when this was written, so an agent\nfollowing the instruction either left the draft where it was or set a product\nfield of its own invention. It is `archived: true` on the record, in the write\nthat files the publication.",
+      "artefact": {
+        "url": "https://github.com/sync-buzz/sync-extensions/releases/download/v1.5.4/posts-0.6.1.syncext",
+        "sha256": "beab58fd289d1bc7a1467c99a755e83fa56e024b4c7fd2e5a76964ecbb2d515a",
+        "bytes": 30427
+      }
+    },
+    {
       "version": "0.6.0",
       "syncApi": "^3.2",
       "description": "Posts holds three things. A channel is one account this project publishes as — which network, whose account, where inside it the posts go where the network needs telling, and a credential kept in this machine's vault under a name the record carries, never in the record itself. A draft is what the project is about to say, written for one channel, with the room left in it counted down as somebody writes. A publication is what it said, carrying the text exactly as it went out and the identifier the network issued, so editing a draft afterwards cannot rewrite the account of it. All three are ordinary records: they live in the project's memory, travel with the repository, and can be written or read by an agent as easily as by a person — while the credential stays on the machine and travels nowhere. Publishing is a person's act: they read the exact text and press the button, there is no clock in here, and nothing sends anything while nobody is looking. Four networks are reached from this window — LinkedIn, Bluesky, Threads and Telegram — and a Telegram channel says what it is: a bot posting into a chat, not a person speaking.",

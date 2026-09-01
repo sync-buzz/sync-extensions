@@ -3,6 +3,17 @@
   "id": "routines",
   "versions": [
     {
+      "version": "0.5.0",
+      "syncApi": "^3.0",
+      "description": "A routine is one instruction, written to an agent, that Sync hands over on an interval — check the tracker, read the inbox, look at what changed overnight. Sync raises the agent and the agent does the work with the tools it already has on this machine, so what a routine can reach is whatever its agent can reach, and nothing here needs to know what a mailbox or an issue is. A routine is a record like any other, so it is read, edited and searched where the rest of the project is, and it travels with the repository. Nothing runs until somebody switches it on: a routine spends an agent's tokens, and arriving at somebody else's clone already running is not something they agreed to.",
+      "changelog": "An agent handed a routine is told what a routine is.\n\nThis package published a kind and said nothing further about it, so the topic\nan agent reads before writing one answered with a sentence saying there was\nnothing to read. The body of a routine is the one text here that is executed\nrather than filed — it is handed to an agent, alone, every time the clock comes\nround — and nothing said so. Now it does: how to write a body somebody who has\nnever seen the project can act on, why *say nothing when there is nothing* has\nto be written down, and the three things a routine must never do with nobody\nwatching — publish, delete, or exist because an agent decided it should.",
+      "artefact": {
+        "url": "https://github.com/sync-buzz/sync-extensions/releases/download/v1.5.4/routines-0.5.0.syncext",
+        "sha256": "9e35e6c6626a97a6dc8a9dc918aa38d2c5101732b85f11272839bee42172601e",
+        "bytes": 17100
+      }
+    },
+    {
       "version": "0.4.1",
       "syncApi": "^3.0",
       "description": "A routine is one instruction, written to an agent, that Sync hands over on an interval — check the tracker, read the inbox, look at what changed overnight. Sync raises the agent and the agent does the work with the tools it already has on this machine, so what a routine can reach is whatever its agent can reach, and nothing here needs to know what a mailbox or an issue is. A routine is a record like any other, so it is read, edited and searched where the rest of the project is, and it travels with the repository. Nothing runs until somebody switches it on: a routine spends an agent's tokens, and arriving at somebody else's clone already running is not something they agreed to.",

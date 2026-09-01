@@ -3,6 +3,17 @@
   "id": "chat",
   "versions": [
     {
+      "version": "1.6.0",
+      "syncApi": "^3.5",
+      "description": "Chat runs an agent as a process and speaks the Agent Client Protocol to it, so the conversation happens here rather than in a terminal beside here. A conversation opens straight away, with the agent this project was last held with, and which agent, which model and how freely it may act are chosen in a strip above the field — beside the sentence they apply to. Which agents it can raise is a fact about this machine rather than about this build: the ones installed are offered, and Codex — which does not speak the protocol at all — is reached through a bridge that ships inside the application. Models and modes are listed as the agent itself stated them, never from a table in the build. A conversation belongs to the project rather than to the screen: switching sections leaves the agent working, and coming back finds everything it said meanwhile.",
+      "changelog": "The package carries the topic an agent reads before it writes.\n\nAsked to *save this conversation* an agent had nothing saying that Chat writes\nthe record itself and that the fields are the session's own, so the obliging\nanswer was to assemble one by hand — an account of a conversation that never\nhappened in the shape it claims. The package now says both halves: do not write\none, and do not quote one as settled. What a conversation settled belongs in the\nkind of record that settles things, with the conversation linked from it.",
+      "artefact": {
+        "url": "https://github.com/sync-buzz/sync-extensions/releases/download/v1.5.4/chat-1.6.0.syncext",
+        "sha256": "b0464b04f20d7481b5bc4ae87217e0e5ce93223c08ec2b9391908a6d63bf889d",
+        "bytes": 24979
+      }
+    },
+    {
       "version": "1.5.0",
       "syncApi": "^3.5",
       "description": "Chat runs an agent as a process and speaks the Agent Client Protocol to it, so the conversation happens here rather than in a terminal beside here. A conversation opens straight away, with the agent this project was last held with, and which agent, which model and how freely it may act are chosen in a strip above the field — beside the sentence they apply to. Which agents it can raise is a fact about this machine rather than about this build: the ones installed are offered, and Codex — which does not speak the protocol at all — is reached through a bridge that ships inside the application. Models and modes are listed as the agent itself stated them, never from a table in the build. A conversation belongs to the project rather than to the screen: switching sections leaves the agent working, and coming back finds everything it said meanwhile.",

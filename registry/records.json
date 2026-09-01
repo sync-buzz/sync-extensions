@@ -3,6 +3,17 @@
   "id": "records",
   "versions": [
     {
+      "version": "1.2.0",
+      "syncApi": "^3.0",
+      "description": "Records brings no vocabulary of its own, and is named after what it holds rather than after anything it knows. It is the section a project's types are made and read in: what a decision is in this project is this project's answer, not ours, and a type another extension published is read here beside the ones somebody typed. What is written lives in the repository's own refs, so it travels with the code and is as shared as it is, and memory-hub reconciles it against code history — a claim whose files moved is marked stale rather than quietly believed.",
+      "changelog": "The section says where its edges are.\n\nTwo of them are met constantly and neither was written down. A type cannot be\ncreated by an agent — the surface has no such call — so an agent that needs a\nkind the project lacks was quietly filing the record under the nearest kind\nthat would accept it, which is wrong in the one place nobody checks. And a\nfolder that has a record describing it is describing what belongs there, which\nis worth reading before filing rather than after.",
+      "artefact": {
+        "url": "https://github.com/sync-buzz/sync-extensions/releases/download/v1.5.4/records-1.2.0.syncext",
+        "sha256": "77a72431af70ebace33c9a9942d0cbe34b00f7b9ece2aa026b6e09ecad0ab9d9",
+        "bytes": 14422
+      }
+    },
+    {
       "version": "1.1.1",
       "syncApi": "^3.0",
       "description": "Records brings no vocabulary of its own, and is named after what it holds rather than after anything it knows. It is the section a project's types are made and read in: what a decision is in this project is this project's answer, not ours, and a type another extension published is read here beside the ones somebody typed. What is written lives in the repository's own refs, so it travels with the code and is as shared as it is, and memory-hub reconciles it against code history — a claim whose files moved is marked stale rather than quietly believed.",
