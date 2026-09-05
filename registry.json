@@ -6,11 +6,14 @@
       "name": "Chat",
       "summary": "Talk to the coding agents installed on this machine, in this project's folder, without leaving the window.",
       "icon": "message-square",
-      "version": "1.6.0",
-      "syncApi": "^3.5",
+      "version": "1.7.0",
+      "syncApi": "^3.8",
       "capabilities": [
         "records",
-        "agents.acp"
+        "agents.acp",
+        "background",
+        "agent.tools",
+        "work.agent"
       ],
       "requires": [],
       "publishes": [
@@ -30,9 +33,9 @@
       "license": "MIT",
       "repository": null,
       "artefact": {
-        "url": "https://github.com/sync-buzz/sync-extensions/releases/download/v1.5.4/chat-1.6.0.syncext",
-        "sha256": "b0464b04f20d7481b5bc4ae87217e0e5ce93223c08ec2b9391908a6d63bf889d",
-        "bytes": 24979
+        "url": "https://github.com/sync-buzz/sync-extensions/releases/download/v1.6.0/chat-1.7.0.syncext",
+        "sha256": "79f573375708446bb992ace814812a0888c0fbbcda561d7beafad0db4e9e2484",
+        "bytes": 29909
       }
     },
     {
@@ -40,7 +43,7 @@
       "name": "Issues",
       "summary": "The issues of a public repository on GitHub, read in this window beside the project they are about.",
       "icon": "circle-dot",
-      "version": "0.3.0",
+      "version": "0.3.1",
       "syncApi": "^3.0",
       "capabilities": [
         "net"
@@ -59,9 +62,9 @@
       "license": "MIT",
       "repository": null,
       "artefact": {
-        "url": "https://github.com/sync-buzz/sync-extensions/releases/download/v1.5.4/issues-0.3.0.syncext",
-        "sha256": "7c15a886fb57055203f3e6861775b099ed9b027dc0213ea06495553fb5ba57ab",
-        "bytes": 11574
+        "url": "https://github.com/sync-buzz/sync-extensions/releases/download/v1.6.0/issues-0.3.1.syncext",
+        "sha256": "58450cbdad44767ed328088040afb0fbab1b997e002ec36545d74f88c314f143",
+        "bytes": 11621
       }
     },
     {
@@ -69,7 +72,7 @@
       "name": "Posts",
       "summary": "Drafts of what this project will say outside itself, the accounts it says them as, and the text of everything already said.",
       "icon": "megaphone",
-      "version": "0.6.1",
+      "version": "0.6.2",
       "syncApi": "^3.2",
       "capabilities": [
         "records",
@@ -97,9 +100,9 @@
       "license": "MIT",
       "repository": null,
       "artefact": {
-        "url": "https://github.com/sync-buzz/sync-extensions/releases/download/v1.5.4/posts-0.6.1.syncext",
-        "sha256": "beab58fd289d1bc7a1467c99a755e83fa56e024b4c7fd2e5a76964ecbb2d515a",
-        "bytes": 30427
+        "url": "https://github.com/sync-buzz/sync-extensions/releases/download/v1.6.0/posts-0.6.2.syncext",
+        "sha256": "b360036ef754f3e4d0d4d7e4c1ab3e5c960758fdf769026a991d9eb129c554f1",
+        "bytes": 30481
       }
     },
     {
@@ -107,7 +110,7 @@
       "name": "Project memory",
       "summary": "A place for the answers your project has already worked out, so nobody works them out twice — and a section for the questions it has not.",
       "icon": "book-marked",
-      "version": "1.2.0",
+      "version": "1.2.1",
       "syncApi": "^3.0",
       "capabilities": [
         "records",
@@ -134,9 +137,9 @@
       "license": "MIT",
       "repository": null,
       "artefact": {
-        "url": "https://github.com/sync-buzz/sync-extensions/releases/download/v1.5.4/project-memory-1.2.0.syncext",
-        "sha256": "116597291d00ec150389311e126a3478538099a3bc929e11a08b822714ba7013",
-        "bytes": 21861
+        "url": "https://github.com/sync-buzz/sync-extensions/releases/download/v1.6.0/project-memory-1.2.1.syncext",
+        "sha256": "d548c0c2271af4f00fc7bf90cd7b5dfd528aaae58b66aab802c86b5d9757392a",
+        "bytes": 21928
       }
     },
     {
@@ -144,7 +147,7 @@
       "name": "Records",
       "summary": "The project's types, and every record written as one — created, renamed and removed from this window or by an agent.",
       "icon": "shapes",
-      "version": "1.2.0",
+      "version": "1.2.1",
       "syncApi": "^3.0",
       "capabilities": [
         "records",
@@ -167,9 +170,9 @@
       "license": "MIT",
       "repository": null,
       "artefact": {
-        "url": "https://github.com/sync-buzz/sync-extensions/releases/download/v1.5.4/records-1.2.0.syncext",
-        "sha256": "77a72431af70ebace33c9a9942d0cbe34b00f7b9ece2aa026b6e09ecad0ab9d9",
-        "bytes": 14422
+        "url": "https://github.com/sync-buzz/sync-extensions/releases/download/v1.6.0/records-1.2.1.syncext",
+        "sha256": "0382953eec1eb5eaf0e284786210d82a6bdd5b46c6a98d7f37f8ccde60cffa58",
+        "bytes": 14484
       }
     },
     {
@@ -177,7 +180,7 @@
       "name": "Routines",
       "summary": "Standing instructions an agent carries out on a clock, whether or not anybody has a window open.",
       "icon": "alarm-clock",
-      "version": "0.5.0",
+      "version": "0.5.1",
       "syncApi": "^3.0",
       "capabilities": [
         "records",
@@ -205,9 +208,9 @@
       "license": "MIT",
       "repository": null,
       "artefact": {
-        "url": "https://github.com/sync-buzz/sync-extensions/releases/download/v1.5.4/routines-0.5.0.syncext",
-        "sha256": "9e35e6c6626a97a6dc8a9dc918aa38d2c5101732b85f11272839bee42172601e",
-        "bytes": 17100
+        "url": "https://github.com/sync-buzz/sync-extensions/releases/download/v1.6.0/routines-0.5.1.syncext",
+        "sha256": "3af032359531140c893e72ec9b7c53f09cf22276e8889b8cfc40f26757b43e3c",
+        "bytes": 17159
       }
     },
     {
@@ -215,7 +218,7 @@
       "name": "Tasks",
       "summary": "The work this project has committed to, written so that finishing it can be checked — and handed to an agent from the record itself.",
       "icon": "list-checks",
-      "version": "0.2.4",
+      "version": "0.2.5",
       "syncApi": "^3.0",
       "capabilities": [
         "records",
@@ -237,9 +240,39 @@
       "license": "MIT",
       "repository": null,
       "artefact": {
-        "url": "https://github.com/sync-buzz/sync-extensions/releases/download/v1.5.4/tasks-0.2.4.syncext",
-        "sha256": "dd2de318b8d03945266766005f986bdc09ea5e3a4b0f92fe8af52e517b6c055b",
-        "bytes": 24003
+        "url": "https://github.com/sync-buzz/sync-extensions/releases/download/v1.6.0/tasks-0.2.5.syncext",
+        "sha256": "7de8ee4ee215a32882a7da0df44628e0d5b205261b48b3d9656cb28f17a3bfe8",
+        "bytes": 24053
+      }
+    },
+    {
+      "id": "terminals",
+      "name": "Terminals",
+      "summary": "Shells in this project's folder, arranged in tabs and tiles, running whether or not you are looking at them.",
+      "icon": "square-terminal",
+      "version": "0.1.0",
+      "syncApi": "^3.9",
+      "capabilities": [
+        "terminal",
+        "native-menu"
+      ],
+      "requires": [],
+      "publishes": [],
+      "areas": [
+        {
+          "id": "terminals",
+          "label": "Terminals"
+        }
+      ],
+      "prompt": false,
+      "npm": [],
+      "author": null,
+      "license": "MIT",
+      "repository": null,
+      "artefact": {
+        "url": "https://github.com/sync-buzz/sync-extensions/releases/download/v1.6.0/terminals-0.1.0.syncext",
+        "sha256": "2e1d7a8c1cbcb96c074a42288d24d499e447c293f17d8d5c237aed2051a5b22d",
+        "bytes": 100365
       }
     }
   ]

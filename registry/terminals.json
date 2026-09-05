@@ -1,0 +1,17 @@
+{
+  "formatVersion": 1,
+  "id": "terminals",
+  "versions": [
+    {
+      "version": "0.1.0",
+      "syncApi": "^3.9",
+      "description": "A terminal here is a shell in the project's folder, started the way this machine starts one — your login shell, so the tools you installed are on the path. Terminals are arranged in tabs, and a tab holds as many tiles as it is split into: drag a divider to change how the space is shared, and close a tile to give its space back to its neighbour. What runs is held by Sync rather than by the screen showing it, so leaving this section, hiding a tile behind another tab or resizing the window changes nothing about the build that is running — come back and it is where it got to. Closing the project is what ends them. This package runs commands in the project's folder as you, which is what a terminal is; nothing it does is narrower than that.",
+      "changelog": "Shells in this project's folder, in tabs and tiles.\n\nA terminal here is started the way this machine starts one — your login shell,\nso the tools you installed are on the path — in the project's own folder. Tabs\nhold as many tiles as they are split into: drag a divider to change how the\nspace is shared, close a tile and its neighbour takes the room back.\n\n**What runs is held by Sync, not by the screen showing it.** Leaving this\nsection, hiding a tile behind another tab, resizing the window, reloading —\nnone of them reaches the process. A build started before lunch is where it got\nto when you come back. Closing the project is what ends them, and nothing else\nis.\n\nThis package runs commands in the project's folder as you, which is what a\nterminal is; nothing it does is narrower than that, and the card says so in\nthose words rather than in a sentence about processes.\n\nNeeds Sync 0.11 or newer: the shell it opens is held by the application, and\nolder builds have nowhere to put one.",
+      "artefact": {
+        "url": "https://github.com/sync-buzz/sync-extensions/releases/download/v1.6.0/terminals-0.1.0.syncext",
+        "sha256": "2e1d7a8c1cbcb96c074a42288d24d499e447c293f17d8d5c237aed2051a5b22d",
+        "bytes": 100365
+      }
+    }
+  ]
+}

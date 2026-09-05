@@ -3,6 +3,17 @@
   "id": "issues",
   "versions": [
     {
+      "version": "0.3.1",
+      "syncApi": "^3.0",
+      "description": "Issues is named after what it holds rather than after where the issues live: GitHub is an address, not a subject. It reads one public repository over the network — the hosts it may reach are in its manifest, the request is made in Rust, and a host it did not declare never leaves this machine. It is read-only in the strongest sense available: nothing it fetches is written to the project's memory, and there is no command in it that changes anything on GitHub. An issue is somebody else's text about your work, so it is shown as what it is — a page you read, with its facts beside it — and it stays outside the corpus, where a claim has to be about this repository's own code to mean anything.",
+      "changelog": "Rebuilt against a moved contract, and nothing else.\n\nThe extension surface is at 3.10.0, and every module here is compiled against\nit — so this package comes out as a different file though not a line of it was\nedited. A released version is immutable, which is why the number moves rather\nthan the bytes under it. Nothing it does has changed.",
+      "artefact": {
+        "url": "https://github.com/sync-buzz/sync-extensions/releases/download/v1.6.0/issues-0.3.1.syncext",
+        "sha256": "58450cbdad44767ed328088040afb0fbab1b997e002ec36545d74f88c314f143",
+        "bytes": 11621
+      }
+    },
+    {
       "version": "0.3.0",
       "syncApi": "^3.0",
       "description": "Issues is named after what it holds rather than after where the issues live: GitHub is an address, not a subject. It reads one public repository over the network — the hosts it may reach are in its manifest, the request is made in Rust, and a host it did not declare never leaves this machine. It is read-only in the strongest sense available: nothing it fetches is written to the project's memory, and there is no command in it that changes anything on GitHub. An issue is somebody else's text about your work, so it is shown as what it is — a page you read, with its facts beside it — and it stays outside the corpus, where a claim has to be about this repository's own code to mean anything.",

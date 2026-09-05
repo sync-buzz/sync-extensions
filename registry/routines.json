@@ -3,6 +3,17 @@
   "id": "routines",
   "versions": [
     {
+      "version": "0.5.1",
+      "syncApi": "^3.0",
+      "description": "A routine is one instruction, written to an agent, that Sync hands over on an interval — check the tracker, read the inbox, look at what changed overnight. Sync raises the agent and the agent does the work with the tools it already has on this machine, so what a routine can reach is whatever its agent can reach, and nothing here needs to know what a mailbox or an issue is. A routine is a record like any other, so it is read, edited and searched where the rest of the project is, and it travels with the repository. Nothing runs until somebody switches it on: a routine spends an agent's tokens, and arriving at somebody else's clone already running is not something they agreed to.",
+      "changelog": "Rebuilt against a moved contract, and nothing else.\n\nThe extension surface is at 3.10.0, and every module here is compiled against\nit — so this package comes out as a different file though not a line of it was\nedited. A released version is immutable, which is why the number moves rather\nthan the bytes under it. Nothing it does has changed.",
+      "artefact": {
+        "url": "https://github.com/sync-buzz/sync-extensions/releases/download/v1.6.0/routines-0.5.1.syncext",
+        "sha256": "3af032359531140c893e72ec9b7c53f09cf22276e8889b8cfc40f26757b43e3c",
+        "bytes": 17159
+      }
+    },
+    {
       "version": "0.5.0",
       "syncApi": "^3.0",
       "description": "A routine is one instruction, written to an agent, that Sync hands over on an interval — check the tracker, read the inbox, look at what changed overnight. Sync raises the agent and the agent does the work with the tools it already has on this machine, so what a routine can reach is whatever its agent can reach, and nothing here needs to know what a mailbox or an issue is. A routine is a record like any other, so it is read, edited and searched where the rest of the project is, and it travels with the repository. Nothing runs until somebody switches it on: a routine spends an agent's tokens, and arriving at somebody else's clone already running is not something they agreed to.",
