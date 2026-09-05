@@ -5,23 +5,27 @@
   "scripts": {
     "build": "sync-ext build extensions/*",
     "check": "sync-ext check extensions/*",
+    "test": "vitest run",
     "pack": "sync-ext pack extensions/* --out dist",
     "typecheck": "tsc --noEmit",
     "immutability": "node scripts/immutability.mjs",
-    "verify": "pnpm typecheck && pnpm build && pnpm check && pnpm prompts && pnpm run pack && pnpm immutability",
+    "verify": "pnpm typecheck && pnpm test && pnpm build && pnpm check && pnpm prompts && pnpm run pack && pnpm immutability",
     "contract": "cd ../sync && pnpm api:publish",
     "prompts": "node scripts/prompt-names.mjs"
   },
   "devDependencies": {
-    "@sync-buzz/extension-api": "^3.5.0",
+    "@sync-buzz/extension-api": "^3.10.0",
     "@types/react": "^19.2.18",
+    "@xterm/addon-fit": "^0.11.0",
+    "@xterm/xterm": "^6.0.0",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
     "lucide-react": "^1.31.0",
     "radix-ui": "^1.6.7",
     "react": "19.2.8",
     "typescript": "^5.9.3",
-    "use-stick-to-bottom": "^1.1.6"
+    "use-stick-to-bottom": "^1.1.6",
+    "vitest": "^4.1.11"
   },
   "packageManager": "pnpm@11.18.0"
 }

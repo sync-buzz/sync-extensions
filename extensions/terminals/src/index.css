@@ -1,0 +1,25 @@
+/*
+ * What this package draws with.
+ *
+ * Two imports and one rule. Everything else an arrangement needs is a utility
+ * compiled from the window's own tokens, so this package ships no colour, no
+ * spacing step and no theme of its own — and retinting the window retints it
+ * with nothing rebuilt.
+ */
+
+@import "@sync-buzz/extension-api/extension.css";
+@import "@xterm/xterm/css/xterm.css";
+
+/*
+ * The terminal fills its tile and keeps its own scrolling.
+ *
+ * `overflow: clip` rather than `hidden`, which is the rule the window's panels
+ * keep: a hidden box is still a scrollport that has lost its bar, so the
+ * browser goes on scrolling it to reveal whatever was focused and leaves the
+ * screen shifted with its foot over nothing.
+ */
+.terminals-layout .xterm {
+  height: 100%;
+  padding: calc(var(--step) * 1.5);
+  overflow: clip;
+}

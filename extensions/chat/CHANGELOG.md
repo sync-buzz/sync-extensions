@@ -1,5 +1,83 @@
 # Changelog
 
+## 1.7.0
+
+An agent can hand work to a second agent, and a person can hand one over with a
+command.
+
+`chat.delegate` raises another agent in a conversation of its own and gives it
+one piece of work. It answers with the key of the order rather than with the
+result — the agent has not been raised yet, and what it was asked may take
+hours — and whatever that agent says last comes back as an ordinary message
+once the conversation that delegated is free. There is no tool to ask whether
+it has finished: work that runs for a day would be asked about thousands of
+times for one answer.
+
+What the caller may say is what the work is, what to call it, and which agent
+to raise. What the work is *about*, and who ordered it, are read from the
+conversation it was delegated from — so an agent can say what it delegated from
+and cannot file the result under a record it has nothing to do with.
+
+A person can hand work over too, without writing to an agent about it first.
+Typing `/` at the start of a line in the field opens the commands **the
+project's packages offer** — every one of them, read from what is installed
+rather than from a list in this build — and writes the chosen one in as a
+block. On Send the blocks are taken in the order they were written, whatever can
+be answered there and then is answered beside the block it came from, and the
+whole of it goes to the agent as one message — so a delegation and the sentence
+around it are one thing said rather than three.
+
+The list is not only what packages declared. Two tools exist in the whole
+system, and a person wanting to write a task was not helped by either — so
+every kind the project holds brings four commands of its own:
+`tasks.task.create`, `posts.draft.read`, and so on for each. Nothing declares
+them and nothing needs to: writing a record is what the corpus is for and what
+every agent already does. The name carries the kind whole, because a package
+brings more than one and `draft.create` collides with the next package that
+brings a draft.
+
+Which kinds may be written by hand is not decided here. A kind the window
+writes for itself says so in its own package's topic, which the agent reads
+before writing one — so the answer comes from the package that owns the kind
+rather than from a list kept in this one.
+
+**A block is written in words or in arguments, and it can tell which.**
+Arguments are `name: value`, one to a line, and every name has to be one the
+tool declared; anything else is a sentence. Doubt goes to the sentence
+deliberately — a sentence is carried out by an agent, which can ask, and the
+other way round would call somebody's tool with an argument they did not mean.
+
+A sentence is not a lesser way of writing one, and it is why `/posts.publish the
+draft about delegation` is a thing somebody can write: working out what a tool
+should be called with is the work, and it is work for whoever has the
+conversation in front of them.
+
+**A command asks for the thing, not for somebody to be raised.** It is carried
+out by the agent standing in the conversation, which already has the record the
+work is under, the project, and everything said so far — all three of which a
+freshly raised agent would have to go and find before it could begin. So the
+block travels on as it was written and nothing is reported beside it: an answer
+appears under a block only where one already exists, which is what stops a
+message describing work nobody has done yet.
+
+`chat.delegate` is the exception, and the reason for it is in it: handing work
+over is the whole of what that command does, so the handing off is the answer.
+
+**Writing a command is not running one.** What runs one is pressing Send or
+pressing a button, never the appearance of the characters: a command quoted in a
+document, or written by an agent in its own answer, does nothing at all. That is
+what makes it safe for this package's own topic to show you one.
+
+A delegated conversation stands under the one it came out of, indented, with a
+count at the trailing edge of the parent that folds them away. A parent with a
+child that wants an answer is marked, because a family folded away is a question
+somebody cannot see.
+
+Delegated work is carried out in the delegating conversation's own working tree,
+and every run starts when it is ordered rather than behind the one before it —
+so two delegations made in one afternoon are two agents in one set of files. The
+tree is the person's, and so is that decision.
+
 ## 1.6.0
 
 The package carries the topic an agent reads before it writes.

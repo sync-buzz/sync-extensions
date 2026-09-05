@@ -1,17 +1,20 @@
 {
   "manifestVersion": 1,
   "id": "chat",
-  "version": "1.6.0",
+  "version": "1.7.0",
   "name": "Chat",
   "summary": "Talk to the coding agents installed on this machine, in this project's folder, without leaving the window.",
-  "description": "Chat runs an agent as a process and speaks the Agent Client Protocol to it, so the conversation happens here rather than in a terminal beside here. A conversation opens straight away, with the agent this project was last held with, and which agent, which model and how freely it may act are chosen in a strip above the field \u2014 beside the sentence they apply to. Which agents it can raise is a fact about this machine rather than about this build: the ones installed are offered, and Codex \u2014 which does not speak the protocol at all \u2014 is reached through a bridge that ships inside the application. Models and modes are listed as the agent itself stated them, never from a table in the build. A conversation belongs to the project rather than to the screen: switching sections leaves the agent working, and coming back finds everything it said meanwhile.",
+  "description": "Chat runs an agent as a process and speaks the Agent Client Protocol to it, so the conversation happens here rather than in a terminal beside here. A conversation opens straight away, with the agent this project was last held with, and which agent, which model and how freely it may act are chosen in a strip above the field — beside the sentence they apply to. Which agents it can raise is a fact about this machine rather than about this build: the ones installed are offered, and Codex — which does not speak the protocol at all — is reached through a bridge that ships inside the application. Models and modes are listed as the agent itself stated them, never from a table in the build. A conversation belongs to the project rather than to the screen: switching sections leaves the agent working, and coming back finds everything it said meanwhile.",
   "icon": "message-square",
   "engines": {
-    "syncApi": "^3.5"
+    "syncApi": "^3.8"
   },
   "capabilities": [
     "records",
-    "agents.acp"
+    "agents.acp",
+    "background",
+    "agent.tools",
+    "work.agent"
   ],
   "areas": [
     {
@@ -44,5 +47,40 @@
   },
   "ui": "ui/index.js",
   "styles": "ui/index.css",
-  "license": "MIT"
+  "license": "MIT",
+  "service": "service/index.js",
+  "tools": [
+    {
+      "handler": "chat.delegate",
+      "name": "delegate",
+      "description": "Delegate a piece of work to a second agent, in a conversation of its own. Answers at once with the key of the work ordered — not with the result: the agent has not been raised yet, and what it finds may take hours. End your turn after calling this. Whatever that agent says last comes back to this conversation as an ordinary message, once you are not in the middle of a turn; there is nothing to wait for and nothing to ask. Write the whole of the work into `prompt`: the agent you are delegating to reads that and nothing else of what was said here.",
+      "input": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "title",
+          "prompt",
+          "agent"
+        ],
+        "properties": {
+          "title": {
+            "type": "string",
+            "description": "What to call the conversation in the list a person reads. A short name for the piece of work, not the instruction itself."
+          },
+          "prompt": {
+            "type": "string",
+            "description": "The work, written to the agent that will do it. It starts in this project's folder and reads no part of this conversation, so everything it needs is here or nowhere."
+          },
+          "agent": {
+            "type": "string",
+            "description": "Which agent to raise, as Sync names them — `claude`, `codex`, `gemini`. Name the one you are, unless the work asks for another. An agent this machine has not installed is ordered and never rises."
+          },
+          "parent": {
+            "type": "string",
+            "description": "The conversation this work comes out of, when you were told one. Work delegated with it stands under that conversation and is filed where it is filed; work delegated without it stands on its own. You cannot find this out for yourself: give it only when your own instructions named it."
+          }
+        }
+      }
+    }
+  ]
 }

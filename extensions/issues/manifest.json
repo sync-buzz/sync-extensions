@@ -1,7 +1,7 @@
 {
   "manifestVersion": 1,
   "id": "issues",
-  "version": "0.3.0",
+  "version": "0.3.1",
   "name": "Issues",
   "summary": "The issues of a public repository on GitHub, read in this window beside the project they are about.",
   "description": "Issues is named after what it holds rather than after where the issues live: GitHub is an address, not a subject. It reads one public repository over the network — the hosts it may reach are in its manifest, the request is made in Rust, and a host it did not declare never leaves this machine. It is read-only in the strongest sense available: nothing it fetches is written to the project's memory, and there is no command in it that changes anything on GitHub. An issue is somebody else's text about your work, so it is shown as what it is — a page you read, with its facts beside it — and it stays outside the corpus, where a claim has to be about this repository's own code to mean anything.",

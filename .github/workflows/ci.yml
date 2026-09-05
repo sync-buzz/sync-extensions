@@ -25,10 +25,15 @@ jobs:
           node-version: 22
           cache: pnpm
       - run: pnpm install --frozen-lockfile
-      # Types, then the modules, then the manifests against the modules. The
-      # order is the point: `check` runs each module against a stand-in host and
-      # compares what came back with what its manifest declared, which is the
-      # one failure nothing in the type system can catch — an area renamed in
-      # one and not the other type-checks perfectly and installs as an empty
-      # column.
+      # Types, then the answers, then the modules, then the manifests against
+      # the modules. The order is the point: `check` runs each module against a
+      # stand-in host and compares what came back with what its manifest
+      # declared, which is the one failure nothing in the type system can catch
+      # — an area renamed in one and not the other type-checks perfectly and
+      # installs as an empty column.
+      #
+      # `test` sits second because it needs neither a build nor a host: what it
+      # covers is the pure half of a package, where being wrong is invisible on
+      # screen. Nothing is added to this file to run it — it is a step of
+      # `verify`, so a desk and this machine go on proving the same list.
       - run: pnpm verify

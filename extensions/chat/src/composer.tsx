@@ -27,6 +27,7 @@ import {
 } from "@sync-buzz/extension-api";
 import { ArrowUp, FileText, Paperclip, Square, X } from "lucide-react";
 
+import { committed, spelled, type Handed } from "./addressing";
 import { AgentPicker, ModePicker, ModelPicker, WorktreePicker } from "./pickers";
 
 /**
@@ -41,6 +42,15 @@ import { AgentPicker, ModePicker, ModelPicker, WorktreePicker } from "./pickers"
  * pictures into somebody else's conversation.
  */
 export interface Draft {
+  /**
+   * The conversation this message is addressed to, once the name is settled.
+   *
+   * A member of the draft rather than the first word of `text`, because it is
+   * drawn as a token and a token is a thing rather than a spelling: it survives
+   * leaving the conversation and coming back, exactly as the half-written
+   * sentence beside it does, and nothing has to re-read the text to find it.
+   */
+  readonly to?: Handed;
   readonly text: string;
   readonly attached: readonly string[];
   readonly pasted: readonly PastedContent[];
@@ -155,6 +165,8 @@ export function Composer({
   draft,
   onDraft,
   settings,
+  onHand,
+  standing,
 }: {
   session: AgentSession;
   /** Where the system's open panel starts, which is where a person is working. */
@@ -176,6 +188,31 @@ export function Composer({
   onDraft: (change: (held: Draft) => Draft) => void;
   /** What this message will be sent with — see {@link Settings}. */
   settings: Settings;
+  /**
+   * Hands the message to another conversation, raising it where the name is new.
+   *
+   * Here as a function passed in rather than done in this file, and the seam is
+   * where it is for a reason: handing work over reaches the whole conversation
+   * — which agent is holding it, which tree it is in, what it came out of — and
+   * none of that is the field's business. The field reads who it is for.
+   */
+  onHand: (handed: Handed, body: string) => Promise<void>;
+  /**
+   * Whether a name is already a conversation of this family.
+   *
+   * Asked so the line below the field can say *goes to* rather than *opens*,
+   * which are two different things to somebody about to press Return: one
+   * carries on with work, the other starts some.
+   */
+  standing: (name: string) => boolean;
+  /**
+   * How to leave for the field that writes a document, drawn as one control
+   * beside the paperclip.
+   *
+   * Absent where this is the only field there is, which is what keeps the
+   * control out of a window that has nowhere for it to lead. The field it leads
+   * to draws the same control in the same place, pointing back.
+   */
 }) {
   const { text, attached, pasted } = draft;
   // Held *with* the conversation they are about, rather than reset when it
@@ -209,6 +246,27 @@ export function Composer({
   const field = useRef<HTMLTextAreaElement>(null);
   const frame = useRef<HTMLDivElement>(null);
 
+  /**
+   * What `@` is about to do, while the name is still being written.
+   *
+   * One state and no more. The moment the name settles it becomes a token in
+   * the band, and a token says where a message is going the way a recipient
+   * does — so a sentence saying the same thing beside it would be the interface
+   * explaining its own furniture.
+   */
+  const hint =
+    draft.to === undefined && text.trimStart().startsWith("@")
+      ? "Name a conversation. A message that starts with a name goes there rather than here."
+      : null;
+
+  /**
+   * Whether this message is on its way somewhere other than here.
+   *
+   * True from the first `@` rather than from the settled name, so the row
+   * changes once — while somebody is typing the address — instead of twice.
+   */
+  const elsewhere = draft.to !== undefined || hint !== null;
+
   const write = (change: (held: Draft) => Partial<Draft>) =>
     onDraft((held) => ({ ...held, ...change(held) }));
 
@@ -226,7 +284,14 @@ export function Composer({
     onDraft(() => EMPTY_DRAFT);
     setTurn({ of, refused: null, sending: true });
     try {
-      await session.prompt(sent.text, sent.attached, sent.pasted);
+      // Handed away, and it does not also happen here: a message with somebody
+      // else's name at the head of it was addressed to them, and saying it in
+      // both places would be one sentence turning into two conversations.
+      if (sent.to === undefined) {
+        await session.prompt(sent.text, sent.attached, sent.pasted);
+      } else {
+        await onHand(sent.to, sent.text);
+      }
       setTurn({ of, refused: null, sending: false });
     } catch (error) {
       // Put back exactly what was about to be sent, and say why it was not. A
@@ -360,6 +425,13 @@ export function Composer({
       if (attached.length > 0) {
         event.preventDefault();
         write((held) => ({ attached: held.attached.slice(0, -1) }));
+        return;
+      }
+      // Oldest of all, so last of all: the address was put on the message
+      // before anything else was written into it.
+      if (draft.to !== undefined) {
+        event.preventDefault();
+        write(() => ({ to: undefined }));
       }
     }
   };
@@ -371,7 +443,7 @@ export function Composer({
           The agent is waiting for an answer above.
         </p>
       ) : null}
-      <div className="mx-auto flex w-full max-w-(--prose-measure) flex-col gap-1.5">
+      <div className="relative mx-auto flex w-full max-w-(--prose-measure) flex-col gap-1.5">
         {refused === null && said === null ? null : (
           <p className="text-xs text-fg-tertiary">{refused ?? said}</p>
         )}
@@ -404,15 +476,41 @@ export function Composer({
                 stacked rows. Sharing the well, there is one edge and one
                 object. */}
             <div className="flex w-full min-w-0 items-center gap-0.5 border-b border-separator px-0.5 py-1">
-              <AgentPicker
-                agents={settings.agents}
-                loading={settings.agentsLoading}
-                currentId={settings.agentId}
-                currentName={settings.agentName}
-                starting={settings.starting}
-                settled={settings.settled}
-                onChoose={settings.onAgent}
-              />
+              {/* First in the row, because a compose window puts the recipient
+                  before the account it goes out under, and this row is that
+                  window's header. It is a token rather than a sentence for the
+                  same reason mail draws one: where a message is going is a
+                  thing, and a thing is shown. */}
+              {draft.to === undefined ? null : (
+                <Recipient
+                  handed={draft.to}
+                  standing={standing(draft.to.to)}
+                  // Whoever holds this conversation holds what it delegates,
+                  // unless the address named somebody else. Passed in so the
+                  // token can say which, now that nothing else in the row does.
+                  here={settings.agentName}
+                  onRemove={() => write(() => ({ to: undefined }))}
+                />
+              )}
+
+              {/* Gone with the other three, and for a sharper reason than
+                  theirs. This says which agent holds *this* conversation, and
+                  beside an address naming another it is two agents on one line
+                  with the wrong one drawn as the control — `@test:codex` next
+                  to a button reading `Claude Code` is the row contradicting
+                  itself. Which agent will hold the message is part of the
+                  address, so it is said on the token. */}
+              {elsewhere ? null : (
+                <AgentPicker
+                  agents={settings.agents}
+                  loading={settings.agentsLoading}
+                  currentId={settings.agentId}
+                  currentName={settings.agentName}
+                  starting={settings.starting}
+                  settled={settings.settled}
+                  onChoose={settings.onAgent}
+                />
+              )}
               {/* Absent rather than empty, in both cases. An agent that states no
                   models and one that states no modes are saying they have none to
                   offer, and a pop-up button over nothing is a promise this build
@@ -423,13 +521,20 @@ export function Composer({
                   so a picker still drawn here would not be a control that quietly
                   did nothing, it would be a rejected promise nobody is holding. The
                   agent's name stays, because that is a fact and it stays true. */}
-              {closed || settings.model === null ? null : (
+              {/* **Gone while the message is addressed elsewhere, not merely
+                  moved aside.** These three say how the agent standing here
+                  will answer, and a message going to another conversation is
+                  not answered here at all — so they are not controls that
+                  happen to be crowded, they are controls that do not apply.
+                  What is left reads as a compose header does: who it is for,
+                  then who it goes out as. */}
+              {elsewhere || closed || settings.model === null ? null : (
                 <ModelPicker
                   option={settings.model}
                   onChoose={(valueId) => void settle(session.choose(settings.model!.id, valueId))}
                 />
               )}
-              {closed || session.modes.length === 0 ? null : (
+              {elsewhere || closed || session.modes.length === 0 ? null : (
                 <ModePicker
                   modes={session.modes}
                   current={session.transcript.mode}
@@ -455,7 +560,9 @@ export function Composer({
                   in the project's own tree says nothing here, and a mark parting
                   a group from an empty space is a hairline the eye has to
                   account for and cannot. */}
-              {settings.worktreesOffered && !(settings.settled && settings.worktree === null) ? (
+              {!elsewhere &&
+              settings.worktreesOffered &&
+              !(settings.settled && settings.worktree === null) ? (
                 <>
                   <Rule />
                   <WorktreePicker
@@ -470,6 +577,30 @@ export function Composer({
                 </>
               ) : null}
 
+              {/* Where this message is going, in the gap this row already has.
+                  The paperclip is held against the trailing edge, so everything
+                  between it and the pickers is space that exists whether or not
+                  anything is written in it — which is the whole reason the text
+                  is here rather than in a line of its own above the well. A line
+                  that appeared as somebody typed moved the field they were
+                  typing in, and a field that moves under the caret is worse than
+                  no help at all.
+
+                  It reads as one more caption in a row of captions rather than
+                  as a notice, and it is the first thing in the row to give up
+                  width: the four pickers are controls and this is help, so it
+                  truncates while they keep their labels. Truncates rather than
+                  wraps — a band that grew a second line would be the movement
+                  this arrangement exists to avoid, one row further down. */}
+              {hint === null ? null : (
+                <span className="ml-1 min-w-0 truncate text-xs text-fg-tertiary">{hint}</span>
+              )}
+
+              {/* The rule is pushed to the trailing edge and the paperclip
+                  follows it, so the mark that parts the two groups travels with
+                  the group it parts rather than sitting in the middle of the
+                  space. */}
+              <Rule className="ml-auto" />
               {/* Against the trailing edge, because attaching is the one thing in
                   this row that adds to the message rather than describing how it
                   travels — and it belongs beside the button that sends it rather
@@ -482,13 +613,19 @@ export function Composer({
                     onClick={() => void attach()}
                     disabled={closed}
                     aria-label="Attach files"
-                    className="ml-auto text-fg-secondary"
+                    className="text-fg-secondary"
                   >
                     <Paperclip />
                   </Button>
                 </TooltipTrigger>
                 <TooltipContent>Attach files</TooltipContent>
               </Tooltip>
+              {/* Beside the paperclip, because it belongs to the same question:
+                  what is being written, and with what. Which of the two fields
+                  is on screen is not a setting about the agent, so it is not
+                  among the four that answer *with what* — it is against the
+                  edge with the one other control that changes the message
+                  itself. */}
             </div>
             {attached.length === 0 && pasted.length === 0 ? null : (
               <Shelf
@@ -517,7 +654,15 @@ export function Composer({
               value={text}
               onChange={(event) => {
                 const said = event.target.value;
-                write(() => ({ text: said }));
+                // The address is taken out of the text the moment it settles,
+                // and only while there is not one already: a second `@name`
+                // further down the message is somebody naming a conversation.
+                const settled = draft.to === undefined ? committed(said) : null;
+                write(() =>
+                  settled === null
+                    ? { text: said }
+                    : { to: settled.handed, text: settled.body },
+                );
               }}
               onKeyDown={onKeyDown}
               onPaste={onPaste}
@@ -573,8 +718,82 @@ export function Composer({
  * of a screen gets from the order and the labels already, and a decoration in
  * the accessibility tree is one more thing to arrow past for no gain.
  */
-function Rule() {
-  return <span aria-hidden className="mx-1 h-3.5 w-px shrink-0 bg-separator" />;
+/**
+ * Where this message is going, drawn the way a recipient is drawn.
+ *
+ * **Filled once the conversation exists, outlined while it does not.** That is
+ * the one distinction worth a person's attention before they press Return: a
+ * settled token carries on with work that is already going, an unsettled one
+ * starts some. It is the same difference a mail client draws between a
+ * recipient it resolved and one it has only been told about, and it is said in
+ * the token's own weight rather than in a word beside it — a row this narrow
+ * has no room for the word, and the tooltip has the whole sentence for anybody
+ * who wants it.
+ */
+function Recipient({
+  handed,
+  standing,
+  here,
+  onRemove,
+}: {
+  handed: Handed;
+  /** Whether a conversation of this name is already going. */
+  standing: boolean;
+  /** The agent holding this conversation, which a new one inherits. */
+  here: string;
+  onRemove: () => void;
+}) {
+  return (
+    <Tooltip>
+      <TooltipTrigger asChild>
+        <span
+          className={cn(
+            // **Inset from the well by as much as the band already insets it
+            // from the top and the bottom.** The controls beside it are ghost
+            // buttons whose ink begins inside their own box, so the band's 2px
+            // is enough for them; a token's ink *is* its box, and at 2px it
+            // meets the well's rounded corner. `ml-1` makes the gap the same on
+            // all three sides, which is what stops it reading as vertically
+            // centred and horizontally forgotten.
+            //
+            // A row shorter than the h-6 controls around it, as a token is: the
+            // height belongs to the button beside it, and matching it exactly
+            // would draw a filled slab where a capsule was meant.
+            "ml-1 flex h-5 min-w-0 shrink-0 items-center gap-1 rounded-full pr-1 pl-2 text-xs",
+            standing
+              ? "bg-selected text-fg"
+              : "border border-separator text-fg-secondary",
+          )}
+        >
+          <span className="truncate">{spelled(handed)}</span>
+          <button
+            type="button"
+            onClick={onRemove}
+            aria-label={`Do not send to ${handed.to}`}
+            className="flex size-3.5 shrink-0 items-center justify-center rounded-full text-fg-tertiary hover:text-fg"
+          >
+            <X className="size-2.5" />
+          </button>
+        </span>
+      </TooltipTrigger>
+      {/* Which agent, said here rather than on the token. A conversation that
+          is already going has one and it cannot be changed, so naming it on the
+          face would be offering a choice that does not exist; a new one takes
+          the agent from the address or from this conversation, and that is
+          worth a sentence rather than a suffix nobody asked for. */}
+      <TooltipContent>
+        {standing
+          ? `Goes to ${handed.to} rather than to this conversation.`
+          : `Opens ${handed.to} with ${handed.with ?? here} and sends this there.`}
+      </TooltipContent>
+    </Tooltip>
+  );
+}
+
+function Rule({ className }: { className?: string }) {
+  return (
+    <span aria-hidden className={cn("mx-1 h-3.5 w-px shrink-0 bg-separator", className)} />
+  );
 }
 
 /**

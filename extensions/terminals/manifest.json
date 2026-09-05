@@ -1,0 +1,28 @@
+{
+  "manifestVersion": 1,
+  "id": "terminals",
+  "version": "0.1.0",
+  "name": "Terminals",
+  "summary": "Shells in this project's folder, arranged in tabs and tiles, running whether or not you are looking at them.",
+  "description": "A terminal here is a shell in the project's folder, started the way this machine starts one — your login shell, so the tools you installed are on the path. Terminals are arranged in tabs, and a tab holds as many tiles as it is split into: drag a divider to change how the space is shared, and close a tile to give its space back to its neighbour. What runs is held by Sync rather than by the screen showing it, so leaving this section, hiding a tile behind another tab or resizing the window changes nothing about the build that is running — come back and it is where it got to. Closing the project is what ends them. This package runs commands in the project's folder as you, which is what a terminal is; nothing it does is narrower than that.",
+  "icon": "square-terminal",
+  "engines": {
+    "syncApi": "^3.9"
+  },
+  "capabilities": [
+    "terminal",
+    "native-menu"
+  ],
+  "areas": [
+    {
+      "id": "terminals",
+      "label": "Terminals",
+      "description": "Shells in this project's folder, in tabs and tiles.",
+      "frame": "list",
+      "icon": "square-terminal"
+    }
+  ],
+  "ui": "ui/index.js",
+  "styles": "ui/index.css",
+  "license": "MIT"
+}

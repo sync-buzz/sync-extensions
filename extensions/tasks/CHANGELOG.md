@@ -1,5 +1,14 @@
 # Changelog
 
+## 0.2.5
+
+Rebuilt against a moved contract, and nothing else.
+
+The extension surface is at 3.10.0, and every module here is compiled against
+it — so this package comes out as a different file though not a line of it was
+edited. A released version is immutable, which is why the number moves rather
+than the bytes under it. Nothing it does has changed.
+
 ## 0.2.4
 
 Filing a task, archiving one, and what the word *task* means.
